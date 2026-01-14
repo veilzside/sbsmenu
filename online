@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  /* --- TEMA SBS --- */
+  :root {
+    --bg-yellow: #FFD700; /* Kuning terang sesuai menu */
+    --text-black: #1a1a1a;
+    --accent-orange: #FF6600; /* Warna oranye untuk rekomendasi */
+    --font-bold: 'Arial Black', 'Roboto Black', sans-serif; /* Font tebal pengganti grunge */
+    --font-std: 'Arial', 'Roboto', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-std);
+    background-color: var(--bg-yellow);
+    /* Opsional: Jika ingin efek tekstur seperti di menu fisik, bisa tambah background image di Canva di belakang embed ini */
+    margin: 0;
+    padding: 15px;
+    color: var(--text-black);
+  }
+
+  /* --- NAVIGATION TABS --- */
+  .tabs-container {
+    overflow-x: auto;
+    white-space: nowrap;
+    margin-bottom: 25px;
+    padding-bottom: 5px;
+    /* Menyembunyikan scrollbar agar rapi */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .tabs-container::-webkit-scrollbar { display: none; /* Chrome, Safari, Opera*/ }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    font-family: var(--font-bold);
+    font-size: 1rem;
+    text-transform: uppercase;
+    margin-right: 15px;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: #555;
+    border-bottom: 3px solid transparent;
+    transition: 0.3s;
+  }
+
+  .tab-btn.active {
+    color: var(--text-black);
+    border-bottom: 3px solid var(--text-black);
+    transform: scale(1.05);
+  }
+
+  /* --- MENU CONTENT --- */
+  .menu-section {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  .menu-section.active {
+    display: block;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* --- ITEM CARD STYLE (DENGAN FOTO) --- */
+  .menu-item {
+    display: flex;
+    align-items: center;
+    background: #fff; /* Latar putih agar item menonjol dari background kuning */
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.1);
+    border-left: 5px solid transparent; /* Garis default transparan */
+  }
+
+  /* Gaya khusus untuk Best Recommendation (Oranye) */
+  .menu-item.best-rec {
+    border-left: 5px solid var(--accent-orange);
+  }
+  .menu-item.best-rec .item-price {
+    color: var(--accent-orange);
+  }
+
+  /* Tempat Foto */
+  .item-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    object-fit: cover; /* Agar foto tidak gepeng */
+    margin-right: 15px;
+    background-color: #ddd; /* Warna placeholder */
+    border: 2px solid var(--text-black);
+  }
+
+  .item-details {
+    flex: 1; /* Mengisi sisa ruang */
+  }
+
+  .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
+  }
+
+  .item-name {
+    font-family: var(--font-bold);
+    font-size: 1.1rem;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .item-desc {
+    font-size: 0.85rem;
+    color: #666;
+    font-style: italic;
+    display: block;
+  }
+
+  .item-price {
+    font-family: var(--font-bold);
+    font-size: 1.3rem;
+    margin-left: 10px;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="tabs-container">
+  <button class="tab-btn active" onclick="openTab(event, 'makanberat')">Makan Berat</button>
+  <button class="tab-btn" onclick="openTab(event, 'cemalcemil')">Cemal-Cemil</button>
+  <button class="tab-btn" onclick="openTab(event, 'black')">Black</button>
+  <button class="tab-btn" onclick="openTab(event, 'white')">White</button>
+  <button class="tab-btn" onclick="openTab(event, 'comfy')">Comfy</button>
+  <button class="tab-btn" onclick="openTab(event, 'refreshing')">Refreshing</button>
+</div>
+
+<div id="makanberat" class="menu-section active">
+  <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Kalter" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Kalter</h3>
+        <span class="item-price">20</span>
+      </div>
+      <span class="item-desc">[Nasi Tahu Telor]</span>
+    </div>
+  </div>
+  <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Obama" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Obama</h3>
+        <span class="item-price">25</span>
+      </div>
+      <span class="item-desc">[Nasi Ayam Geprek Sambal Matah]</span>
+    </div>
+  </div>
+  <div class="menu-item best-rec">
+    <img src="https://via.placeholder.com/80x80?text=FOTO+BEST+REC" alt="Mangku Koe" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Mangku Koe</h3>
+        <span class="item-price">28</span>
+      </div>
+      <span class="item-desc">[Nasi Chicken Katsu Kari]</span>
+    </div>
+  </div>
+    <div class="menu-item best-rec">
+    <img src="https://via.placeholder.com/80x80?text=FOTO+BEST+REC" alt="Mangku Ayang" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Mangku Ayang</h3>
+        <span class="item-price">25</span>
+      </div>
+      <span class="item-desc">[Nasi Ayam Siram]</span>
+    </div>
+  </div>
+   <div class="menu-item best-rec">
+    <img src="https://via.placeholder.com/80x80?text=FOTO+BEST+REC" alt="Barudak" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Barudak</h3>
+        <span class="item-price">20</span>
+      </div>
+      <span class="item-desc">[Bakmie Katsu Sambal Matah]</span>
+    </div>
+  </div>
+    <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Sekena Gomes" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Sekena Gomes</h3>
+        <span class="item-price">22</span>
+      </div>
+      <span class="item-desc">[Nasgor Merah + Katsu + Sambal Matah]</span>
+    </div>
+  </div>
+    <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Sekena Goput" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Sekena Goput</h3>
+        <span class="item-price">22</span>
+      </div>
+      <span class="item-desc">[Nasgor Putih + Katsu + Sambal Matah]</span>
+    </div>
+  </div>
+    <div class="menu-item best-rec">
+    <img src="https://via.placeholder.com/80x80?text=FOTO+BEST+REC" alt="Sekena Keren" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Sekena Keren</h3>
+        <span class="item-price">25</span>
+      </div>
+      <span class="item-desc">[Nasgor Kari + Katsu + Sambal Matah]</span>
+    </div>
+  </div>
+</div>
+
+<div id="cemalcemil" class="menu-section">
+  <div class="menu-item best-rec">
+    <img src="https://via.placeholder.com/80x80?text=FOTO+BEST+REC" alt="Paket Sambat" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Paket Sambat</h3>
+        <span class="item-price">35</span>
+      </div>
+      <span class="item-desc">[Aneka Camilan]</span>
+    </div>
+  </div>
+  <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Cricket" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Cricket</h3>
+        <span class="item-price">25</span>
+      </div>
+      <span class="item-desc">[Chicken Fillet Lava]</span>
+    </div>
+  </div>
+    <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Potato Freak" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Potato Freak</h3>
+        <span class="item-price">17</span>
+      </div>
+      <span class="item-desc">[French Fries]</span>
+    </div>
+  </div>
+    <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Uhat Lawik" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Uhat Lawik</h3>
+        <span class="item-price">17</span>
+      </div>
+      <span class="item-desc">[Tahu Walik]</span>
+    </div>
+  </div>
+    <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Gyozable" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Gyozable</h3>
+        <span class="item-price">18</span>
+      </div>
+      <span class="item-desc">[Gyoza]</span>
+    </div>
+  </div>
+    <div class="menu-item best-rec">
+    <img src="https://via.placeholder.com/80x80?text=FOTO+BEST+REC" alt="Tahu Julit" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Tahu Julit</h3>
+        <span class="item-price">19</span>
+      </div>
+      <span class="item-desc">[Tahu Cabe Garam]</span>
+    </div>
+  </div>
+</div>
+
+<div id="black" class="menu-section">
+  <div class="menu-item best-rec">
+    <img src="https://via.placeholder.com/80x80?text=FOTO+BEST+REC" alt="Fressa" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Fressa</h3>
+        <span class="item-price">25</span>
+      </div>
+      <span class="item-desc">[Berry Soda Coffee]</span>
+    </div>
+  </div>
+  <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Americano" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Americano</h3>
+        <span class="item-price">16</span>
+      </div>
+      <span class="item-desc">[Americano]</span>
+    </div>
+  </div>
+  <div class="menu-item best-rec">
+    <img src="https://via.placeholder.com/80x80?text=FOTO+BEST+REC" alt="Dark Freshly" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Dark Freshly</h3>
+        <span class="item-price">19</span>
+      </div>
+      <span class="item-desc">[Americano Lemon]</span>
+    </div>
+  </div>
+   <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Darkberry" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Darkberry</h3>
+        <span class="item-price">19</span>
+      </div>
+      <span class="item-desc">[Americano Berry]</span>
+    </div>
+  </div>
+     <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Tubruk Syari" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Tubruk Syari</h3>
+        <span class="item-price">13</span>
+      </div>
+      <span class="item-desc">[Kopi Tubruk]</span>
+    </div>
+  </div>
+     <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Hanoi Tears" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Hanoi Tears</h3>
+        <span class="item-price">15</span>
+      </div>
+      <span class="item-desc">[Vietnam Drip]</span>
+    </div>
+  </div>
+</div>
+
+<div id="white" class="menu-section">
+    <div class="menu-item best-rec">
+    <img src="https://via.placeholder.com/80x80?text=FOTO+BEST+REC" alt="Penkopi" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Penkopi</h3>
+        <span class="item-price">23</span>
+      </div>
+      <span class="item-desc">[Creamy Coffee]</span>
+    </div>
+  </div>
+    <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Macch Favorito" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Macch Favorito</h3>
+        <span class="item-price">20</span>
+      </div>
+      <span class="item-desc">[Caramel Macchiato]</span>
+    </div>
+  </div>
+    <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Specta" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Specta</h3>
+        <span class="item-price">25</span>
+      </div>
+      <span class="item-desc">[Peanut Coffee]</span>
+    </div>
+  </div>
+    <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Comica" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Comica</h3>
+        <span class="item-price">22</span>
+      </div>
+      <span class="item-desc">[Hazelnut Coffee]</span>
+    </div>
+  </div>
+    <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Rhumpee" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Rhumpee</h3>
+        <span class="item-price">20</span>
+      </div>
+      <span class="item-desc">[Rhum Coffee]</span>
+    </div>
+  </div>
+    <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Crush" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Crush</h3>
+        <span class="item-price">22</span>
+      </div>
+      <span class="item-desc">[Rhum Regal Coffee]</span>
+    </div>
+  </div>
+</div>
+
+<div id="comfy" class="menu-section">
+   <div class="menu-item best-rec">
+    <img src="https://via.placeholder.com/80x80?text=FOTO+BEST+REC" alt="Mammy" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Mammy</h3>
+        <span class="item-price">18</span>
+      </div>
+      <span class="item-desc">[Matcha Latte]</span>
+    </div>
+  </div>
+   <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Deep Choc" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Deep Choc</h3>
+        <span class="item-price">18</span>
+      </div>
+      <span class="item-desc">[Chocolate]</span>
+    </div>
+  </div>
+   <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Schopea" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Schopea</h3>
+        <span class="item-price">25</span>
+      </div>
+      <span class="item-desc">[Peanut Chocolate]</span>
+    </div>
+  </div>
+   <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Creamberry" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Creamberry</h3>
+        <span class="item-price">23</span>
+      </div>
+      <span class="item-desc">[Berry Latte]</span>
+    </div>
+  </div>
+     <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Jandu" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Jandu</h3>
+        <span class="item-price">18</span>
+      </div>
+      <span class="item-desc">[Jahe Madu]</span>
+    </div>
+  </div>
+</div>
+
+<div id="refreshing" class="menu-section">
+  <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Threepi" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Threepi</h3>
+        <span class="item-price">15</span>
+      </div>
+      <span class="item-desc">[Tropical Tea]</span>
+    </div>
+  </div>
+    <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Teh Gelies" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Teh Gelies</h3>
+        <span class="item-price">10</span>
+      </div>
+      <span class="item-desc">[Jasmine Tea]</span>
+    </div>
+  </div>
+  <div class="menu-item best-rec">
+    <img src="https://via.placeholder.com/80x80?text=FOTO+BEST+REC" alt="Red Bloom" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Red Bloom</h3>
+        <span class="item-price">18</span>
+      </div>
+      <span class="item-desc">[Yakult Berry]</span>
+    </div>
+  </div>
+   <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Yagustea" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Yagustea</h3>
+        <span class="item-price">15</span>
+      </div>
+      <span class="item-desc">[Yakult Sugus Grape]</span>
+    </div>
+  </div>
+   <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Chenteal" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Chenteal</h3>
+        <span class="item-price">15</span>
+      </div>
+      <span class="item-desc">[Yakult Lychee Tea]</span>
+    </div>
+  </div>
+   <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Trustey" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Trustey</h3>
+        <span class="item-price">18</span>
+      </div>
+      <span class="item-desc">[Honey Yuzu]</span>
+    </div>
+  </div>
+   <div class="menu-item">
+    <img src="https://via.placeholder.com/80x80?text=Foto+Menu" alt="Rindu" class="item-img">
+    <div class="item-details">
+      <div class="item-header">
+        <h3 class="item-name">Rindu</h3>
+        <span class="item-price">15</span>
+      </div>
+      <span class="item-desc">[Winter Melon]</span>
+    </div>
+  </div>
+</div>
+
+<script>
+function openTab(evt, tabName) {
+  var i, content, buttons;
+  // Sembunyikan semua konten menu
+  content = document.getElementsByClassName("menu-section");
+  for (i = 0; i < content.length; i++) {
+    content[i].classList.remove("active");
+  }
+  // Hapus status 'active' dari semua tombol
+  buttons = document.getElementsByClassName("tab-btn");
+  for (i = 0; i < buttons.length; i++) {
+    buttons[i].classList.remove("active");
+  }
+  // Tampilkan konten tab yang dipilih dan aktifkan tombolnya
+  document.getElementById(tabName).classList.add("active");
+  evt.currentTarget.classList.add("active");
+}
+</script>
+
+</body>
+</html>
