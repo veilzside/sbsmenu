@@ -15,11 +15,11 @@
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0; padding: 15px; color: var(--sbs-black);
-            /* Background dengan gradasi dan garis diagonal rapat */
             background: 
                 repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px),
                 radial-gradient(circle at center, var(--sbs-yellow) 0%, #e6bc00 100%);
             background-attachment: fixed;
+            overflow-x: hidden; /* Mencegah scroll horizontal body */
         }
 
         /* Top Bar: Logo & Header */
@@ -34,22 +34,16 @@
         }
         .logo-container img { width: 85%; height: auto; }
         
-        .header-title { flex: 1; }
         .header-title h1 {
-            font-family: 'Bebas Neue', cursive; font-size: 55px; margin: 0; line-height: 0.8;
+            font-family: 'Bebas Neue', cursive; font-size: 60px; margin: 0; line-height: 0.8;
             letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff;
         }
-        .header-title h2 {
-            font-family: 'Montserrat', sans-serif; font-size: 22px; margin: 0;
-            text-transform: uppercase; background: var(--sbs-black); color: #fff;
-            display: inline-block; padding: 2px 10px; margin-top: 5px;
-        }
 
-        /* Tabs Style Kapsul Tebal */
+        /* Tabs Style Kapsul */
         .tabs {
             display: flex; overflow-x: auto; gap: 12px; padding: 10px 5px;
             margin-bottom: 25px; scrollbar-width: none; position: sticky; top: 0;
-            z-index: 100;
+            z-index: 100; background: inherit;
         }
         .tabs::-webkit-scrollbar { display: none; }
         .tab-btn {
@@ -64,7 +58,7 @@
         }
 
         /* Menu Item Cards */
-        .content { display: none; animation: fadeIn 0.4s ease-out; }
+        .content { display: none; animation: fadeIn 0.4s ease-out; width: 100%; }
         .content.active { display: block; }
 
         .menu-item {
@@ -82,7 +76,6 @@
         .item-name { font-family: 'Montserrat', sans-serif; font-size: 18px; text-transform: uppercase; margin: 0; line-height: 1.1; }
         .item-desc { font-size: 11px; color: #555; font-style: italic; display: block; margin-top: 3px; }
 
-        /* Lingkaran Harga */
         .item-price {
             background: var(--sbs-black); color: #fff; width: 45px; height: 45px; min-width: 45px;
             display: flex; align-items: center; justify-content: center; border-radius: 50%;
@@ -90,15 +83,14 @@
             border: 2px solid #fff; box-shadow: 0 0 0 3px var(--sbs-black);
         }
 
-        /* Best Recommendation (Orange) */
         .best-rec { border-color: var(--sbs-orange); box-shadow: 7px 7px 0px var(--sbs-orange); }
         .best-rec .item-name { color: var(--sbs-orange); }
         .best-rec .item-price { background: var(--sbs-orange); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
     </style>
 </head>
-<body>
+<body id="swipe-area">
 
 <div class="top-bar">
     <div class="logo-container">
@@ -106,33 +98,29 @@
     </div>
     <div class="header-title">
         <h1>OUR MENU</h1>
-        <h2>Authentic Taste</h2>
     </div>
 </div>
 
-<div class="tabs">
-    <button class="tab-btn active" onclick="openT(event, 'makan')">Makan Berat</button>
-    <button class="tab-btn" onclick="openT(event, 'cemil')">Cemal-Cemil</button>
-    <button class="tab-btn" onclick="openT(event, 'black')">Black</button>
-    <button class="tab-btn" onclick="openT(event, 'white')">White</button>
-    <button class="tab-btn" onclick="openT(event, 'comfy')">Comfy</button>
-    <button class="tab-btn" onclick="openT(event, 'refresh')">Refreshing</button>
+<div class="tabs" id="tab-bar">
+    <button class="tab-btn active" data-target="makan">Makan Berat</button>
+    <button class="tab-btn" data-target="cemil">Cemal-Cemil</button>
+    <button class="tab-btn" data-target="black">Black</button>
+    <button class="tab-btn" data-target="white">White</button>
+    <button class="tab-btn" data-target="comfy">Comfy</button>
+    <button class="tab-btn" data-target="refresh">Refreshing</button>
 </div>
 
 <div id="makan" class="content active">
     <div class="menu-item"><div class="item-img-box"><img src="img/kalter.jpg"></div><div class="item-info"><h3 class="item-name">Kalter</h3><span class="item-desc">[Nasi Tahu Telor]</span></div><div class="item-price">20</div></div>
     <div class="menu-item best-rec"><div class="item-img-box"><img src="img/mangkukoe.jpg"></div><div class="item-info"><h3 class="item-name">Mangku Koe</h3><span class="item-desc">[Nasi Chicken Katsu Kari]</span></div><div class="item-price">28</div></div>
-    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Mangku Ayang</h3><span class="item-desc">[Nasi Ayam Siram]</span></div><div class="item-price">25</div></div>
 </div>
 
 <div id="cemil" class="content">
-    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Paket Sambat</h3><span class="item-desc">[Aneka Camilan]</span></div><div class="item-price">35</div></div>
     <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Tahu Julit</h3><span class="item-desc">[Tahu Cabe Garam]</span></div><div class="item-price">19</div></div>
 </div>
 
 <div id="black" class="content">
     <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Fressa</h3><span class="item-desc">[Berry Soda Coffee]</span></div><div class="item-price">25</div></div>
-    <div class="menu-item"><div class="item-info"><h3 class="item-name">Americano</h3><span class="item-desc">[Americano]</span></div><div class="item-price">16</div></div>
 </div>
 
 <div id="white" class="content">
@@ -148,14 +136,67 @@
 </div>
 
 <script>
-    function openT(e, n) {
-        var i, c, t;
-        c = document.getElementsByClassName("content");
-        for (i = 0; i < c.length; i++) c[i].classList.remove("active");
-        t = document.getElementsByClassName("tab-btn");
-        for (i = 0; i < t.length; i++) t[i].classList.remove("active");
-        document.getElementById(n).classList.add("active");
-        e.currentTarget.classList.add("active");
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.content');
+    const tabList = ['makan', 'cemil', 'black', 'white', 'comfy', 'refresh'];
+    let currentIndex = 0;
+
+    // Fungsi pindah tab
+    function switchTab(index) {
+        if (index < 0 || index >= tabList.length) return;
+        
+        currentIndex = index;
+        const targetId = tabList[currentIndex];
+
+        contents.forEach(c => c.classList.remove('active'));
+        tabs.forEach(t => t.classList.remove('active'));
+
+        document.getElementById(targetId).classList.add('active');
+        const activeBtn = document.querySelector(`[data-target="${targetId}"]`);
+        activeBtn.classList.add('active');
+        
+        // Auto scroll tab bar agar tab yang aktif terlihat
+        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+
+    // Klik Tab
+    tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => switchTab(index));
+    });
+
+    // FITUR SWIPE
+    let touchstartX = 0;
+    let touchendX = 0;
+    let touchstartY = 0;
+    let touchendY = 0;
+
+    const area = document.getElementById('swipe-area');
+
+    area.addEventListener('touchstart', e => {
+        touchstartX = e.changedTouches[0].screenX;
+        touchstartY = e.changedTouches[0].screenY;
+    }, false);
+
+    area.addEventListener('touchend', e => {
+        touchendX = e.changedTouches[0].screenX;
+        touchendY = e.changedTouches[0].screenY;
+        handleGesture();
+    }, false);
+
+    function handleGesture() {
+        const diffX = touchendX - touchstartX;
+        const diffY = touchendY - touchstartY;
+
+        // Pastikan gerakan lebih dominan horizontal daripada vertikal (scroll)
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+            if (diffX < 0) {
+                // Swipe Kiri -> Tab Berikutnya
+                switchTab(currentIndex + 1);
+            } else {
+                // Swipe Kanan -> Tab Sebelumnya
+                switchTab(currentIndex - 1);
+            }
+        }
     }
 </script>
 </body>
