@@ -20,10 +20,6 @@
                 repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px),
                 radial-gradient(circle at center, var(--sbs-yellow) 0%, #e6bc00 100%);
             background-attachment: fixed;
-            /* PENTING: Mencegah browser melakukan aksi default saat swipe horizontal */
-            touch-action: pan-y; 
-            overflow-x: hidden;
-            min-height: 100vh;
         }
 
         /* Top Bar: Logo & Header */
@@ -54,10 +50,6 @@
             display: flex; overflow-x: auto; gap: 12px; padding: 10px 5px;
             margin-bottom: 25px; scrollbar-width: none; position: sticky; top: 0;
             z-index: 100;
-            /* Supaya saat scroll ke bawah, background tab tidak transparan */
-            background: rgba(255, 210, 0, 0.9); 
-            backdrop-filter: blur(5px);
-            border-radius: 0 0 15px 15px;
         }
         .tabs::-webkit-scrollbar { display: none; }
         .tab-btn {
@@ -72,7 +64,7 @@
         }
 
         /* Menu Item Cards */
-        .content { display: none; animation: slideEffect 0.3s ease-out; }
+        .content { display: none; animation: fadeIn 0.4s ease-out; }
         .content.active { display: block; }
 
         .menu-item {
@@ -103,11 +95,7 @@
         .best-rec .item-name { color: var(--sbs-orange); }
         .best-rec .item-price { background: var(--sbs-orange); }
 
-        /* Animasi Slide Halus */
-        @keyframes slideEffect { 
-            from { opacity: 0; transform: translateX(20px); } 
-            to { opacity: 1; transform: translateX(0); } 
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -123,8 +111,52 @@
 </div>
 
 <div class="tabs">
-    <button class="tab-btn active" onclick="jumpToTab(0)">Makan Berat</button>
-    <button class="tab-btn" onclick="jumpToTab(1)">Cemal-Cemil</button>
-    <button class="tab-btn" onclick="jumpToTab(2)">Black</button>
-    <button class="tab-btn" onclick="jumpToTab(3)">White</button>
-    <button class="tab-btn" onclick="jumpToTab(4)">Comfy</button>
+    <button class="tab-btn active" onclick="openT(event, 'makan')">Makan Berat</button>
+    <button class="tab-btn" onclick="openT(event, 'cemil')">Cemal-Cemil</button>
+    <button class="tab-btn" onclick="openT(event, 'black')">Black</button>
+    <button class="tab-btn" onclick="openT(event, 'white')">White</button>
+    <button class="tab-btn" onclick="openT(event, 'comfy')">Comfy</button>
+    <button class="tab-btn" onclick="openT(event, 'refresh')">Refreshing</button>
+</div>
+
+<div id="makan" class="content active">
+    <div class="menu-item"><div class="item-img-box"><img src="img/kalter.jpg"></div><div class="item-info"><h3 class="item-name">Kalter</h3><span class="item-desc">[Nasi Tahu Telor]</span></div><div class="item-price">20</div></div>
+    <div class="menu-item best-rec"><div class="item-img-box"><img src="img/mangkukoe.jpg"></div><div class="item-info"><h3 class="item-name">Mangku Koe</h3><span class="item-desc">[Nasi Chicken Katsu Kari]</span></div><div class="item-price">28</div></div>
+    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Mangku Ayang</h3><span class="item-desc">[Nasi Ayam Siram]</span></div><div class="item-price">25</div></div>
+</div>
+
+<div id="cemil" class="content">
+    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Paket Sambat</h3><span class="item-desc">[Aneka Camilan]</span></div><div class="item-price">35</div></div>
+    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Tahu Julit</h3><span class="item-desc">[Tahu Cabe Garam]</span></div><div class="item-price">19</div></div>
+</div>
+
+<div id="black" class="content">
+    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Fressa</h3><span class="item-desc">[Berry Soda Coffee]</span></div><div class="item-price">25</div></div>
+    <div class="menu-item"><div class="item-info"><h3 class="item-name">Americano</h3><span class="item-desc">[Americano]</span></div><div class="item-price">16</div></div>
+</div>
+
+<div id="white" class="content">
+    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Penkopi</h3><span class="item-desc">[Creamy Coffee]</span></div><div class="item-price">23</div></div>
+</div>
+
+<div id="comfy" class="content">
+    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Mammy</h3><span class="item-desc">[Matcha Latte]</span></div><div class="item-price">18</div></div>
+</div>
+
+<div id="refresh" class="content">
+    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Red Bloom</h3><span class="item-desc">[Yakult Berry]</span></div><div class="item-price">18</div></div>
+</div>
+
+<script>
+    function openT(e, n) {
+        var i, c, t;
+        c = document.getElementsByClassName("content");
+        for (i = 0; i < c.length; i++) c[i].classList.remove("active");
+        t = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < t.length; i++) t[i].classList.remove("active");
+        document.getElementById(n).classList.add("active");
+        e.currentTarget.classList.add("active");
+    }
+</script>
+</body>
+</html>
