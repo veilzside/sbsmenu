@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBS Online Menu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Poppins:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sbs-yellow: #FFD200;
+            --sbs-black: #1A1A1A;
+            --sbs-orange: #FF6600;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--sbs-yellow);
+            /* Motif background halus untuk tekstur */
+            background-image: radial-gradient(#e3bb00 0.5px, transparent 0.5px);
+            background-size: 10px 10px;
+            margin: 0;
+            padding: 15px;
+            color: var(--sbs-black);
+        }
+
+        .header {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .header h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 32px;
+            text-transform: uppercase;
+            margin: 0;
+            line-height: 0.9;
+        }
+
+        /* Navigasi Tab Gaya Kapsul */
+        .tabs {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 10px 5px;
+            margin-bottom: 25px;
+            scrollbar-width: none;
+            position: sticky;
+            top: 0;
+            background: var(--sbs-yellow);
+            z-index: 100;
+        }
+
+        .tabs::-webkit-scrollbar { display: none; }
+
+        .tab-btn {
+            background: #fff;
+            border: 2px solid var(--sbs-black);
+            padding: 8px 20px;
+            border-radius: 50px; /* Bentuk Kapsul */
+            font-family: 'Montserrat', sans-serif;
+            font-size: 12px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px var(--sbs-black);
+            transition: 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--sbs-black);
+            color: #fff;
+            transform: translateY(2px);
+            box-shadow: 1px 1px 0px var(--sbs-black);
+        }
+
+        /* Card Menu */
+        .content { display: none; animation: fadeIn 0.4s; }
+        .content.active { display: block; }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            margin-bottom: 18px;
+            padding: 12px;
+            border-radius: 15px;
+            border: 3px solid var(--sbs-black);
+            box-shadow: 6px 6px 0px var(--sbs-black);
+        }
+
+        /* Ornamen Foto */
+        .item-img-container {
+            width: 90px;
+            height: 90px;
+            min-width: 90px;
+            border: 2px solid var(--sbs-black);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-right: 15px;
+            background: #ddd;
+        }
+
+        .item-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .item-info { flex: 1; }
+
+        .item-name {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            text-transform: uppercase;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .item-desc {
+            font-size: 11px;
+            color: #555;
+            font-style: italic;
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* Harga dengan Lingkaran Hitam */
+        .item-price {
+            background: var(--sbs-black);
+            color: #fff;
+            width: 45px;
+            height: 45px;
+            min-width: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%; /* Lingkaran Sempurna */
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            margin-left: 10px;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px var(--sbs-black);
+        }
+
+        /* Warna Best Recommendation */
+        .best-rec { border-color: var(--sbs-orange); }
+        .best-rec .item-name { color: var(--sbs-orange); }
+        .best-rec .item-price { background: var(--sbs-orange); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>OUR MENU</h1>
+</div>
+
+<div class="tabs">
+    <button class="tab-btn active" onclick="openT(event, 'makan')">Makan Berat</button>
+    <button class="tab-btn" onclick="openT(event, 'cemil')">Cemal-Cemil</button>
+    <button class="tab-btn" onclick="openT(event, 'black')">Black</button>
+    <button class="tab-btn" onclick="openT(event, 'white')">White</button>
+    <button class="tab-btn" onclick="openT(event, 'comfy')">Comfy</button>
+    <button class="tab-btn" onclick="openT(event, 'refresh')">Refreshing</button>
+</div>
+
+<div id="makan" class="content active">
+    <div class="menu-item">
+        <div class="item-img-container">
+            <img src="img/kalter.jpg" alt="Kalter">
+        </div>
+        <div class="item-info">
+            <h3 class="item-name">Kalter</h3>
+            <span class="item-desc">[Nasi Tahu Telor]</span>
+        </div>
+        <div class="item-price">20</div>
+    </div>
+
+    <div class="menu-item best-rec">
+        <div class="item-img-container">
+            <img src="img/mangkukoe.jpg" alt="Mangku Koe">
+        </div>
+        <div class="item-info">
+            <h3 class="item-name">Mangku Koe</h3>
+            <span class="item-desc">[Nasi Chicken Katsu Kari]</span>
+        </div>
+        <div class="item-price">28</div>
+    </div>
+</div>
+
+<script>
+    function openT(e, n) {
+        var i, c, t;
+        c = document.getElementsByClassName("content");
+        for (i = 0; i < c.length; i++) c[i].classList.remove("active");
+        t = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < t.length; i++) t[i].classList.remove("active");
+        document.getElementById(n).classList.add("active");
+        e.currentTarget.classList.add("active");
+    }
+</script>
+</body>
+</html>
