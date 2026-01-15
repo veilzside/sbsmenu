@@ -42,7 +42,7 @@
             letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff;
         }
 
-        /* Tabs Container */
+        /* Tabs Style */
         .tabs {
             display: flex; overflow-x: auto; gap: 10px; 
             padding: 12px; 
@@ -74,45 +74,100 @@
             touch-action: pan-y;
         }
 
-        .content { display: none; animation: fadeIn 0.4s ease-out; }
-        .content.active { display: block; }
-
-        /* Style Menu Biasa */
-        .menu-item {
-            display: flex; align-items: center; background: #fff;
-            margin-bottom: 20px; padding: 14px; border-radius: 18px;
-            border: 3px solid var(--sbs-black); box-shadow: 7px 7px 0px var(--sbs-black);
+        /* Grid Layout untuk Card Besar */
+        .content { 
+            display: none; 
+            animation: fadeIn 0.4s ease-out;
+            /* Grid satu kolom agar foto besar maksimal di HP */
+            grid-template-columns: 1fr; 
+            gap: 30px;
         }
-        .item-img-box {
-            width: 90px; height: 90px; min-width: 90px; border: 3.5px solid var(--sbs-black);
-            border-radius: 12px; overflow: hidden; margin-right: 15px; background: #eee;
-        }
-        .item-img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .content.active { display: grid; }
 
-        .item-info { flex: 1; }
-        .item-name { font-family: 'Montserrat', sans-serif; font-size: 18px; text-transform: uppercase; margin: 0; line-height: 1.1; }
-        .item-desc { font-size: 11px; color: #555; font-style: italic; display: block; margin-top: 3px; }
-
-        .item-price {
-            background: var(--sbs-black); color: #fff; width: 45px; height: 45px; min-width: 45px;
-            display: flex; align-items: center; justify-content: center; border-radius: 50%;
-            font-family: 'Montserrat', sans-serif; font-size: 15px; margin-left: 10px;
-            border: 2px solid #fff; box-shadow: 0 0 0 3px var(--sbs-black);
+        /* --- NEW CARD STYLE (BIG PHOTO) --- */
+        .menu-card {
+            background: #fff;
+            border: 3px solid var(--sbs-black);
+            border-radius: 25px; /* Rounded besar */
+            overflow: hidden;
+            box-shadow: 10px 10px 0px var(--sbs-black); /* Shadow tebal */
+            position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Best Recommendation Style */
-        .best-rec { border-color: var(--sbs-orange); box-shadow: 7px 7px 0px var(--sbs-orange); }
+        /* Container Foto Besar */
+        .card-img-box {
+            width: 100%;
+            height: 280px; /* Tinggi foto fixed agar seragam & besar */
+            position: relative;
+            border-bottom: 3px solid var(--sbs-black);
+            background: #eee;
+        }
+        .card-img-box img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+
+        /* Sticker Harga Mengambang */
+        .price-sticker {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background: var(--sbs-yellow);
+            color: var(--sbs-black);
+            font-family: 'Bebas Neue', cursive;
+            font-size: 32px;
+            padding: 2px 15px 0px 15px;
+            border: 2px solid var(--sbs-black);
+            box-shadow: 4px 4px 0px var(--sbs-black);
+            transform: rotate(-3deg); /* Miring sedikit biar stylish */
+            z-index: 10;
+        }
+
+        /* Area Teks di Bawah Foto */
+        .card-info {
+            padding: 15px 20px;
+            position: relative;
+        }
+        
+        .item-name { 
+            font-family: 'Montserrat', sans-serif; 
+            font-size: 24px; /* Judul lebih besar */
+            text-transform: uppercase; 
+            margin: 0; 
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+        
+        .item-desc { 
+            font-size: 13px; 
+            color: #555; 
+            font-style: italic; 
+            display: block; 
+            font-weight: 500;
+        }
+
+        /* Best Recommendation Highlight */
+        .best-rec { 
+            border-color: var(--sbs-orange); 
+            box-shadow: 10px 10px 0px var(--sbs-orange); 
+        }
+        .best-rec .card-img-box { border-bottom-color: var(--sbs-orange); }
         .best-rec .item-name { color: var(--sbs-orange); }
-        .best-rec .item-price { background: var(--sbs-orange); }
+        .best-rec .price-sticker { 
+            background: var(--sbs-orange); 
+            color: #fff; 
+            border-color: var(--sbs-black); 
+        }
 
-        /* --- STYLE KHUSUS ALCS (Grouped Card) --- */
+        /* --- STYLE KHUSUS ALCS (Tetap List) --- */
         .alcs-card {
             background: #fff;
             border: 3px solid var(--sbs-black);
-            box-shadow: 7px 7px 0px var(--sbs-black);
-            border-radius: 18px;
+            box-shadow: 8px 8px 0px var(--sbs-black);
+            border-radius: 20px;
             padding: 20px;
-            margin-bottom: 25px;
+            margin-bottom: 0; /* Margin dihandle oleh Grid gap */
             position: relative;
         }
         .alcs-brand {
@@ -138,7 +193,7 @@
         .alcs-variant { font-weight: 500; color: #333; }
         .alcs-price-tag { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 18px; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -164,64 +219,211 @@
 
 <div id="swipe-area">
     <div id="makan" class="content active">
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Kalter"></div><div class="item-info"><h3 class="item-name">Kalter</h3><span class="item-desc">[Nasi Tahu Telor]</span></div><div class="item-price">20</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Obama"></div><div class="item-info"><h3 class="item-name">Obama</h3><span class="item-desc">[Nasi Ayam Geprek Sambal Matah]</span></div><div class="item-price">25</div></div>
-        <div class="menu-item best-rec"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Mangku Koe"></div><div class="item-info"><h3 class="item-name">Mangku Koe</h3><span class="item-desc">[Nasi Chicken Katsu Kari]</span></div><div class="item-price">28</div></div>
-        <div class="menu-item best-rec"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Mangku Ayang"></div><div class="item-info"><h3 class="item-name">Mangku Ayang</h3><span class="item-desc">[Nasi Ayam Siram]</span></div><div class="item-price">25</div></div>
-        <div class="menu-item best-rec"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Barudak"></div><div class="item-info"><h3 class="item-name">Barudak</h3><span class="item-desc">[Bakmie Katsu Sambal Matah]</span></div><div class="item-price">20</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Sekena Gomes"></div><div class="item-info"><h3 class="item-name">Sekena Gomes</h3><span class="item-desc">[Nasgor Merah + Katsu + Sambal Matah]</span></div><div class="item-price">22</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Sekena Goput"></div><div class="item-info"><h3 class="item-name">Sekena Goput</h3><span class="item-desc">[Nasgor Putih + Katsu + Sambal Matah]</span></div><div class="item-price">22</div></div>
-        <div class="menu-item best-rec"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Sekena Keren"></div><div class="item-info"><h3 class="item-name">Sekena Keren</h3><span class="item-desc">[Nasgor Kari + Katsu + Sambal Matah]</span></div><div class="item-price">25</div></div>
+        <div class="menu-card">
+            <div class="card-img-box">
+                <img src="https://via.placeholder.com/400x300?text=Kalter" alt="Kalter">
+                <div class="price-sticker">20K</div>
+            </div>
+            <div class="card-info"><h3 class="item-name">Kalter</h3><span class="item-desc">[Nasi Tahu Telor]</span></div>
+        </div>
+
+        <div class="menu-card">
+            <div class="card-img-box">
+                <img src="https://via.placeholder.com/400x300?text=Obama" alt="Obama">
+                <div class="price-sticker">25K</div>
+            </div>
+            <div class="card-info"><h3 class="item-name">Obama</h3><span class="item-desc">[Nasi Ayam Geprek Sambal Matah]</span></div>
+        </div>
+
+        <div class="menu-card best-rec">
+            <div class="card-img-box">
+                <img src="https://via.placeholder.com/400x300?text=Mangku+Koe" alt="Mangku Koe">
+                <div class="price-sticker">28K</div>
+            </div>
+            <div class="card-info"><h3 class="item-name">Mangku Koe</h3><span class="item-desc">[Nasi Chicken Katsu Kari]</span></div>
+        </div>
+
+        <div class="menu-card best-rec">
+            <div class="card-img-box">
+                <img src="https://via.placeholder.com/400x300?text=Mangku+Ayang" alt="Mangku Ayang">
+                <div class="price-sticker">25K</div>
+            </div>
+            <div class="card-info"><h3 class="item-name">Mangku Ayang</h3><span class="item-desc">[Nasi Ayam Siram]</span></div>
+        </div>
+
+        <div class="menu-card best-rec">
+            <div class="card-img-box">
+                <img src="https://via.placeholder.com/400x300?text=Barudak" alt="Barudak">
+                <div class="price-sticker">20K</div>
+            </div>
+            <div class="card-info"><h3 class="item-name">Barudak</h3><span class="item-desc">[Bakmie Katsu Sambal Matah]</span></div>
+        </div>
+
+        <div class="menu-card">
+            <div class="card-img-box">
+                <img src="https://via.placeholder.com/400x300?text=Sekena+Gomes" alt="Sekena Gomes">
+                <div class="price-sticker">22K</div>
+            </div>
+            <div class="card-info"><h3 class="item-name">Sekena Gomes</h3><span class="item-desc">[Nasgor Merah + Katsu + Sambal Matah]</span></div>
+        </div>
+
+        <div class="menu-card">
+            <div class="card-img-box">
+                <img src="https://via.placeholder.com/400x300?text=Sekena+Goput" alt="Sekena Goput">
+                <div class="price-sticker">22K</div>
+            </div>
+            <div class="card-info"><h3 class="item-name">Sekena Goput</h3><span class="item-desc">[Nasgor Putih + Katsu + Sambal Matah]</span></div>
+        </div>
+
+        <div class="menu-card best-rec">
+            <div class="card-img-box">
+                <img src="https://via.placeholder.com/400x300?text=Sekena+Keren" alt="Sekena Keren">
+                <div class="price-sticker">25K</div>
+            </div>
+            <div class="card-info"><h3 class="item-name">Sekena Keren</h3><span class="item-desc">[Nasgor Kari + Katsu + Sambal Matah]</span></div>
+        </div>
     </div>
 
     <div id="cemil" class="content">
-        <div class="menu-item best-rec"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Paket Sambat"></div><div class="item-info"><h3 class="item-name">Paket Sambat</h3><span class="item-desc">[Aneka Camilan]</span></div><div class="item-price">35</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Cricket"></div><div class="item-info"><h3 class="item-name">Cricket</h3><span class="item-desc">[Chicken Fillet Lava]</span></div><div class="item-price">25</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Potato Freak"></div><div class="item-info"><h3 class="item-name">Potato Freak</h3><span class="item-desc">[French Fries]</span></div><div class="item-price">17</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Uhat Lawik"></div><div class="item-info"><h3 class="item-name">Uhat Lawik</h3><span class="item-desc">[Tahu Walik]</span></div><div class="item-price">17</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Gyozable"></div><div class="item-info"><h3 class="item-name">Gyozable</h3><span class="item-desc">[Gyoza]</span></div><div class="item-price">18</div></div>
-        <div class="menu-item best-rec"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Tahu Julit"></div><div class="item-info"><h3 class="item-name">Tahu Julit</h3><span class="item-desc">[Tahu Cabe Garam]</span></div><div class="item-price">19</div></div>
+        <div class="menu-card best-rec">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Paket+Sambat" alt="Paket Sambat"><div class="price-sticker">35K</div></div>
+            <div class="card-info"><h3 class="item-name">Paket Sambat</h3><span class="item-desc">[Aneka Camilan]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Cricket" alt="Cricket"><div class="price-sticker">25K</div></div>
+            <div class="card-info"><h3 class="item-name">Cricket</h3><span class="item-desc">[Chicken Fillet Lava]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Potato+Freak" alt="Potato Freak"><div class="price-sticker">17K</div></div>
+            <div class="card-info"><h3 class="item-name">Potato Freak</h3><span class="item-desc">[French Fries]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Uhat+Lawik" alt="Uhat Lawik"><div class="price-sticker">17K</div></div>
+            <div class="card-info"><h3 class="item-name">Uhat Lawik</h3><span class="item-desc">[Tahu Walik]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Gyozable" alt="Gyozable"><div class="price-sticker">18K</div></div>
+            <div class="card-info"><h3 class="item-name">Gyozable</h3><span class="item-desc">[Gyoza]</span></div>
+        </div>
+        <div class="menu-card best-rec">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Tahu+Julit" alt="Tahu Julit"><div class="price-sticker">19K</div></div>
+            <div class="card-info"><h3 class="item-name">Tahu Julit</h3><span class="item-desc">[Tahu Cabe Garam]</span></div>
+        </div>
     </div>
 
     <div id="black" class="content">
-        <div class="menu-item best-rec"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Fressa"></div><div class="item-info"><h3 class="item-name">Fressa</h3><span class="item-desc">[Berry Soda Coffee]</span></div><div class="item-price">25</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Americano"></div><div class="item-info"><h3 class="item-name">Americano</h3><span class="item-desc">[Americano]</span></div><div class="item-price">16</div></div>
-        <div class="menu-item best-rec"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Dark Freshly"></div><div class="item-info"><h3 class="item-name">Dark Freshly</h3><span class="item-desc">[Americano Lemon]</span></div><div class="item-price">19</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Darkberry"></div><div class="item-info"><h3 class="item-name">Darkberry</h3><span class="item-desc">[Americano Berry]</span></div><div class="item-price">19</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Tubruk Syari"></div><div class="item-info"><h3 class="item-name">Tubruk Syari</h3><span class="item-desc">[Kopi Tubruk]</span></div><div class="item-price">13</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Hanoi Tears"></div><div class="item-info"><h3 class="item-name">Hanoi Tears</h3><span class="item-desc">[Vietnam Drip]</span></div><div class="item-price">15</div></div>
+        <div class="menu-card best-rec">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Fressa" alt="Fressa"><div class="price-sticker">25K</div></div>
+            <div class="card-info"><h3 class="item-name">Fressa</h3><span class="item-desc">[Berry Soda Coffee]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Americano" alt="Americano"><div class="price-sticker">16K</div></div>
+            <div class="card-info"><h3 class="item-name">Americano</h3><span class="item-desc">[Americano]</span></div>
+        </div>
+        <div class="menu-card best-rec">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Dark+Freshly" alt="Dark Freshly"><div class="price-sticker">19K</div></div>
+            <div class="card-info"><h3 class="item-name">Dark Freshly</h3><span class="item-desc">[Americano Lemon]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Darkberry" alt="Darkberry"><div class="price-sticker">19K</div></div>
+            <div class="card-info"><h3 class="item-name">Darkberry</h3><span class="item-desc">[Americano Berry]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Tubruk+Syari" alt="Tubruk Syari"><div class="price-sticker">13K</div></div>
+            <div class="card-info"><h3 class="item-name">Tubruk Syari</h3><span class="item-desc">[Kopi Tubruk]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Hanoi+Tears" alt="Hanoi Tears"><div class="price-sticker">15K</div></div>
+            <div class="card-info"><h3 class="item-name">Hanoi Tears</h3><span class="item-desc">[Vietnam Drip]</span></div>
+        </div>
     </div>
 
     <div id="white" class="content">
-        <div class="menu-item best-rec"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Penkopi"></div><div class="item-info"><h3 class="item-name">Penkopi</h3><span class="item-desc">[Creamy Coffee]</span></div><div class="item-price">23</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Macch Favorito"></div><div class="item-info"><h3 class="item-name">Macch Favorito</h3><span class="item-desc">[Caramel Macchiato]</span></div><div class="item-price">20</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Specta"></div><div class="item-info"><h3 class="item-name">Specta</h3><span class="item-desc">[Peanut Coffee]</span></div><div class="item-price">25</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Comica"></div><div class="item-info"><h3 class="item-name">Comica</h3><span class="item-desc">[Hazelnut Coffee]</span></div><div class="item-price">22</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Rhumpee"></div><div class="item-info"><h3 class="item-name">Rhumpee</h3><span class="item-desc">[Rhum Coffee]</span></div><div class="item-price">20</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Crush"></div><div class="item-info"><h3 class="item-name">Crush</h3><span class="item-desc">[Rhum Regal Coffee]</span></div><div class="item-price">22</div></div>
+        <div class="menu-card best-rec">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Penkopi" alt="Penkopi"><div class="price-sticker">23K</div></div>
+            <div class="card-info"><h3 class="item-name">Penkopi</h3><span class="item-desc">[Creamy Coffee]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Macch+Favorito" alt="Macch Favorito"><div class="price-sticker">20K</div></div>
+            <div class="card-info"><h3 class="item-name">Macch Favorito</h3><span class="item-desc">[Caramel Macchiato]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Specta" alt="Specta"><div class="price-sticker">25K</div></div>
+            <div class="card-info"><h3 class="item-name">Specta</h3><span class="item-desc">[Peanut Coffee]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Comica" alt="Comica"><div class="price-sticker">22K</div></div>
+            <div class="card-info"><h3 class="item-name">Comica</h3><span class="item-desc">[Hazelnut Coffee]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Rhumpee" alt="Rhumpee"><div class="price-sticker">20K</div></div>
+            <div class="card-info"><h3 class="item-name">Rhumpee</h3><span class="item-desc">[Rhum Coffee]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Crush" alt="Crush"><div class="price-sticker">22K</div></div>
+            <div class="card-info"><h3 class="item-name">Crush</h3><span class="item-desc">[Rhum Regal Coffee]</span></div>
+        </div>
     </div>
 
     <div id="comfy" class="content">
-        <div class="menu-item best-rec"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Mammy"></div><div class="item-info"><h3 class="item-name">Mammy</h3><span class="item-desc">[Matcha Latte]</span></div><div class="item-price">18</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Deep Choc"></div><div class="item-info"><h3 class="item-name">Deep Choc</h3><span class="item-desc">[Chocolate]</span></div><div class="item-price">18</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Schopea"></div><div class="item-info"><h3 class="item-name">Schopea</h3><span class="item-desc">[Peanut Chocolate]</span></div><div class="item-price">25</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Creamberry"></div><div class="item-info"><h3 class="item-name">Creamberry</h3><span class="item-desc">[Berry Latte]</span></div><div class="item-price">23</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Jandu"></div><div class="item-info"><h3 class="item-name">Jandu</h3><span class="item-desc">[Jahe Madu]</span></div><div class="item-price">18</div></div>
+        <div class="menu-card best-rec">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Mammy" alt="Mammy"><div class="price-sticker">18K</div></div>
+            <div class="card-info"><h3 class="item-name">Mammy</h3><span class="item-desc">[Matcha Latte]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Deep+Choc" alt="Deep Choc"><div class="price-sticker">18K</div></div>
+            <div class="card-info"><h3 class="item-name">Deep Choc</h3><span class="item-desc">[Chocolate]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Schopea" alt="Schopea"><div class="price-sticker">25K</div></div>
+            <div class="card-info"><h3 class="item-name">Schopea</h3><span class="item-desc">[Peanut Chocolate]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Creamberry" alt="Creamberry"><div class="price-sticker">23K</div></div>
+            <div class="card-info"><h3 class="item-name">Creamberry</h3><span class="item-desc">[Berry Latte]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Jandu" alt="Jandu"><div class="price-sticker">18K</div></div>
+            <div class="card-info"><h3 class="item-name">Jandu</h3><span class="item-desc">[Jahe Madu]</span></div>
+        </div>
     </div>
 
     <div id="refresh" class="content">
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Threepi"></div><div class="item-info"><h3 class="item-name">Threepi</h3><span class="item-desc">[Tropical Tea]</span></div><div class="item-price">15</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Teh Gelies"></div><div class="item-info"><h3 class="item-name">Teh Gelies</h3><span class="item-desc">[Jasmine Tea]</span></div><div class="item-price">10</div></div>
-        <div class="menu-item best-rec"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Red Bloom"></div><div class="item-info"><h3 class="item-name">Red Bloom</h3><span class="item-desc">[Yakult Berry]</span></div><div class="item-price">18</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Yagustea"></div><div class="item-info"><h3 class="item-name">Yagustea</h3><span class="item-desc">[Yakult Sugus Grape]</span></div><div class="item-price">15</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Chenteal"></div><div class="item-info"><h3 class="item-name">Chenteal</h3><span class="item-desc">[Yakult Lychee Tea]</span></div><div class="item-price">15</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Trustey"></div><div class="item-info"><h3 class="item-name">Trustey</h3><span class="item-desc">[Honey Yuzu]</span></div><div class="item-price">18</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Rindu"></div><div class="item-info"><h3 class="item-name">Rindu</h3><span class="item-desc">[Winter Melon]</span></div><div class="item-price">15</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Literally Water"></div><div class="item-info"><h3 class="item-name">Literally Water</h3><span class="item-desc">[Air Mineral Cleo]</span></div><div class="item-price">5</div></div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Threepi" alt="Threepi"><div class="price-sticker">15K</div></div>
+            <div class="card-info"><h3 class="item-name">Threepi</h3><span class="item-desc">[Tropical Tea]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Teh+Gelies" alt="Teh Gelies"><div class="price-sticker">10K</div></div>
+            <div class="card-info"><h3 class="item-name">Teh Gelies</h3><span class="item-desc">[Jasmine Tea]</span></div>
+        </div>
+        <div class="menu-card best-rec">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Red+Bloom" alt="Red Bloom"><div class="price-sticker">18K</div></div>
+            <div class="card-info"><h3 class="item-name">Red Bloom</h3><span class="item-desc">[Yakult Berry]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Yagustea" alt="Yagustea"><div class="price-sticker">15K</div></div>
+            <div class="card-info"><h3 class="item-name">Yagustea</h3><span class="item-desc">[Yakult Sugus Grape]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Chenteal" alt="Chenteal"><div class="price-sticker">15K</div></div>
+            <div class="card-info"><h3 class="item-name">Chenteal</h3><span class="item-desc">[Yakult Lychee Tea]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Trustey" alt="Trustey"><div class="price-sticker">18K</div></div>
+            <div class="card-info"><h3 class="item-name">Trustey</h3><span class="item-desc">[Honey Yuzu]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Rindu" alt="Rindu"><div class="price-sticker">15K</div></div>
+            <div class="card-info"><h3 class="item-name">Rindu</h3><span class="item-desc">[Winter Melon]</span></div>
+        </div>
+        <div class="menu-card">
+            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Literally+Water" alt="Literally Water"><div class="price-sticker">5K</div></div>
+            <div class="card-info"><h3 class="item-name">Literally Water</h3><span class="item-desc">[Air Mineral Cleo]</span></div>
+        </div>
     </div>
 
     <div id="alcs" class="content">
-        
         <div class="alcs-card">
             <div class="alcs-brand">BINTANG</div>
             <div class="alcs-list">
@@ -230,7 +432,6 @@
                 <div class="alcs-row"><span class="alcs-variant">Large</span><span class="alcs-price-tag">50K</span></div>
             </div>
         </div>
-
         <div class="alcs-card">
             <div class="alcs-brand">ANKER</div>
             <div class="alcs-list">
@@ -238,7 +439,6 @@
                 <div class="alcs-row"><span class="alcs-variant">Pineapple</span><span class="alcs-price-tag">29K</span></div>
             </div>
         </div>
-
         <div class="alcs-card">
             <div class="alcs-brand">SMIRNOFF</div>
             <div class="alcs-list">
@@ -248,7 +448,6 @@
                 <div class="alcs-row"><span class="alcs-variant">Pink Lemonade</span><span class="alcs-price-tag">33K</span></div>
             </div>
         </div>
-
         <div class="alcs-card">
             <div class="alcs-brand">MIX MAX</div>
             <div class="alcs-list">
@@ -256,7 +455,6 @@
                 <div class="alcs-row"><span class="alcs-variant">Exotic Blue</span><span class="alcs-price-tag">34K</span></div>
             </div>
         </div>
-
         <div class="alcs-card">
             <div class="alcs-brand">ICELAND</div>
             <div class="alcs-list">
@@ -264,14 +462,12 @@
                 <div class="alcs-row"><span class="alcs-variant">Long Island</span><span class="alcs-price-tag">34K</span></div>
             </div>
         </div>
-
         <div class="alcs-card">
             <div class="alcs-brand">API</div>
             <div class="alcs-list">
                 <div class="alcs-row"><span class="alcs-variant">Anggur Hijau</span><span class="alcs-price-tag">106K</span></div>
             </div>
         </div>
-
     </div>
 </div>
 
