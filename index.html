@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SBS Online Menu</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Poppins:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <title>SBS Authentic Menu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@900&family=Poppins:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         :root {
             --sbs-yellow: #FFD200;
@@ -14,78 +14,101 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: var(--sbs-yellow);
-            /* Background titik-titik lebih rapat dan kontras */
-            background-image: radial-gradient(#cc9d00 1.5px, transparent 1.5px);
-            background-size: 8px 8px;
             margin: 0; padding: 15px; color: var(--sbs-black);
+            /* Background dengan gradasi dan garis diagonal rapat */
+            background: 
+                repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px),
+                radial-gradient(circle at center, var(--sbs-yellow) 0%, #e6bc00 100%);
+            background-attachment: fixed;
         }
 
-        .header { text-align: center; margin: 20px 0; }
-        .header h1 { font-family: 'Montserrat', sans-serif; font-size: 32px; text-transform: uppercase; margin: 0; }
+        /* Top Bar: Logo & Header */
+        .top-bar {
+            display: flex; align-items: center; justify-content: flex-start;
+            margin-bottom: 30px; gap: 15px;
+        }
+        .logo-container {
+            width: 70px; height: 70px; background: var(--sbs-black);
+            border-radius: 50%; border: 3px solid #fff; box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .logo-container img { width: 85%; height: auto; }
+        
+        .header-title { flex: 1; }
+        .header-title h1 {
+            font-family: 'Bebas Neue', cursive; font-size: 55px; margin: 0; line-height: 0.8;
+            letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff;
+        }
+        .header-title h2 {
+            font-family: 'Montserrat', sans-serif; font-size: 22px; margin: 0;
+            text-transform: uppercase; background: var(--sbs-black); color: #fff;
+            display: inline-block; padding: 2px 10px; margin-top: 5px;
+        }
 
-        /* Navigasi Tab Kapsul */
+        /* Tabs Style Kapsul Tebal */
         .tabs {
-            display: flex; overflow-x: auto; gap: 10px; padding: 10px 5px;
-            margin-bottom: 25px; scrollbar-width: none; position: sticky;
-            top: 0; background: var(--sbs-yellow); z-index: 100;
+            display: flex; overflow-x: auto; gap: 12px; padding: 10px 5px;
+            margin-bottom: 25px; scrollbar-width: none; position: sticky; top: 0;
+            z-index: 100;
         }
         .tabs::-webkit-scrollbar { display: none; }
-
         .tab-btn {
-            background: #fff; border: 2.5px solid var(--sbs-black);
-            padding: 8px 18px; border-radius: 50px;
-            font-family: 'Montserrat', sans-serif; font-size: 11px;
+            background: #fff; border: 3px solid var(--sbs-black); padding: 10px 22px;
+            border-radius: 50px; font-family: 'Montserrat', sans-serif; font-size: 11px;
             text-transform: uppercase; white-space: nowrap; cursor: pointer;
-            box-shadow: 4px 4px 0px var(--sbs-black); transition: 0.2s;
+            box-shadow: 5px 5px 0px var(--sbs-black); transition: 0.1s;
         }
         .tab-btn.active {
-            background: var(--sbs-black); color: #fff;
-            transform: translateY(2px); box-shadow: 1px 1px 0px var(--sbs-black);
+            background: var(--sbs-black); color: #fff; transform: translate(3px, 3px);
+            box-shadow: 0px 0px 0px var(--sbs-black);
         }
 
-        /* Card Menu */
-        .content { display: none; animation: fadeIn 0.4s; }
+        /* Menu Item Cards */
+        .content { display: none; animation: fadeIn 0.4s ease-out; }
         .content.active { display: block; }
 
         .menu-item {
             display: flex; align-items: center; background: #fff;
-            margin-bottom: 18px; padding: 12px; border-radius: 15px;
-            border: 3px solid var(--sbs-black); box-shadow: 6px 6px 0px var(--sbs-black);
+            margin-bottom: 20px; padding: 14px; border-radius: 18px;
+            border: 3px solid var(--sbs-black); box-shadow: 7px 7px 0px var(--sbs-black);
         }
-
-        .item-img-container {
-            width: 85px; height: 85px; min-width: 85px;
-            border: 2px solid var(--sbs-black); border-radius: 10px;
-            overflow: hidden; margin-right: 15px; background: #eee;
+        .item-img-box {
+            width: 90px; height: 90px; min-width: 90px; border: 3.5px solid var(--sbs-black);
+            border-radius: 12px; overflow: hidden; margin-right: 15px; background: #eee;
         }
-        .item-img-container img { width: 100%; height: 100%; object-fit: cover; }
+        .item-img-box img { width: 100%; height: 100%; object-fit: cover; }
 
         .item-info { flex: 1; }
-        .item-name { font-family: 'Montserrat', sans-serif; font-size: 17px; text-transform: uppercase; margin: 0; line-height: 1.1; }
-        .item-desc { font-size: 10px; color: #555; font-style: italic; display: block; margin-top: 2px; }
+        .item-name { font-family: 'Montserrat', sans-serif; font-size: 18px; text-transform: uppercase; margin: 0; line-height: 1.1; }
+        .item-desc { font-size: 11px; color: #555; font-style: italic; display: block; margin-top: 3px; }
 
-        /* Ornamen Harga Lingkaran */
+        /* Lingkaran Harga */
         .item-price {
-            background: var(--sbs-black); color: #fff;
-            width: 42px; height: 42px; min-width: 42px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 50%; font-family: 'Montserrat', sans-serif;
-            font-size: 16px; margin-left: 10px; border: 2px solid #fff;
-            box-shadow: 0 0 0 2px var(--sbs-black);
+            background: var(--sbs-black); color: #fff; width: 45px; height: 45px; min-width: 45px;
+            display: flex; align-items: center; justify-content: center; border-radius: 50%;
+            font-family: 'Montserrat', sans-serif; font-size: 18px; margin-left: 10px;
+            border: 2px solid #fff; box-shadow: 0 0 0 3px var(--sbs-black);
         }
 
-        /* Best Recommendation Style */
-        .best-rec { border-color: var(--sbs-orange); }
+        /* Best Recommendation (Orange) */
+        .best-rec { border-color: var(--sbs-orange); box-shadow: 7px 7px 0px var(--sbs-orange); }
         .best-rec .item-name { color: var(--sbs-orange); }
         .best-rec .item-price { background: var(--sbs-orange); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
 
-<div class="header"><h1>OUR MENU</h1></div>
+<div class="top-bar">
+    <div class="logo-container">
+        <img src="img/logo.png" alt="SBS Logo">
+    </div>
+    <div class="header-title">
+        <h1>OUR MENU</h1>
+        <h2>Authentic Taste</h2>
+    </div>
+</div>
 
 <div class="tabs">
     <button class="tab-btn active" onclick="openT(event, 'makan')">Makan Berat</button>
@@ -97,128 +120,31 @@
 </div>
 
 <div id="makan" class="content active">
-    <div class="menu-item">
-        <div class="item-img-container"><img src="img/kalter.jpg" alt="Kalter"></div>
-        <div class="item-info"><h3 class="item-name">Kalter</h3><span class="item-desc">[Nasi Tahu Telor]</span></div>
-        <div class="item-price">20</div>
-    </div>
-    <div class="menu-item">
-        <div class="item-img-container"><img src="img/obama.jpg" alt="Obama"></div>
-        <div class="item-info"><h3 class="item-name">Obama</h3><span class="item-desc">[Nasi Ayam Geprek Sambal Matah]</span></div>
-        <div class="item-price">25</div>
-    </div>
-    <div class="menu-item best-rec">
-        <div class="item-img-container"><img src="img/mangkukoe.jpg" alt="Mangku Koe"></div>
-        <div class="item-info"><h3 class="item-name">Mangku Koe</h3><span class="item-desc">[Nasi Chicken Katsu Kari]</span></div>
-        <div class="item-price">28</div>
-    </div>
-    <div class="menu-item best-rec">
-        <div class="item-img-container"><img src="img/mangkuayang.jpg" alt="Mangku Ayang"></div>
-        <div class="item-info"><h3 class="item-name">Mangku Ayang</h3><span class="item-desc">[Nasi Ayam Siram]</span></div>
-        <div class="item-price">25</div>
-    </div>
-    <div class="menu-item best-rec">
-        <div class="item-img-container"><img src="img/barudak.jpg" alt="Barudak"></div>
-        <div class="item-info"><h3 class="item-name">Barudak</h3><span class="item-desc">[Bakmie Katsu Sambal Matah]</span></div>
-        <div class="item-price">20</div>
-    </div>
-    <div class="menu-item">
-        <div class="item-img-container"><img src="img/sekenagomes.jpg" alt="Sekena Gomes"></div>
-        <div class="item-info"><h3 class="item-name">Sekena Gomes</h3><span class="item-desc">[Nasgor Merah + Katsu + S. Matah]</span></div>
-        <div class="item-price">22</div>
-    </div>
-    <div class="menu-item">
-        <div class="item-img-container"><img src="img/sekenagoput.jpg" alt="Sekena Goput"></div>
-        <div class="item-info"><h3 class="item-name">Sekena Goput</h3><span class="item-desc">[Nasgor Putih + Katsu + S. Matah]</span></div>
-        <div class="item-price">22</div>
-    </div>
-    <div class="menu-item best-rec">
-        <div class="item-img-container"><img src="img/sekenakeren.jpg" alt="Sekena Keren"></div>
-        <div class="item-info"><h3 class="item-name">Sekena Keren</h3><span class="item-desc">[Nasgor Kari + Katsu + S. Matah]</span></div>
-        <div class="item-price">25</div>
-    </div>
+    <div class="menu-item"><div class="item-img-box"><img src="img/kalter.jpg"></div><div class="item-info"><h3 class="item-name">Kalter</h3><span class="item-desc">[Nasi Tahu Telor]</span></div><div class="item-price">20</div></div>
+    <div class="menu-item best-rec"><div class="item-img-box"><img src="img/mangkukoe.jpg"></div><div class="item-info"><h3 class="item-name">Mangku Koe</h3><span class="item-desc">[Nasi Chicken Katsu Kari]</span></div><div class="item-price">28</div></div>
+    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Mangku Ayang</h3><span class="item-desc">[Nasi Ayam Siram]</span></div><div class="item-price">25</div></div>
 </div>
 
 <div id="cemil" class="content">
-    <div class="menu-item best-rec">
-        <div class="item-img-container"><img src="img/paketsambat.jpg" alt="Paket Sambat"></div>
-        <div class="item-info"><h3 class="item-name">Paket Sambat</h3><span class="item-desc">[Aneka Camilan]</span></div>
-        <div class="item-price">35</div>
-    </div>
-    <div class="menu-item">
-        <div class="item-img-container"><img src="img/cricket.jpg" alt="Cricket"></div>
-        <div class="item-info"><h3 class="item-name">Cricket</h3><span class="item-desc">[Chicken Fillet Lava]</span></div>
-        <div class="item-price">25</div>
-    </div>
-    <div class="menu-item">
-        <div class="item-img-container"><img src="img/potatofreak.jpg" alt="Potato Freak"></div>
-        <div class="item-info"><h3 class="item-name">Potato Freak</h3><span class="item-desc">[French Fries]</span></div>
-        <div class="item-price">17</div>
-    </div>
-    <div class="menu-item">
-        <div class="item-img-container"><img src="img/uhatlawik.jpg" alt="Uhat Lawik"></div>
-        <div class="item-info"><h3 class="item-name">Uhat Lawik</h3><span class="item-desc">[Tahu Walik]</span></div>
-        <div class="item-price">17</div>
-    </div>
-    <div class="menu-item">
-        <div class="item-img-container"><img src="img/gyozable.jpg" alt="Gyozable"></div>
-        <div class="item-info"><h3 class="item-name">Gyozable</h3><span class="item-desc">[Gyoza]</span></div>
-        <div class="item-price">18</div>
-    </div>
-    <div class="menu-item best-rec">
-        <div class="item-img-container"><img src="img/tahujulit.jpg" alt="Tahu Julit"></div>
-        <div class="item-info"><h3 class="item-name">Tahu Julit</h3><span class="item-desc">[Tahu Cabe Garam]</span></div>
-        <div class="item-price">19</div>
-    </div>
+    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Paket Sambat</h3><span class="item-desc">[Aneka Camilan]</span></div><div class="item-price">35</div></div>
+    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Tahu Julit</h3><span class="item-desc">[Tahu Cabe Garam]</span></div><div class="item-price">19</div></div>
 </div>
 
 <div id="black" class="content">
-    <div class="menu-item best-rec">
-        <div class="item-img-container"><img src="img/fressa.jpg" alt="Fressa"></div>
-        <div class="item-info"><h3 class="item-name">Fressa</h3><span class="item-desc">[Berry Soda Coffee]</span></div>
-        <div class="item-price">25</div>
-    </div>
-    <div class="menu-item">
-        <div class="item-info"><h3 class="item-name">Americano</h3><span class="item-desc">[Americano]</span></div>
-        <div class="item-price">16</div>
-    </div>
-    <div class="menu-item best-rec">
-        <div class="item-info"><h3 class="item-name">Dark Freshly</h3><span class="item-desc">[Americano Lemon]</span></div>
-        <div class="item-price">19</div>
-    </div>
+    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Fressa</h3><span class="item-desc">[Berry Soda Coffee]</span></div><div class="item-price">25</div></div>
+    <div class="menu-item"><div class="item-info"><h3 class="item-name">Americano</h3><span class="item-desc">[Americano]</span></div><div class="item-price">16</div></div>
 </div>
 
 <div id="white" class="content">
-    <div class="menu-item best-rec">
-        <div class="item-info"><h3 class="item-name">Penkopi</h3><span class="item-desc">[Creamy Coffee]</span></div>
-        <div class="item-price">23</div>
-    </div>
-    <div class="menu-item">
-        <div class="item-info"><h3 class="item-name">Macch Favorito</h3><span class="item-desc">[Caramel Macchiato]</span></div>
-        <div class="item-price">20</div>
-    </div>
+    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Penkopi</h3><span class="item-desc">[Creamy Coffee]</span></div><div class="item-price">23</div></div>
 </div>
 
 <div id="comfy" class="content">
-    <div class="menu-item best-rec">
-        <div class="item-info"><h3 class="item-name">Mammy</h3><span class="item-desc">[Matcha Latte]</span></div>
-        <div class="item-price">18</div>
-    </div>
-    <div class="menu-item">
-        <div class="item-info"><h3 class="item-name">Deep Choc</h3><span class="item-desc">[Chocolate]</span></div>
-        <div class="item-price">18</div>
-    </div>
+    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Mammy</h3><span class="item-desc">[Matcha Latte]</span></div><div class="item-price">18</div></div>
 </div>
 
 <div id="refresh" class="content">
-    <div class="menu-item best-rec">
-        <div class="item-info"><h3 class="item-name">Red Bloom</h3><span class="item-desc">[Yakult Berry]</span></div>
-        <div class="item-price">18</div>
-    </div>
-    <div class="menu-item">
-        <div class="item-info"><h3 class="item-name">Threepi</h3><span class="item-desc">[Tropical Tea]</span></div>
-        <div class="item-price">15</div>
-    </div>
+    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Red Bloom</h3><span class="item-desc">[Yakult Berry]</span></div><div class="item-price">18</div></div>
 </div>
 
 <script>
