@@ -10,12 +10,13 @@
             --sbs-yellow: #FFD200;
             --sbs-black: #1A1A1A;
             --sbs-orange: #FF6600;
+            /* Variabel baru untuk warna tab yang lebih gelap */
+            --sbs-dark-yellow: #FFB800; 
         }
 
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0; padding: 15px; color: var(--sbs-black);
-            /* Background tetap sama */
             background: 
                 repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px),
                 radial-gradient(circle at center, var(--sbs-yellow) 0%, #e6bc00 100%);
@@ -23,10 +24,10 @@
             overscroll-behavior-y: contain; 
         }
 
-        /* Top Bar: Logo & Header */
+        /* Top Bar */
         .top-bar {
             display: flex; align-items: center; justify-content: flex-start;
-            margin-bottom: 20px; gap: 15px; /* Margin bawah dikurangi sedikit agar pas dengan sticky tab */
+            margin-bottom: 20px; gap: 15px;
         }
         .logo-container {
             width: 70px; height: 70px; background: var(--sbs-black);
@@ -42,31 +43,31 @@
             letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff;
         }
 
-        /* --- UPDATED: TABS CONTAINER STYLE --- */
+        /* --- UPDATED: TABS CONTAINER STYLE (DARKER YELLOW) --- */
         .tabs {
             display: flex; overflow-x: auto; gap: 10px; 
-            padding: 12px; /* Padding dalam container */
+            padding: 12px; 
             margin-bottom: 25px; scrollbar-width: none; 
             
             position: sticky; 
-            top: 20px; /* Memberikan jarak dari atas layar (floating effect) */
+            top: 20px; 
             z-index: 100;
 
-            /* Container Style Baru: Putih, Kontras, Rounded */
-            background: #fff; 
+            /* Ganti background putih jadi Kuning yang lebih gelap/kontras */
+            background: var(--sbs-dark-yellow); 
             border: 3px solid var(--sbs-black); 
-            border-radius: 50px; /* Sangat rounded (kapsul) */
-            box-shadow: 6px 6px 0px rgba(0,0,0,0.1); /* Shadow halus */
+            border-radius: 50px; 
+            box-shadow: 6px 6px 0px rgba(0,0,0,0.1); 
         }
         .tabs::-webkit-scrollbar { display: none; }
         
         .tab-btn {
             background: #fff; 
-            border: 2px solid var(--sbs-black); /* Border sedikit dipertipis agar rapi di dalam container */
+            border: 2px solid var(--sbs-black); 
             padding: 8px 20px;
             border-radius: 50px; font-family: 'Montserrat', sans-serif; font-size: 11px;
             text-transform: uppercase; white-space: nowrap; cursor: pointer;
-            box-shadow: 3px 3px 0px var(--sbs-black); /* Shadow tombol diperkecil agar muat */
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.2); /* Shadow sedikit ditransparankan agar menyatu dengan kuning */
             transition: 0.1s;
         }
         .tab-btn.active {
@@ -164,7 +165,6 @@
 </div>
 
 <script>
-    // Logic Tab & Swipe (Tidak berubah dari sebelumnya)
     function openT(e, n) {
         var i, c, t;
         c = document.getElementsByClassName("content");
