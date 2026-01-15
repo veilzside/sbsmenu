@@ -22,10 +22,9 @@
             overflow-x: hidden;
         }
 
-        .container { padding: 15px; }
+        .header-section { padding: 20px 15px 10px; }
 
-        /* Header Area (No Swipe) */
-        .top-bar { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+        .top-bar { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
         .logo-container {
             width: 65px; height: 65px; background: var(--sbs-black);
             border-radius: 50%; border: 3px solid #fff; box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
@@ -37,11 +36,10 @@
             letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff;
         }
 
-        /* Tab Area (No Swipe, Click Only) */
         .tabs {
-            display: flex; overflow-x: auto; gap: 10px; padding: 10px 5px;
-            margin-bottom: 20px; scrollbar-width: none; position: sticky; top: 0;
-            z-index: 100;
+            display: flex; overflow-x: auto; gap: 10px; padding: 10px 15px;
+            margin-bottom: 10px; scrollbar-width: none; position: sticky; top: 0;
+            z-index: 100; background: transparent;
         }
         .tabs::-webkit-scrollbar { display: none; }
         .tab-btn {
@@ -55,8 +53,7 @@
             box-shadow: 0px 0px 0px var(--sbs-black);
         }
 
-        /* Swipe Area (The Menu Body) */
-        #menu-body { min-height: 60vh; width: 100%; touch-action: pan-y; }
+        #menu-body { padding: 0 15px 30px; min-height: 70vh; touch-action: pan-y; }
 
         .content { display: none; animation: slideIn 0.3s ease-out; }
         .content.active { display: block; }
@@ -75,4 +72,7 @@
         .item-name { font-family: 'Montserrat', sans-serif; font-size: 16px; text-transform: uppercase; margin: 0; line-height: 1.1; }
         .item-desc { font-size: 10px; color: #555; font-style: italic; display: block; }
         .item-price {
-            background: var(--sbs-black); color: #fff; width: 40px; height: 40px
+            background: var(--sbs-black); color: #fff; width: 40px; height: 40px; min-width: 40px;
+            display: flex; align-items: center; justify-content: center; border-radius: 50%;
+            font-family: 'Montserrat', sans-serif; font-size: 16px; margin-left: 10px;
+            border: 2px solid #fff; box-shadow:
