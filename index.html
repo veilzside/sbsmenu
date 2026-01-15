@@ -15,11 +15,12 @@
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0; padding: 15px; color: var(--sbs-black);
-            /* Background dengan gradasi dan garis diagonal rapat */
             background: 
                 repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px),
                 radial-gradient(circle at center, var(--sbs-yellow) 0%, #e6bc00 100%);
             background-attachment: fixed;
+            /* Mencegah refresh browser saat swipe ke bawah di mobile agar UX swipe lebih enak */
+            overscroll-behavior-y: contain; 
         }
 
         /* Top Bar: Logo & Header */
@@ -31,25 +32,24 @@
             width: 70px; height: 70px; background: var(--sbs-black);
             border-radius: 50%; border: 3px solid #fff; box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
             display: flex; align-items: center; justify-content: center; overflow: hidden;
+            flex-shrink: 0; /* Mencegah logo mengecil */
         }
         .logo-container img { width: 85%; height: auto; }
         
-        .header-title { flex: 1; }
+        .header-title { flex: 1; display: flex; align-items: center; }
         .header-title h1 {
             font-family: 'Bebas Neue', cursive; font-size: 55px; margin: 0; line-height: 0.8;
             letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff;
         }
-        .header-title h2 {
-            font-family: 'Montserrat', sans-serif; font-size: 22px; margin: 0;
-            text-transform: uppercase; background: var(--sbs-black); color: #fff;
-            display: inline-block; padding: 2px 10px; margin-top: 5px;
-        }
+        /* H2 Authentic Taste DIHAPUS sesuai request */
 
         /* Tabs Style Kapsul Tebal */
         .tabs {
             display: flex; overflow-x: auto; gap: 12px; padding: 10px 5px;
             margin-bottom: 25px; scrollbar-width: none; position: sticky; top: 0;
             z-index: 100;
+            /* Menambahkan background gradient transparan agar tab terlihat jelas saat sticky */
+            background: linear-gradient(to bottom, rgba(255, 210, 0, 0.9) 80%, transparent); 
         }
         .tabs::-webkit-scrollbar { display: none; }
         .tab-btn {
@@ -61,6 +61,12 @@
         .tab-btn.active {
             background: var(--sbs-black); color: #fff; transform: translate(3px, 3px);
             box-shadow: 0px 0px 0px var(--sbs-black);
+        }
+
+        /* Container untuk area swipe */
+        #swipe-area {
+            min-height: 60vh; /* Memastikan area swipe cukup tinggi walaupun konten sedikit */
+            touch-action: pan-y; /* Mengizinkan scroll vertikal, tapi JS akan handle horizontal */
         }
 
         /* Menu Item Cards */
@@ -102,12 +108,11 @@
 
 <div class="top-bar">
     <div class="logo-container">
-        <img src="img/logo.png" alt="SBS Logo">
+        <img src="https://via.placeholder.com/100x100?text=SBS" alt="SBS Logo">
     </div>
     <div class="header-title">
         <h1>OUR MENU</h1>
-        <h2>Authentic Taste</h2>
-    </div>
+        </div>
 </div>
 
 <div class="tabs">
@@ -119,43 +124,98 @@
     <button class="tab-btn" onclick="openT(event, 'refresh')">Refreshing</button>
 </div>
 
-<div id="makan" class="content active">
-    <div class="menu-item"><div class="item-img-box"><img src="img/kalter.jpg"></div><div class="item-info"><h3 class="item-name">Kalter</h3><span class="item-desc">[Nasi Tahu Telor]</span></div><div class="item-price">20</div></div>
-    <div class="menu-item best-rec"><div class="item-img-box"><img src="img/mangkukoe.jpg"></div><div class="item-info"><h3 class="item-name">Mangku Koe</h3><span class="item-desc">[Nasi Chicken Katsu Kari]</span></div><div class="item-price">28</div></div>
-    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Mangku Ayang</h3><span class="item-desc">[Nasi Ayam Siram]</span></div><div class="item-price">25</div></div>
-</div>
+<div id="swipe-area">
+    <div id="makan" class="content active">
+        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Kalter"></div><div class="item-info"><h3 class="item-name">Kalter</h3><span class="item-desc">[Nasi Tahu Telor]</span></div><div class="item-price">20</div></div>
+        <div class="menu-item best-rec"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Mangku Koe"></div><div class="item-info"><h3 class="item-name">Mangku Koe</h3><span class="item-desc">[Nasi Chicken Katsu Kari]</span></div><div class="item-price">28</div></div>
+        <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Mangku Ayang</h3><span class="item-desc">[Nasi Ayam Siram]</span></div><div class="item-price">25</div></div>
+    </div>
 
-<div id="cemil" class="content">
-    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Paket Sambat</h3><span class="item-desc">[Aneka Camilan]</span></div><div class="item-price">35</div></div>
-    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Tahu Julit</h3><span class="item-desc">[Tahu Cabe Garam]</span></div><div class="item-price">19</div></div>
-</div>
+    <div id="cemil" class="content">
+        <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Paket Sambat</h3><span class="item-desc">[Aneka Camilan]</span></div><div class="item-price">35</div></div>
+        <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Tahu Julit</h3><span class="item-desc">[Tahu Cabe Garam]</span></div><div class="item-price">19</div></div>
+    </div>
 
-<div id="black" class="content">
-    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Fressa</h3><span class="item-desc">[Berry Soda Coffee]</span></div><div class="item-price">25</div></div>
-    <div class="menu-item"><div class="item-info"><h3 class="item-name">Americano</h3><span class="item-desc">[Americano]</span></div><div class="item-price">16</div></div>
-</div>
+    <div id="black" class="content">
+        <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Fressa</h3><span class="item-desc">[Berry Soda Coffee]</span></div><div class="item-price">25</div></div>
+        <div class="menu-item"><div class="item-info"><h3 class="item-name">Americano</h3><span class="item-desc">[Americano]</span></div><div class="item-price">16</div></div>
+    </div>
 
-<div id="white" class="content">
-    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Penkopi</h3><span class="item-desc">[Creamy Coffee]</span></div><div class="item-price">23</div></div>
-</div>
+    <div id="white" class="content">
+        <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Penkopi</h3><span class="item-desc">[Creamy Coffee]</span></div><div class="item-price">23</div></div>
+    </div>
 
-<div id="comfy" class="content">
-    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Mammy</h3><span class="item-desc">[Matcha Latte]</span></div><div class="item-price">18</div></div>
-</div>
+    <div id="comfy" class="content">
+        <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Mammy</h3><span class="item-desc">[Matcha Latte]</span></div><div class="item-price">18</div></div>
+    </div>
 
-<div id="refresh" class="content">
-    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Red Bloom</h3><span class="item-desc">[Yakult Berry]</span></div><div class="item-price">18</div></div>
+    <div id="refresh" class="content">
+        <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Red Bloom</h3><span class="item-desc">[Yakult Berry]</span></div><div class="item-price">18</div></div>
+    </div>
 </div>
 
 <script>
+    // --- Logic Tab Switching Dasar ---
     function openT(e, n) {
         var i, c, t;
         c = document.getElementsByClassName("content");
         for (i = 0; i < c.length; i++) c[i].classList.remove("active");
         t = document.getElementsByClassName("tab-btn");
         for (i = 0; i < t.length; i++) t[i].classList.remove("active");
+        
+        // Handle jika dipanggil via click event atau manual function call
         document.getElementById(n).classList.add("active");
-        e.currentTarget.classList.add("active");
+        if(e && e.currentTarget) {
+            e.currentTarget.classList.add("active");
+            e.currentTarget.scrollIntoView({behavior: 'smooth', inline: 'center', block: 'nearest'});
+        } else {
+            // Fallback untuk swipe: cari tombol yg punya onclick ke id ini
+            for (i = 0; i < t.length; i++) {
+                if(t[i].getAttribute('onclick').includes(n)) {
+                    t[i].classList.add("active");
+                    t[i].scrollIntoView({behavior: 'smooth', inline: 'center', block: 'nearest'});
+                    break;
+                }
+            }
+        }
+    }
+
+    // --- Logic Swipe Gesture ---
+    const swipeArea = document.getElementById('swipe-area');
+    let startX = 0;
+    let endX = 0;
+    const minSwipeDistance = 50; // Jarak minimum swipe (px) agar terhitung
+
+    swipeArea.addEventListener('touchstart', (e) => {
+        startX = e.changedTouches[0].screenX;
+    }, {passive: true});
+
+    swipeArea.addEventListener('touchend', (e) => {
+        endX = e.changedTouches[0].screenX;
+        handleSwipeGesture();
+    }, {passive: true});
+
+    function handleSwipeGesture() {
+        // Deteksi arah swipe
+        const distance = endX - startX;
+        
+        if (Math.abs(distance) < minSwipeDistance) return; // Abaikan sentuhan kecil
+
+        const tabs = Array.from(document.querySelectorAll('.tab-btn'));
+        const activeTab = document.querySelector('.tab-btn.active');
+        const currentIndex = tabs.indexOf(activeTab);
+
+        if (distance < 0) {
+            // Swipe ke KIRI -> Ingin lihat tab KANAN (Next)
+            if (currentIndex < tabs.length - 1) {
+                tabs[currentIndex + 1].click();
+            }
+        } else {
+            // Swipe ke KANAN -> Ingin lihat tab KIRI (Prev)
+            if (currentIndex > 0) {
+                tabs[currentIndex - 1].click();
+            }
+        }
     }
 </script>
 </body>
