@@ -15,24 +15,24 @@
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0; padding: 15px; color: var(--sbs-black);
+            /* Background tetap sama */
             background: 
                 repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px),
                 radial-gradient(circle at center, var(--sbs-yellow) 0%, #e6bc00 100%);
             background-attachment: fixed;
-            /* Mencegah refresh browser saat swipe ke bawah di mobile agar UX swipe lebih enak */
             overscroll-behavior-y: contain; 
         }
 
         /* Top Bar: Logo & Header */
         .top-bar {
             display: flex; align-items: center; justify-content: flex-start;
-            margin-bottom: 30px; gap: 15px;
+            margin-bottom: 20px; gap: 15px; /* Margin bawah dikurangi sedikit agar pas dengan sticky tab */
         }
         .logo-container {
             width: 70px; height: 70px; background: var(--sbs-black);
             border-radius: 50%; border: 3px solid #fff; box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
             display: flex; align-items: center; justify-content: center; overflow: hidden;
-            flex-shrink: 0; /* Mencegah logo mengecil */
+            flex-shrink: 0;
         }
         .logo-container img { width: 85%; height: auto; }
         
@@ -41,32 +41,43 @@
             font-family: 'Bebas Neue', cursive; font-size: 55px; margin: 0; line-height: 0.8;
             letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff;
         }
-        /* H2 Authentic Taste DIHAPUS sesuai request */
 
-        /* Tabs Style Kapsul Tebal */
+        /* --- UPDATED: TABS CONTAINER STYLE --- */
         .tabs {
-            display: flex; overflow-x: auto; gap: 12px; padding: 10px 5px;
-            margin-bottom: 25px; scrollbar-width: none; position: sticky; top: 0;
+            display: flex; overflow-x: auto; gap: 10px; 
+            padding: 12px; /* Padding dalam container */
+            margin-bottom: 25px; scrollbar-width: none; 
+            
+            position: sticky; 
+            top: 20px; /* Memberikan jarak dari atas layar (floating effect) */
             z-index: 100;
-            /* Menambahkan background gradient transparan agar tab terlihat jelas saat sticky */
-            background: linear-gradient(to bottom, rgba(255, 210, 0, 0.9) 80%, transparent); 
+
+            /* Container Style Baru: Putih, Kontras, Rounded */
+            background: #fff; 
+            border: 3px solid var(--sbs-black); 
+            border-radius: 50px; /* Sangat rounded (kapsul) */
+            box-shadow: 6px 6px 0px rgba(0,0,0,0.1); /* Shadow halus */
         }
         .tabs::-webkit-scrollbar { display: none; }
+        
         .tab-btn {
-            background: #fff; border: 3px solid var(--sbs-black); padding: 10px 22px;
+            background: #fff; 
+            border: 2px solid var(--sbs-black); /* Border sedikit dipertipis agar rapi di dalam container */
+            padding: 8px 20px;
             border-radius: 50px; font-family: 'Montserrat', sans-serif; font-size: 11px;
             text-transform: uppercase; white-space: nowrap; cursor: pointer;
-            box-shadow: 5px 5px 0px var(--sbs-black); transition: 0.1s;
+            box-shadow: 3px 3px 0px var(--sbs-black); /* Shadow tombol diperkecil agar muat */
+            transition: 0.1s;
         }
         .tab-btn.active {
-            background: var(--sbs-black); color: #fff; transform: translate(3px, 3px);
+            background: var(--sbs-black); color: #fff; transform: translate(2px, 2px);
             box-shadow: 0px 0px 0px var(--sbs-black);
         }
 
-        /* Container untuk area swipe */
+        /* Swipe Area */
         #swipe-area {
-            min-height: 60vh; /* Memastikan area swipe cukup tinggi walaupun konten sedikit */
-            touch-action: pan-y; /* Mengizinkan scroll vertikal, tapi JS akan handle horizontal */
+            min-height: 60vh;
+            touch-action: pan-y;
         }
 
         /* Menu Item Cards */
@@ -88,7 +99,6 @@
         .item-name { font-family: 'Montserrat', sans-serif; font-size: 18px; text-transform: uppercase; margin: 0; line-height: 1.1; }
         .item-desc { font-size: 11px; color: #555; font-style: italic; display: block; margin-top: 3px; }
 
-        /* Lingkaran Harga */
         .item-price {
             background: var(--sbs-black); color: #fff; width: 45px; height: 45px; min-width: 45px;
             display: flex; align-items: center; justify-content: center; border-radius: 50%;
@@ -96,7 +106,6 @@
             border: 2px solid #fff; box-shadow: 0 0 0 3px var(--sbs-black);
         }
 
-        /* Best Recommendation (Orange) */
         .best-rec { border-color: var(--sbs-orange); box-shadow: 7px 7px 0px var(--sbs-orange); }
         .best-rec .item-name { color: var(--sbs-orange); }
         .best-rec .item-price { background: var(--sbs-orange); }
@@ -112,7 +121,7 @@
     </div>
     <div class="header-title">
         <h1>OUR MENU</h1>
-        </div>
+    </div>
 </div>
 
 <div class="tabs">
@@ -155,7 +164,7 @@
 </div>
 
 <script>
-    // --- Logic Tab Switching Dasar ---
+    // Logic Tab & Swipe (Tidak berubah dari sebelumnya)
     function openT(e, n) {
         var i, c, t;
         c = document.getElementsByClassName("content");
@@ -163,13 +172,11 @@
         t = document.getElementsByClassName("tab-btn");
         for (i = 0; i < t.length; i++) t[i].classList.remove("active");
         
-        // Handle jika dipanggil via click event atau manual function call
         document.getElementById(n).classList.add("active");
         if(e && e.currentTarget) {
             e.currentTarget.classList.add("active");
             e.currentTarget.scrollIntoView({behavior: 'smooth', inline: 'center', block: 'nearest'});
         } else {
-            // Fallback untuk swipe: cari tombol yg punya onclick ke id ini
             for (i = 0; i < t.length; i++) {
                 if(t[i].getAttribute('onclick').includes(n)) {
                     t[i].classList.add("active");
@@ -180,11 +187,10 @@
         }
     }
 
-    // --- Logic Swipe Gesture ---
     const swipeArea = document.getElementById('swipe-area');
     let startX = 0;
     let endX = 0;
-    const minSwipeDistance = 50; // Jarak minimum swipe (px) agar terhitung
+    const minSwipeDistance = 50;
 
     swipeArea.addEventListener('touchstart', (e) => {
         startX = e.changedTouches[0].screenX;
@@ -196,25 +202,17 @@
     }, {passive: true});
 
     function handleSwipeGesture() {
-        // Deteksi arah swipe
         const distance = endX - startX;
-        
-        if (Math.abs(distance) < minSwipeDistance) return; // Abaikan sentuhan kecil
+        if (Math.abs(distance) < minSwipeDistance) return;
 
         const tabs = Array.from(document.querySelectorAll('.tab-btn'));
         const activeTab = document.querySelector('.tab-btn.active');
         const currentIndex = tabs.indexOf(activeTab);
 
         if (distance < 0) {
-            // Swipe ke KIRI -> Ingin lihat tab KANAN (Next)
-            if (currentIndex < tabs.length - 1) {
-                tabs[currentIndex + 1].click();
-            }
+            if (currentIndex < tabs.length - 1) tabs[currentIndex + 1].click();
         } else {
-            // Swipe ke KANAN -> Ingin lihat tab KIRI (Prev)
-            if (currentIndex > 0) {
-                tabs[currentIndex - 1].click();
-            }
+            if (currentIndex > 0) tabs[currentIndex - 1].click();
         }
     }
 </script>
