@@ -21,7 +21,7 @@
                 radial-gradient(circle at center, var(--sbs-yellow) 0%, #e6bc00 100%);
             background-attachment: fixed;
             overscroll-behavior-y: contain; 
-            padding-bottom: 50px; /* Extra padding bawah */
+            padding-bottom: 80px;
         }
 
         .top-bar {
@@ -77,12 +77,12 @@
         .content { display: none; animation: fadeIn 0.4s ease-out; }
         .content.active { display: block; }
 
+        /* Style Menu Biasa */
         .menu-item {
             display: flex; align-items: center; background: #fff;
             margin-bottom: 20px; padding: 14px; border-radius: 18px;
             border: 3px solid var(--sbs-black); box-shadow: 7px 7px 0px var(--sbs-black);
         }
-        
         .item-img-box {
             width: 90px; height: 90px; min-width: 90px; border: 3.5px solid var(--sbs-black);
             border-radius: 12px; overflow: hidden; margin-right: 15px; background: #eee;
@@ -105,6 +105,39 @@
         .best-rec .item-name { color: var(--sbs-orange); }
         .best-rec .item-price { background: var(--sbs-orange); }
 
+        /* --- STYLE KHUSUS ALCS (Grouped Card) --- */
+        .alcs-card {
+            background: #fff;
+            border: 3px solid var(--sbs-black);
+            box-shadow: 7px 7px 0px var(--sbs-black);
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        .alcs-brand {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 26px;
+            text-transform: uppercase;
+            font-weight: 900;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #eee;
+            padding-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        .alcs-list {
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .alcs-row {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 16px;
+            border-bottom: 1px dashed #ddd;
+            padding-bottom: 5px;
+        }
+        .alcs-row:last-child { border-bottom: none; }
+        .alcs-variant { font-weight: 500; color: #333; }
+        .alcs-price-tag { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 18px; }
+
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
@@ -122,11 +155,11 @@
 <div class="tabs">
     <button class="tab-btn active" onclick="openT(event, 'makan')">Makan Berat</button>
     <button class="tab-btn" onclick="openT(event, 'cemil')">Cemal-Cemil</button>
-    <button class="tab-btn" onclick="openT(event, 'alcs')">Alcs</button>
     <button class="tab-btn" onclick="openT(event, 'black')">Black</button>
     <button class="tab-btn" onclick="openT(event, 'white')">White</button>
     <button class="tab-btn" onclick="openT(event, 'comfy')">Comfy</button>
     <button class="tab-btn" onclick="openT(event, 'refresh')">Refreshing</button>
+    <button class="tab-btn" onclick="openT(event, 'alcs')">Alcs</button>
 </div>
 
 <div id="swipe-area">
@@ -148,28 +181,6 @@
         <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Uhat Lawik"></div><div class="item-info"><h3 class="item-name">Uhat Lawik</h3><span class="item-desc">[Tahu Walik]</span></div><div class="item-price">17</div></div>
         <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Gyozable"></div><div class="item-info"><h3 class="item-name">Gyozable</h3><span class="item-desc">[Gyoza]</span></div><div class="item-price">18</div></div>
         <div class="menu-item best-rec"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Tahu Julit"></div><div class="item-info"><h3 class="item-name">Tahu Julit</h3><span class="item-desc">[Tahu Cabe Garam]</span></div><div class="item-price">19</div></div>
-    </div>
-
-    <div id="alcs" class="content">
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Bintang"></div><div class="item-info"><h3 class="item-name">Bintang</h3><span class="item-desc">[Small]</span></div><div class="item-price">32</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Bintang"></div><div class="item-info"><h3 class="item-name">Bintang</h3><span class="item-desc">[Radler]</span></div><div class="item-price">32</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Bintang"></div><div class="item-info"><h3 class="item-name">Bintang</h3><span class="item-desc">[Large]</span></div><div class="item-price">50</div></div>
-        
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Anker"></div><div class="item-info"><h3 class="item-name">Anker</h3><span class="item-desc">[Lychee]</span></div><div class="item-price">29</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Anker"></div><div class="item-info"><h3 class="item-name">Anker</h3><span class="item-desc">[Pineapple]</span></div><div class="item-price">29</div></div>
-
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Smirnoff"></div><div class="item-info"><h3 class="item-name">Smirnoff</h3><span class="item-desc">[Raspberry]</span></div><div class="item-price">33</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Smirnoff"></div><div class="item-info"><h3 class="item-name">Smirnoff</h3><span class="item-desc">[Green Apple]</span></div><div class="item-price">33</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Smirnoff"></div><div class="item-info"><h3 class="item-name">Smirnoff</h3><span class="item-desc">[Lemon Lychee]</span></div><div class="item-price">33</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Smirnoff"></div><div class="item-info"><h3 class="item-name">Smirnoff</h3><span class="item-desc">[Pink Lemonade]</span></div><div class="item-price">33</div></div>
-
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Mix Max"></div><div class="item-info"><h3 class="item-name">Mix Max</h3><span class="item-desc">[Anggur Merah]</span></div><div class="item-price">34</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Mix Max"></div><div class="item-info"><h3 class="item-name">Mix Max</h3><span class="item-desc">[Exotic Blue]</span></div><div class="item-price">34</div></div>
-
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Iceland"></div><div class="item-info"><h3 class="item-name">Iceland</h3><span class="item-desc">[Lychee]</span></div><div class="item-price">34</div></div>
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Iceland"></div><div class="item-info"><h3 class="item-name">Iceland</h3><span class="item-desc">[Long Island]</span></div><div class="item-price">34</div></div>
-
-        <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Api"></div><div class="item-info"><h3 class="item-name">Api</h3><span class="item-desc">[Anggur Hijau]</span></div><div class="item-price">106</div></div>
     </div>
 
     <div id="black" class="content">
@@ -207,6 +218,60 @@
         <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Trustey"></div><div class="item-info"><h3 class="item-name">Trustey</h3><span class="item-desc">[Honey Yuzu]</span></div><div class="item-price">18</div></div>
         <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Rindu"></div><div class="item-info"><h3 class="item-name">Rindu</h3><span class="item-desc">[Winter Melon]</span></div><div class="item-price">15</div></div>
         <div class="menu-item"><div class="item-img-box"><img src="https://via.placeholder.com/150" alt="Literally Water"></div><div class="item-info"><h3 class="item-name">Literally Water</h3><span class="item-desc">[Air Mineral Cleo]</span></div><div class="item-price">5</div></div>
+    </div>
+
+    <div id="alcs" class="content">
+        
+        <div class="alcs-card">
+            <div class="alcs-brand">BINTANG</div>
+            <div class="alcs-list">
+                <div class="alcs-row"><span class="alcs-variant">Small</span><span class="alcs-price-tag">32K</span></div>
+                <div class="alcs-row"><span class="alcs-variant">Radler</span><span class="alcs-price-tag">32K</span></div>
+                <div class="alcs-row"><span class="alcs-variant">Large</span><span class="alcs-price-tag">50K</span></div>
+            </div>
+        </div>
+
+        <div class="alcs-card">
+            <div class="alcs-brand">ANKER</div>
+            <div class="alcs-list">
+                <div class="alcs-row"><span class="alcs-variant">Lychee</span><span class="alcs-price-tag">29K</span></div>
+                <div class="alcs-row"><span class="alcs-variant">Pineapple</span><span class="alcs-price-tag">29K</span></div>
+            </div>
+        </div>
+
+        <div class="alcs-card">
+            <div class="alcs-brand">SMIRNOFF</div>
+            <div class="alcs-list">
+                <div class="alcs-row"><span class="alcs-variant">Raspberry</span><span class="alcs-price-tag">33K</span></div>
+                <div class="alcs-row"><span class="alcs-variant">Green Apple</span><span class="alcs-price-tag">33K</span></div>
+                <div class="alcs-row"><span class="alcs-variant">Lemon Lychee</span><span class="alcs-price-tag">33K</span></div>
+                <div class="alcs-row"><span class="alcs-variant">Pink Lemonade</span><span class="alcs-price-tag">33K</span></div>
+            </div>
+        </div>
+
+        <div class="alcs-card">
+            <div class="alcs-brand">MIX MAX</div>
+            <div class="alcs-list">
+                <div class="alcs-row"><span class="alcs-variant">Anggur Merah</span><span class="alcs-price-tag">34K</span></div>
+                <div class="alcs-row"><span class="alcs-variant">Exotic Blue</span><span class="alcs-price-tag">34K</span></div>
+            </div>
+        </div>
+
+        <div class="alcs-card">
+            <div class="alcs-brand">ICELAND</div>
+            <div class="alcs-list">
+                <div class="alcs-row"><span class="alcs-variant">Lychee</span><span class="alcs-price-tag">34K</span></div>
+                <div class="alcs-row"><span class="alcs-variant">Long Island</span><span class="alcs-price-tag">34K</span></div>
+            </div>
+        </div>
+
+        <div class="alcs-card">
+            <div class="alcs-brand">API</div>
+            <div class="alcs-list">
+                <div class="alcs-row"><span class="alcs-variant">Anggur Hijau</span><span class="alcs-price-tag">106K</span></div>
+            </div>
+        </div>
+
     </div>
 </div>
 
