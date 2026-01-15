@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SBS Authentic Menu</title>
+    <title>SBS Digital Menu</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@900&family=Poppins:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -14,190 +14,65 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            margin: 0; padding: 15px; color: var(--sbs-black);
+            margin: 0; padding: 0; color: var(--sbs-black);
             background: 
                 repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px),
                 radial-gradient(circle at center, var(--sbs-yellow) 0%, #e6bc00 100%);
             background-attachment: fixed;
-            overflow-x: hidden; /* Mencegah scroll horizontal body */
+            overflow-x: hidden;
         }
 
-        /* Top Bar: Logo & Header */
-        .top-bar {
-            display: flex; align-items: center; justify-content: flex-start;
-            margin-bottom: 30px; gap: 15px;
-        }
+        .container { padding: 15px; }
+
+        /* Header Area (No Swipe) */
+        .top-bar { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
         .logo-container {
-            width: 70px; height: 70px; background: var(--sbs-black);
+            width: 65px; height: 65px; background: var(--sbs-black);
             border-radius: 50%; border: 3px solid #fff; box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
             display: flex; align-items: center; justify-content: center; overflow: hidden;
         }
         .logo-container img { width: 85%; height: auto; }
-        
         .header-title h1 {
-            font-family: 'Bebas Neue', cursive; font-size: 60px; margin: 0; line-height: 0.8;
+            font-family: 'Bebas Neue', cursive; font-size: 55px; margin: 0; line-height: 0.8;
             letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff;
         }
 
-        /* Tabs Style Kapsul */
+        /* Tab Area (No Swipe, Click Only) */
         .tabs {
-            display: flex; overflow-x: auto; gap: 12px; padding: 10px 5px;
-            margin-bottom: 25px; scrollbar-width: none; position: sticky; top: 0;
-            z-index: 100; background: inherit;
+            display: flex; overflow-x: auto; gap: 10px; padding: 10px 5px;
+            margin-bottom: 20px; scrollbar-width: none; position: sticky; top: 0;
+            z-index: 100;
         }
         .tabs::-webkit-scrollbar { display: none; }
         .tab-btn {
-            background: #fff; border: 3px solid var(--sbs-black); padding: 10px 22px;
+            background: #fff; border: 3px solid var(--sbs-black); padding: 8px 18px;
             border-radius: 50px; font-family: 'Montserrat', sans-serif; font-size: 11px;
             text-transform: uppercase; white-space: nowrap; cursor: pointer;
-            box-shadow: 5px 5px 0px var(--sbs-black); transition: 0.1s;
+            box-shadow: 4px 4px 0px var(--sbs-black); transition: 0.1s;
         }
         .tab-btn.active {
-            background: var(--sbs-black); color: #fff; transform: translate(3px, 3px);
+            background: var(--sbs-black); color: #fff; transform: translate(2px, 2px);
             box-shadow: 0px 0px 0px var(--sbs-black);
         }
 
-        /* Menu Item Cards */
-        .content { display: none; animation: fadeIn 0.4s ease-out; width: 100%; }
+        /* Swipe Area (The Menu Body) */
+        #menu-body { min-height: 60vh; width: 100%; touch-action: pan-y; }
+
+        .content { display: none; animation: slideIn 0.3s ease-out; }
         .content.active { display: block; }
 
         .menu-item {
             display: flex; align-items: center; background: #fff;
-            margin-bottom: 20px; padding: 14px; border-radius: 18px;
-            border: 3px solid var(--sbs-black); box-shadow: 7px 7px 0px var(--sbs-black);
+            margin-bottom: 15px; padding: 12px; border-radius: 15px;
+            border: 3px solid var(--sbs-black); box-shadow: 6px 6px 0px var(--sbs-black);
         }
-        .item-img-box {
-            width: 90px; height: 90px; min-width: 90px; border: 3.5px solid var(--sbs-black);
-            border-radius: 12px; overflow: hidden; margin-right: 15px; background: #eee;
+        .item-img {
+            width: 80px; height: 80px; min-width: 80px; border: 3px solid var(--sbs-black);
+            border-radius: 10px; overflow: hidden; margin-right: 12px; background: #ddd;
         }
-        .item-img-box img { width: 100%; height: 100%; object-fit: cover; }
-
+        .item-img img { width: 100%; height: 100%; object-fit: cover; }
         .item-info { flex: 1; }
-        .item-name { font-family: 'Montserrat', sans-serif; font-size: 18px; text-transform: uppercase; margin: 0; line-height: 1.1; }
-        .item-desc { font-size: 11px; color: #555; font-style: italic; display: block; margin-top: 3px; }
-
+        .item-name { font-family: 'Montserrat', sans-serif; font-size: 16px; text-transform: uppercase; margin: 0; line-height: 1.1; }
+        .item-desc { font-size: 10px; color: #555; font-style: italic; display: block; }
         .item-price {
-            background: var(--sbs-black); color: #fff; width: 45px; height: 45px; min-width: 45px;
-            display: flex; align-items: center; justify-content: center; border-radius: 50%;
-            font-family: 'Montserrat', sans-serif; font-size: 18px; margin-left: 10px;
-            border: 2px solid #fff; box-shadow: 0 0 0 3px var(--sbs-black);
-        }
-
-        .best-rec { border-color: var(--sbs-orange); box-shadow: 7px 7px 0px var(--sbs-orange); }
-        .best-rec .item-name { color: var(--sbs-orange); }
-        .best-rec .item-price { background: var(--sbs-orange); }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-    </style>
-</head>
-<body id="swipe-area">
-
-<div class="top-bar">
-    <div class="logo-container">
-        <img src="img/logo.png" alt="SBS Logo">
-    </div>
-    <div class="header-title">
-        <h1>OUR MENU</h1>
-    </div>
-</div>
-
-<div class="tabs" id="tab-bar">
-    <button class="tab-btn active" data-target="makan">Makan Berat</button>
-    <button class="tab-btn" data-target="cemil">Cemal-Cemil</button>
-    <button class="tab-btn" data-target="black">Black</button>
-    <button class="tab-btn" data-target="white">White</button>
-    <button class="tab-btn" data-target="comfy">Comfy</button>
-    <button class="tab-btn" data-target="refresh">Refreshing</button>
-</div>
-
-<div id="makan" class="content active">
-    <div class="menu-item"><div class="item-img-box"><img src="img/kalter.jpg"></div><div class="item-info"><h3 class="item-name">Kalter</h3><span class="item-desc">[Nasi Tahu Telor]</span></div><div class="item-price">20</div></div>
-    <div class="menu-item best-rec"><div class="item-img-box"><img src="img/mangkukoe.jpg"></div><div class="item-info"><h3 class="item-name">Mangku Koe</h3><span class="item-desc">[Nasi Chicken Katsu Kari]</span></div><div class="item-price">28</div></div>
-</div>
-
-<div id="cemil" class="content">
-    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Tahu Julit</h3><span class="item-desc">[Tahu Cabe Garam]</span></div><div class="item-price">19</div></div>
-</div>
-
-<div id="black" class="content">
-    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Fressa</h3><span class="item-desc">[Berry Soda Coffee]</span></div><div class="item-price">25</div></div>
-</div>
-
-<div id="white" class="content">
-    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Penkopi</h3><span class="item-desc">[Creamy Coffee]</span></div><div class="item-price">23</div></div>
-</div>
-
-<div id="comfy" class="content">
-    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Mammy</h3><span class="item-desc">[Matcha Latte]</span></div><div class="item-price">18</div></div>
-</div>
-
-<div id="refresh" class="content">
-    <div class="menu-item best-rec"><div class="item-info"><h3 class="item-name">Red Bloom</h3><span class="item-desc">[Yakult Berry]</span></div><div class="item-price">18</div></div>
-</div>
-
-<script>
-    const tabs = document.querySelectorAll('.tab-btn');
-    const contents = document.querySelectorAll('.content');
-    const tabList = ['makan', 'cemil', 'black', 'white', 'comfy', 'refresh'];
-    let currentIndex = 0;
-
-    // Fungsi pindah tab
-    function switchTab(index) {
-        if (index < 0 || index >= tabList.length) return;
-        
-        currentIndex = index;
-        const targetId = tabList[currentIndex];
-
-        contents.forEach(c => c.classList.remove('active'));
-        tabs.forEach(t => t.classList.remove('active'));
-
-        document.getElementById(targetId).classList.add('active');
-        const activeBtn = document.querySelector(`[data-target="${targetId}"]`);
-        activeBtn.classList.add('active');
-        
-        // Auto scroll tab bar agar tab yang aktif terlihat
-        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }
-
-    // Klik Tab
-    tabs.forEach((tab, index) => {
-        tab.addEventListener('click', () => switchTab(index));
-    });
-
-    // FITUR SWIPE
-    let touchstartX = 0;
-    let touchendX = 0;
-    let touchstartY = 0;
-    let touchendY = 0;
-
-    const area = document.getElementById('swipe-area');
-
-    area.addEventListener('touchstart', e => {
-        touchstartX = e.changedTouches[0].screenX;
-        touchstartY = e.changedTouches[0].screenY;
-    }, false);
-
-    area.addEventListener('touchend', e => {
-        touchendX = e.changedTouches[0].screenX;
-        touchendY = e.changedTouches[0].screenY;
-        handleGesture();
-    }, false);
-
-    function handleGesture() {
-        const diffX = touchendX - touchstartX;
-        const diffY = touchendY - touchstartY;
-
-        // Pastikan gerakan lebih dominan horizontal daripada vertikal (scroll)
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-            if (diffX < 0) {
-                // Swipe Kiri -> Tab Berikutnya
-                switchTab(currentIndex + 1);
-            } else {
-                // Swipe Kanan -> Tab Sebelumnya
-                switchTab(currentIndex - 1);
-            }
-        }
-    }
-</script>
-</body>
-</html>
+            background: var(--sbs-black); color: #fff; width: 40px; height: 40px
