@@ -26,7 +26,7 @@
 
         .top-bar {
             display: flex; align-items: center; justify-content: flex-start;
-            margin-bottom: 20px; gap: 15px;
+            margin-bottom: 15px; gap: 15px;
         }
         .logo-container {
             width: 70px; height: 70px; background: var(--sbs-black);
@@ -34,7 +34,7 @@
             display: flex; align-items: center; justify-content: center; overflow: hidden;
             flex-shrink: 0;
         }
-        .logo-container img { width: 85%; height: auto; }
+        .logo-container img { width: 100%; height: auto; }
         
         .header-title { flex: 1; display: flex; align-items: center; }
         .header-title h1 {
@@ -42,17 +42,70 @@
             letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff;
         }
 
+        /* --- SEARCH BAR STYLE --- */
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+            z-index: 101;
+        }
+        .search-box {
+            width: 100%;
+            box-sizing: border-box;
+            background: #fff;
+            border: 3px solid var(--sbs-black);
+            border-radius: 50px;
+            padding: 12px 20px 12px 45px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            outline: none;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+            transition: 0.2s;
+            text-transform: uppercase;
+        }
+        .search-box:focus {
+            box-shadow: 4px 4px 0px var(--sbs-black);
+            transform: translate(-2px, -2px);
+        }
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .clear-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #ddd;
+            border: none;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            display: none;
+            align-items: center; justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #555;
+        }
+
         /* Tabs Style */
         .tabs {
             display: flex; overflow-x: auto; gap: 10px; 
             padding: 12px; 
             margin-bottom: 25px; scrollbar-width: none; 
-            position: sticky; top: 20px; z-index: 100;
+            position: sticky; top: 10px; z-index: 100;
             background: var(--sbs-dark-yellow); 
             border: 3px solid var(--sbs-black); 
             border-radius: 50px; 
             box-shadow: 6px 6px 0px rgba(0,0,0,0.1); 
+            transition: 0.3s;
         }
+        .tabs.hidden-by-search { display: none; }
         .tabs::-webkit-scrollbar { display: none; }
         
         .tab-btn {
@@ -74,100 +127,65 @@
             touch-action: pan-y;
         }
 
-        /* Grid Layout untuk Card Besar */
         .content { 
             display: none; 
-            animation: fadeIn 0.4s ease-out;
-            /* Grid satu kolom agar foto besar maksimal di HP */
             grid-template-columns: 1fr; 
             gap: 30px;
         }
-        .content.active { display: grid; }
+        .content.active { 
+            display: grid; 
+            animation: fadeIn 0.4s ease-out;
+        }
+        .search-mode-active .content {
+            display: grid !important;
+            animation: none;
+        }
+        
+        /* Helper class untuk search */
+        .card-hidden { display: none !important; }
+        .section-hidden { display: none !important; }
 
-        /* --- NEW CARD STYLE (BIG PHOTO) --- */
+        /* --- CARD STYLE --- */
         .menu-card {
             background: #fff;
             border: 3px solid var(--sbs-black);
-            border-radius: 25px; /* Rounded besar */
+            border-radius: 25px; 
             overflow: hidden;
-            box-shadow: 10px 10px 0px var(--sbs-black); /* Shadow tebal */
+            box-shadow: 10px 10px 0px var(--sbs-black); 
             position: relative;
             display: flex;
             flex-direction: column;
         }
 
-        /* Container Foto Besar */
         .card-img-box {
             width: 100%;
-            height: 280px; /* Tinggi foto fixed agar seragam & besar */
+            /* height: 320px;  <-- INI YANG BIKIN KEPOTONG, KITA HAPUS */
+            height: auto;      /* Biarkan tinggi menyesuaikan */
+            aspect-ratio: 1 / 1; /* Kunci rasio jadi kotak sempurna (1:1) */
             position: relative;
-            border-bottom: 3px solid var(--sbs-black);
             background: #eee;
+            /* border-bottom: 3px solid var(--sbs-black); */ /* Opsional: tambah garis pembatas bawah foto */
         }
+        
         .card-img-box img {
-            width: 100%; height: 100%; object-fit: cover;
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; /* Karena wadahnya sudah kotak, cover aman digunakan */
         }
 
-        /* Sticker Harga Mengambang */
-        .price-sticker {
-            position: absolute;
-            bottom: 15px;
-            left: 15px;
-            background: var(--sbs-yellow);
-            color: var(--sbs-black);
-            font-family: 'Bebas Neue', cursive;
-            font-size: 32px;
-            padding: 2px 15px 0px 15px;
-            border: 2px solid var(--sbs-black);
-            box-shadow: 4px 4px 0px var(--sbs-black);
-            transform: rotate(-3deg); /* Miring sedikit biar stylish */
-            z-index: 10;
-        }
-
-        /* Area Teks di Bawah Foto */
-        .card-info {
-            padding: 15px 20px;
-            position: relative;
-        }
-        
-        .item-name { 
-            font-family: 'Montserrat', sans-serif; 
-            font-size: 24px; /* Judul lebih besar */
-            text-transform: uppercase; 
-            margin: 0; 
-            line-height: 1;
-            margin-bottom: 5px;
-        }
-        
-        .item-desc { 
-            font-size: 13px; 
-            color: #555; 
-            font-style: italic; 
-            display: block; 
-            font-weight: 500;
-        }
-
-        /* Best Recommendation Highlight */
         .best-rec { 
             border-color: var(--sbs-orange); 
             box-shadow: 10px 10px 0px var(--sbs-orange); 
         }
-        .best-rec .card-img-box { border-bottom-color: var(--sbs-orange); }
-        .best-rec .item-name { color: var(--sbs-orange); }
-        .best-rec .price-sticker { 
-            background: var(--sbs-orange); 
-            color: #fff; 
-            border-color: var(--sbs-black); 
-        }
 
-        /* --- STYLE KHUSUS ALCS (Tetap List) --- */
+        /* --- STYLE KHUSUS ALCS --- */
         .alcs-card {
             background: #fff;
             border: 3px solid var(--sbs-black);
             box-shadow: 8px 8px 0px var(--sbs-black);
             border-radius: 20px;
             padding: 20px;
-            margin-bottom: 0; /* Margin dihandle oleh Grid gap */
+            margin-bottom: 0; 
             position: relative;
         }
         .alcs-brand {
@@ -193,6 +211,15 @@
         .alcs-variant { font-weight: 500; color: #333; }
         .alcs-price-tag { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 18px; }
 
+        #no-results {
+            display: none;
+            text-align: center;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: bold;
+            margin-top: 50px;
+            opacity: 0.5;
+        }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -200,14 +227,23 @@
 
 <div class="top-bar">
     <div class="logo-container">
-        <img src="https://via.placeholder.com/100x100?text=SBS" alt="SBS Logo">
+        <img src="img/sbslogo.jpg" alt="SBS Logo"> 
     </div>
     <div class="header-title">
         <h1>OUR MENU</h1>
     </div>
 </div>
 
-<div class="tabs">
+<div class="search-wrapper">
+    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <input type="text" id="menuSearch" class="search-box" placeholder="Cari menu (e.g. Kopi, Vodka)..." autocomplete="off">
+    <button id="clearSearch" class="clear-btn" onclick="clearSearchInput()">✕</button>
+</div>
+
+<div class="tabs" id="menuTabs">
     <button class="tab-btn active" onclick="openT(event, 'makan')">Makan Berat</button>
     <button class="tab-btn" onclick="openT(event, 'cemil')">Cemal-Cemil</button>
     <button class="tab-btn" onclick="openT(event, 'black')">Black</button>
@@ -218,213 +254,145 @@
 </div>
 
 <div id="swipe-area">
+    <div id="no-results">MENU TIDAK DITEMUKAN</div>
+
     <div id="makan" class="content active">
-        <div class="menu-card">
-            <div class="card-img-box">
-                <img src="https://via.placeholder.com/400x300?text=Kalter" alt="Kalter">
-                <div class="price-sticker">20K</div>
-            </div>
-            <div class="card-info"><h3 class="item-name">Kalter</h3><span class="item-desc">[Nasi Tahu Telor]</span></div>
+        <div class="menu-card" data-tags="nasi tahu telor rice tofu egg telur vegetarian kalter">
+            <div class="card-img-box"><img src="img/kalter.webp" alt="Kalter"></div>
         </div>
-
-        <div class="menu-card">
-            <div class="card-img-box">
-                <img src="https://via.placeholder.com/400x300?text=Obama" alt="Obama">
-                <div class="price-sticker">25K</div>
-            </div>
-            <div class="card-info"><h3 class="item-name">Obama</h3><span class="item-desc">[Nasi Ayam Geprek Sambal Matah]</span></div>
+        <div class="menu-card" data-tags="nasi ayam geprek sambal matah rice chicken pedas spicy hot chili obama">
+            <div class="card-img-box"><img src="img/obama.webp" alt="Obama"></div>
         </div>
-
-        <div class="menu-card best-rec">
-            <div class="card-img-box">
-                <img src="https://via.placeholder.com/400x300?text=Mangku+Koe" alt="Mangku Koe">
-                <div class="price-sticker">28K</div>
-            </div>
-            <div class="card-info"><h3 class="item-name">Mangku Koe</h3><span class="item-desc">[Nasi Chicken Katsu Kari]</span></div>
+        <div class="menu-card best-rec" data-tags="nasi chicken katsu kari rice ayam curry japanese food mangku koe">
+            <div class="card-img-box"><img src="img/mangkukoe.webp" alt="Mangku Koe"></div>
         </div>
-
-        <div class="menu-card best-rec">
-            <div class="card-img-box">
-                <img src="https://via.placeholder.com/400x300?text=Mangku+Ayang" alt="Mangku Ayang">
-                <div class="price-sticker">25K</div>
-            </div>
-            <div class="card-info"><h3 class="item-name">Mangku Ayang</h3><span class="item-desc">[Nasi Ayam Siram]</span></div>
+        <div class="menu-card best-rec" data-tags="nasi ayam siram rice chicken gravy sauce mangku ayang">
+            <div class="card-img-box"><img src="img/mangkuayang.webp" alt="Mangku Ayang"></div>
         </div>
-
-        <div class="menu-card best-rec">
-            <div class="card-img-box">
-                <img src="https://via.placeholder.com/400x300?text=Barudak" alt="Barudak">
-                <div class="price-sticker">20K</div>
-            </div>
-            <div class="card-info"><h3 class="item-name">Barudak</h3><span class="item-desc">[Bakmie Katsu Sambal Matah]</span></div>
+        <div class="menu-card best-rec" data-tags="bakmie katsu sambal matah mie noodle noodles ayam chicken pedas spicy hot barudak">
+            <div class="card-img-box"><img src="img/barudak.webp" alt="Barudak"></div>
         </div>
-
-        <div class="menu-card">
-            <div class="card-img-box">
-                <img src="https://via.placeholder.com/400x300?text=Sekena+Gomes" alt="Sekena Gomes">
-                <div class="price-sticker">22K</div>
-            </div>
-            <div class="card-info"><h3 class="item-name">Sekena Gomes</h3><span class="item-desc">[Nasgor Merah + Katsu + Sambal Matah]</span></div>
+        <div class="menu-card" data-tags="nasgor merah katsu sambal matah nasi goreng fried rice red ayam chicken pedas spicy hot sekena gomes">
+            <div class="card-img-box"><img src="img/sekenagomes.webp" alt="Sekena Gomes"></div>
         </div>
-
-        <div class="menu-card">
-            <div class="card-img-box">
-                <img src="https://via.placeholder.com/400x300?text=Sekena+Goput" alt="Sekena Goput">
-                <div class="price-sticker">22K</div>
-            </div>
-            <div class="card-info"><h3 class="item-name">Sekena Goput</h3><span class="item-desc">[Nasgor Putih + Katsu + Sambal Matah]</span></div>
+        <div class="menu-card" data-tags="nasgor putih katsu sambal matah nasi goreng fried rice white ayam chicken pedas spicy hot sekena goput">
+            <div class="card-img-box"><img src="img/sekenagoput.webp" alt="Sekena Goput"></div>
         </div>
-
-        <div class="menu-card best-rec">
-            <div class="card-img-box">
-                <img src="https://via.placeholder.com/400x300?text=Sekena+Keren" alt="Sekena Keren">
-                <div class="price-sticker">25K</div>
-            </div>
-            <div class="card-info"><h3 class="item-name">Sekena Keren</h3><span class="item-desc">[Nasgor Kari + Katsu + Sambal Matah]</span></div>
+        <div class="menu-card best-rec" data-tags="nasgor kari katsu sambal matah nasi goreng fried rice curry ayam chicken pedas spicy hot sekena keren">
+            <div class="card-img-box"><img src="img/sekenakeren.webp" alt="Sekena Keren"></div>
         </div>
     </div>
 
     <div id="cemil" class="content">
-        <div class="menu-card best-rec">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Paket+Sambat" alt="Paket Sambat"><div class="price-sticker">35K</div></div>
-            <div class="card-info"><h3 class="item-name">Paket Sambat</h3><span class="item-desc">[Aneka Camilan]</span></div>
+        <div class="menu-card best-rec" data-tags="aneka camilan snack platter sosis sausage kentang fries gorengan paket sambat">
+            <div class="card-img-box"><img src="img/paketsambat.webp" alt="Paket Sambat"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Cricket" alt="Cricket"><div class="price-sticker">25K</div></div>
-            <div class="card-info"><h3 class="item-name">Cricket</h3><span class="item-desc">[Chicken Fillet Lava]</span></div>
+        <div class="menu-card" data-tags="chicken fillet lava ayam boneless pedas spicy hot snack cricket">
+            <div class="card-img-box"><img src="img/cricket.webp" alt="Cricket"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Potato+Freak" alt="Potato Freak"><div class="price-sticker">17K</div></div>
-            <div class="card-info"><h3 class="item-name">Potato Freak</h3><span class="item-desc">[French Fries]</span></div>
+        <div class="menu-card" data-tags="french fries kentang goreng potato chips asin salty snack potato freak">
+            <div class="card-img-box"><img src="img/potatofreak.webp" alt="Potato Freak"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Uhat+Lawik" alt="Uhat Lawik"><div class="price-sticker">17K</div></div>
-            <div class="card-info"><h3 class="item-name">Uhat Lawik</h3><span class="item-desc">[Tahu Walik]</span></div>
+        <div class="menu-card" data-tags="tahu walik tofu aci goreng crispy snack uhat lawik">
+            <div class="card-img-box"><img src="img/uhatlawik.webp" alt="Uhat Lawik"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Gyozable" alt="Gyozable"><div class="price-sticker">18K</div></div>
-            <div class="card-info"><h3 class="item-name">Gyozable</h3><span class="item-desc">[Gyoza]</span></div>
+        <div class="menu-card" data-tags="gyoza dimsum dumpling ayam chicken kukus steam goreng fried gyozable">
+            <div class="card-img-box"><img src="img/gyozable.webp" alt="Gyozable"></div>
         </div>
-        <div class="menu-card best-rec">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Tahu+Julit" alt="Tahu Julit"><div class="price-sticker">19K</div></div>
-            <div class="card-info"><h3 class="item-name">Tahu Julit</h3><span class="item-desc">[Tahu Cabe Garam]</span></div>
+        <div class="menu-card best-rec" data-tags="tahu cabe garam tofu chili salt pedas spicy hot asin snack tahu julit">
+            <div class="card-img-box"><img src="img/tahujulit.webp" alt="Tahu Julit"></div>
         </div>
     </div>
 
     <div id="black" class="content">
-        <div class="menu-card best-rec">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Fressa" alt="Fressa"><div class="price-sticker">25K</div></div>
-            <div class="card-info"><h3 class="item-name">Fressa</h3><span class="item-desc">[Berry Soda Coffee]</span></div>
+        <div class="menu-card best-rec" data-tags="berry soda coffee kopi buah segar fizz fressa">
+            <div class="card-img-box"><img src="img/fressa.webp" alt="Fressa"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Americano" alt="Americano"><div class="price-sticker">16K</div></div>
-            <div class="card-info"><h3 class="item-name">Americano</h3><span class="item-desc">[Americano]</span></div>
+        <div class="menu-card" data-tags="americano kopi hitam black coffee pahit bitter no sugar">
+            <div class="card-img-box"><img src="img/americano.webp" alt="Americano"></div>
         </div>
-        <div class="menu-card best-rec">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Dark+Freshly" alt="Dark Freshly"><div class="price-sticker">19K</div></div>
-            <div class="card-info"><h3 class="item-name">Dark Freshly</h3><span class="item-desc">[Americano Lemon]</span></div>
+        <div class="menu-card best-rec" data-tags="americano lemon kopi coffee citrus segar fresh dark freshly">
+            <div class="card-img-box"><img src="img/darkfreshly.webp" alt="Dark Freshly"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Darkberry" alt="Darkberry"><div class="price-sticker">19K</div></div>
-            <div class="card-info"><h3 class="item-name">Darkberry</h3><span class="item-desc">[Americano Berry]</span></div>
+        <div class="menu-card" data-tags="americano berry kopi coffee strawberry fruity darkberry">
+            <div class="card-img-box"><img src="img/darkberry.webp" alt="Darkberry"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Tubruk+Syari" alt="Tubruk Syari"><div class="price-sticker">13K</div></div>
-            <div class="card-info"><h3 class="item-name">Tubruk Syari</h3><span class="item-desc">[Kopi Tubruk]</span></div>
+        <div class="menu-card" data-tags="kopi tubruk traditional black coffee ampas tubruk syari">
+            <div class="card-img-box"><img src="img/tubruksyari.webp" alt="Tubruk Syari"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Hanoi+Tears" alt="Hanoi Tears"><div class="price-sticker">15K</div></div>
-            <div class="card-info"><h3 class="item-name">Hanoi Tears</h3><span class="item-desc">[Vietnam Drip]</span></div>
+        <div class="menu-card" data-tags="vietnam drip kopi susu milk condensed manis sweet hanoi tears">
+            <div class="card-img-box"><img src="img/hanoitears.webp" alt="Hanoi Tears"></div>
         </div>
     </div>
 
     <div id="white" class="content">
-        <div class="menu-card best-rec">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Penkopi" alt="Penkopi"><div class="price-sticker">23K</div></div>
-            <div class="card-info"><h3 class="item-name">Penkopi</h3><span class="item-desc">[Creamy Coffee]</span></div>
+        <div class="menu-card best-rec" data-tags="creamy coffee kopi susu milk latte palm sugar gula aren penkopi">
+            <div class="card-img-box"><img src="img/penkopi.webp" alt="Penkopi"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Macch+Favorito" alt="Macch Favorito"><div class="price-sticker">20K</div></div>
-            <div class="card-info"><h3 class="item-name">Macch Favorito</h3><span class="item-desc">[Caramel Macchiato]</span></div>
+        <div class="menu-card" data-tags="caramel macchiato kopi coffee susu milk karamel manis sweet macch favorito">
+            <div class="card-img-box"><img src="img/macchfavorito.webp" alt="Macch Favorito"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Specta" alt="Specta"><div class="price-sticker">25K</div></div>
-            <div class="card-info"><h3 class="item-name">Specta</h3><span class="item-desc">[Peanut Coffee]</span></div>
+        <div class="menu-card" data-tags="peanut coffee kopi kacang skippy jam susu milk specta">
+            <div class="card-img-box"><img src="img/specta.webp" alt="Specta"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Comica" alt="Comica"><div class="price-sticker">22K</div></div>
-            <div class="card-info"><h3 class="item-name">Comica</h3><span class="item-desc">[Hazelnut Coffee]</span></div>
+        <div class="menu-card" data-tags="hazelnut coffee kopi susu milk kacang wangi comica">
+            <div class="card-img-box"><img src="img/comica.webp" alt="Comica"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Rhumpee" alt="Rhumpee"><div class="price-sticker">20K</div></div>
-            <div class="card-info"><h3 class="item-name">Rhumpee</h3><span class="item-desc">[Rhum Coffee]</span></div>
+        <div class="menu-card" data-tags="rhum coffee rum non alkohol kopi susu milk wangi rhumpee">
+            <div class="card-img-box"><img src="img/rhumpee.webp" alt="Rhumpee"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Crush" alt="Crush"><div class="price-sticker">22K</div></div>
-            <div class="card-info"><h3 class="item-name">Crush</h3><span class="item-desc">[Rhum Regal Coffee]</span></div>
+        <div class="menu-card" data-tags="rhum regal coffee rum biskuit biscuit marie susu milk crush">
+            <div class="card-img-box"><img src="img/crush.webp" alt="Crush"></div>
         </div>
     </div>
 
     <div id="comfy" class="content">
-        <div class="menu-card best-rec">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Mammy" alt="Mammy"><div class="price-sticker">18K</div></div>
-            <div class="card-info"><h3 class="item-name">Mammy</h3><span class="item-desc">[Matcha Latte]</span></div>
+        <div class="menu-card best-rec" data-tags="matcha latte green tea teh hijau susu milk japanese mammy">
+            <div class="card-img-box"><img src="img/mammy.webp" alt="Mammy"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Deep+Choc" alt="Deep Choc"><div class="price-sticker">18K</div></div>
-            <div class="card-info"><h3 class="item-name">Deep Choc</h3><span class="item-desc">[Chocolate]</span></div>
+        <div class="menu-card" data-tags="chocolate coklat cocoa susu milk manis sweet deep choc">
+            <div class="card-img-box"><img src="img/deepchoc.webp" alt="Deep Choc"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Schopea" alt="Schopea"><div class="price-sticker">25K</div></div>
-            <div class="card-info"><h3 class="item-name">Schopea</h3><span class="item-desc">[Peanut Chocolate]</span></div>
+        <div class="menu-card" data-tags="peanut chocolate coklat kacang susu milk schopea">
+            <div class="card-img-box"><img src="img/schopea.webp" alt="Schopea"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Creamberry" alt="Creamberry"><div class="price-sticker">23K</div></div>
-            <div class="card-info"><h3 class="item-name">Creamberry</h3><span class="item-desc">[Berry Latte]</span></div>
+        <div class="menu-card" data-tags="berry latte strawberry susu milk fruity creamberry">
+            <div class="card-img-box"><img src="img/creamberry.webp" alt="Creamberry"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Jandu" alt="Jandu"><div class="price-sticker">18K</div></div>
-            <div class="card-info"><h3 class="item-name">Jandu</h3><span class="item-desc">[Jahe Madu]</span></div>
+        <div class="menu-card" data-tags="jahe madu ginger honey hangat warm herbal wedang jandu">
+            <div class="card-img-box"><img src="img/jandu.webp" alt="Jandu"></div>
         </div>
     </div>
 
     <div id="refresh" class="content">
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Threepi" alt="Threepi"><div class="price-sticker">15K</div></div>
-            <div class="card-info"><h3 class="item-name">Threepi</h3><span class="item-desc">[Tropical Tea]</span></div>
+        <div class="menu-card" data-tags="tropical tea teh buah fruit segar fresh threepi">
+            <div class="card-img-box"><img src="img/threepi.webp" alt="Threepi"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Teh+Gelies" alt="Teh Gelies"><div class="price-sticker">10K</div></div>
-            <div class="card-info"><h3 class="item-name">Teh Gelies</h3><span class="item-desc">[Jasmine Tea]</span></div>
+        <div class="menu-card" data-tags="jasmine tea teh melati manis sweet es ice teh gelies">
+            <div class="card-img-box"><img src="img/tehgelies.webp" alt="Teh Gelies"></div>
         </div>
-        <div class="menu-card best-rec">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Red+Bloom" alt="Red Bloom"><div class="price-sticker">18K</div></div>
-            <div class="card-info"><h3 class="item-name">Red Bloom</h3><span class="item-desc">[Yakult Berry]</span></div>
+        <div class="menu-card best-rec" data-tags="yakult berry yogurt strawberry probiotik asam manis sour sweet red bloom">
+            <div class="card-img-box"><img src="img/redbloom.webp" alt="Red Bloom"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Yagustea" alt="Yagustea"><div class="price-sticker">15K</div></div>
-            <div class="card-info"><h3 class="item-name">Yagustea</h3><span class="item-desc">[Yakult Sugus Grape]</span></div>
+        <div class="menu-card" data-tags="yakult sugus grape anggur permen candy ungu purple yagustea">
+            <div class="card-img-box"><img src="img/yagustea.webp" alt="Yagustea"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Chenteal" alt="Chenteal"><div class="price-sticker">15K</div></div>
-            <div class="card-info"><h3 class="item-name">Chenteal</h3><span class="item-desc">[Yakult Lychee Tea]</span></div>
+        <div class="menu-card" data-tags="yakult lychee tea leci teh fruit chenteal">
+            <div class="card-img-box"><img src="img/chenteal.webp" alt="Chenteal"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Trustey" alt="Trustey"><div class="price-sticker">18K</div></div>
-            <div class="card-info"><h3 class="item-name">Trustey</h3><span class="item-desc">[Honey Yuzu]</span></div>
+        <div class="menu-card" data-tags="honey yuzu madu jeruk citrus orange lemon segar trustey">
+            <div class="card-img-box"><img src="img/trustey.webp" alt="Trustey"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Rindu" alt="Rindu"><div class="price-sticker">15K</div></div>
-            <div class="card-info"><h3 class="item-name">Rindu</h3><span class="item-desc">[Winter Melon]</span></div>
+        <div class="menu-card" data-tags="winter melon kundur buah manis segar rindu">
+            <div class="card-img-box"><img src="img/rindu.webp" alt="Rindu"></div>
         </div>
-        <div class="menu-card">
-            <div class="card-img-box"><img src="https://via.placeholder.com/400x300?text=Literally+Water" alt="Literally Water"><div class="price-sticker">5K</div></div>
-            <div class="card-info"><h3 class="item-name">Literally Water</h3><span class="item-desc">[Air Mineral Cleo]</span></div>
+        <div class="menu-card" data-tags="air mineral water bening tawar literally water">
+             <div class="card-img-box"><img src="img/literallywater.webp" alt="Literally Water"></div>
         </div>
     </div>
 
     <div id="alcs" class="content">
-        <div class="alcs-card">
+        <div class="alcs-card" data-tags="bintang beer bir pilsener alkohol alcohol">
             <div class="alcs-brand">BINTANG</div>
             <div class="alcs-list">
                 <div class="alcs-row"><span class="alcs-variant">Small</span><span class="alcs-price-tag">32K</span></div>
@@ -432,14 +400,14 @@
                 <div class="alcs-row"><span class="alcs-variant">Large</span><span class="alcs-price-tag">50K</span></div>
             </div>
         </div>
-        <div class="alcs-card">
+        <div class="alcs-card" data-tags="anker beer bir lychee leci pineapple nanas alkohol alcohol">
             <div class="alcs-brand">ANKER</div>
             <div class="alcs-list">
                 <div class="alcs-row"><span class="alcs-variant">Lychee</span><span class="alcs-price-tag">29K</span></div>
                 <div class="alcs-row"><span class="alcs-variant">Pineapple</span><span class="alcs-price-tag">29K</span></div>
             </div>
         </div>
-        <div class="alcs-card">
+        <div class="alcs-card" data-tags="smirnoff vodka raspberry berry green apple apel hijau lemon lychee leci pink lemonade alkohol alcohol">
             <div class="alcs-brand">SMIRNOFF</div>
             <div class="alcs-list">
                 <div class="alcs-row"><span class="alcs-variant">Raspberry</span><span class="alcs-price-tag">33K</span></div>
@@ -448,21 +416,21 @@
                 <div class="alcs-row"><span class="alcs-variant">Pink Lemonade</span><span class="alcs-price-tag">33K</span></div>
             </div>
         </div>
-        <div class="alcs-card">
+        <div class="alcs-card" data-tags="mix max vodka anggur merah red grape exotic blue biru alkohol alcohol">
             <div class="alcs-brand">MIX MAX</div>
             <div class="alcs-list">
                 <div class="alcs-row"><span class="alcs-variant">Anggur Merah</span><span class="alcs-price-tag">34K</span></div>
                 <div class="alcs-row"><span class="alcs-variant">Exotic Blue</span><span class="alcs-price-tag">34K</span></div>
             </div>
         </div>
-        <div class="alcs-card">
+        <div class="alcs-card" data-tags="iceland vodka lychee leci long island alkohol alcohol">
             <div class="alcs-brand">ICELAND</div>
             <div class="alcs-list">
                 <div class="alcs-row"><span class="alcs-variant">Lychee</span><span class="alcs-price-tag">34K</span></div>
                 <div class="alcs-row"><span class="alcs-variant">Long Island</span><span class="alcs-price-tag">34K</span></div>
             </div>
         </div>
-        <div class="alcs-card">
+        <div class="alcs-card" data-tags="api anggur hijau green grape kawa kawi arak bali alkohol alcohol">
             <div class="alcs-brand">API</div>
             <div class="alcs-list">
                 <div class="alcs-row"><span class="alcs-variant">Anggur Hijau</span><span class="alcs-price-tag">106K</span></div>
@@ -473,6 +441,11 @@
 
 <script>
     function openT(e, n) {
+        const searchInput = document.getElementById('menuSearch');
+        if(searchInput && searchInput.value !== '') {
+            clearSearchInput();
+        }
+
         var i, c, t;
         c = document.getElementsByClassName("content");
         for (i = 0; i < c.length; i++) c[i].classList.remove("active");
@@ -480,6 +453,8 @@
         for (i = 0; i < t.length; i++) t[i].classList.remove("active");
         
         document.getElementById(n).classList.add("active");
+        
+        // Logic handling tombol aktif
         if(e && e.currentTarget) {
             e.currentTarget.classList.add("active");
             e.currentTarget.scrollIntoView({behavior: 'smooth', inline: 'center', block: 'nearest'});
@@ -494,34 +469,156 @@
         }
     }
 
+    // --- SWIPE LOGIC UPDATE (ANTI SENSITIF) ---
     const swipeArea = document.getElementById('swipe-area');
     let startX = 0;
+    let startY = 0; // Tambahan: Deteksi posisi Y awal
     let endX = 0;
-    const minSwipeDistance = 50;
+    let endY = 0;   // Tambahan: Deteksi posisi Y akhir
+    
+    // Saya naikkan sedikit threshold-nya dari 50 ke 70 pixel biar gak gampang kepencet
+    const minSwipeDistance = 70; 
 
     swipeArea.addEventListener('touchstart', (e) => {
+        if(document.body.classList.contains('search-mode-active')) return;
         startX = e.changedTouches[0].screenX;
+        startY = e.changedTouches[0].screenY; // Rekam Y saat mulai sentuh
     }, {passive: true});
 
     swipeArea.addEventListener('touchend', (e) => {
+        if(document.body.classList.contains('search-mode-active')) return;
         endX = e.changedTouches[0].screenX;
+        endY = e.changedTouches[0].screenY; // Rekam Y saat lepas sentuh
         handleSwipeGesture();
     }, {passive: true});
 
     function handleSwipeGesture() {
-        const distance = endX - startX;
-        if (Math.abs(distance) < minSwipeDistance) return;
+        const distanceX = endX - startX;
+        const distanceY = endY - startY;
+        
+        // Logika Baru:
+        // 1. Jarak geser samping harus lebih dari minSwipeDistance (70px)
+        // 2. Jarak geser samping (absX) harus LEBIH BESAR dari geser atas-bawah (absY)
+        // Ini mencegah scroll diagonal dianggap swipe.
+        
+        if (Math.abs(distanceX) > minSwipeDistance && Math.abs(distanceX) > Math.abs(distanceY)) {
+            
+            const tabs = Array.from(document.querySelectorAll('.tab-btn'));
+            const activeTab = document.querySelector('.tab-btn.active');
+            const currentIndex = tabs.indexOf(activeTab);
 
-        const tabs = Array.from(document.querySelectorAll('.tab-btn'));
-        const activeTab = document.querySelector('.tab-btn.active');
-        const currentIndex = tabs.indexOf(activeTab);
+            if (distanceX < 0) {
+                // Swipe Kiri (Next Tab)
+                if (currentIndex < tabs.length - 1) tabs[currentIndex + 1].click();
+            } else {
+                // Swipe Kanan (Prev Tab)
+                if (currentIndex > 0) tabs[currentIndex - 1].click();
+            }
+        }
+        // Jika geser atas-bawahnya lebih dominan, maka fungsi ini diam saja (biarkan native scroll bekerja)
+    }
 
-        if (distance < 0) {
-            if (currentIndex < tabs.length - 1) tabs[currentIndex + 1].click();
-        } else {
-            if (currentIndex > 0) tabs[currentIndex - 1].click();
+    // --- SEARCH LOGIC (TETAP SAMA) ---
+    const searchInput = document.getElementById('menuSearch');
+    const clearBtn = document.getElementById('clearSearch');
+    const menuTabs = document.getElementById('menuTabs');
+    const noResults = document.getElementById('no-results');
+
+    const categoryMap = {
+        'kopi': ['black', 'white'],
+        'coffee': ['black', 'white'],
+        'alkohol': ['alcs'],
+        'beer': ['alcs']
+    };
+
+    if(searchInput) {
+        searchInput.addEventListener('keyup', (e) => {
+            const term = e.target.value.toLowerCase().trim();
+            clearBtn.style.display = term.length > 0 ? 'flex' : 'none';
+
+            if (term.length === 0) {
+                exitSearchMode();
+                return;
+            }
+
+            enterSearchMode();
+
+            if (categoryMap[term]) {
+                showFullCategories(categoryMap[term]);
+            } else {
+                filterSpecificItems(term);
+            }
+        });
+    }
+
+    function enterSearchMode() {
+        document.body.classList.add('search-mode-active');
+        menuTabs.classList.add('hidden-by-search');
+    }
+
+    function exitSearchMode() {
+        document.body.classList.remove('search-mode-active');
+        menuTabs.classList.remove('hidden-by-search');
+        
+        document.querySelectorAll('.menu-card, .alcs-card').forEach(card => card.classList.remove('card-hidden'));
+        document.querySelectorAll('.content').forEach(section => section.classList.remove('section-hidden'));
+        noResults.style.display = 'none';
+
+        const activeBtn = document.querySelector('.tab-btn.active');
+        if(activeBtn) {
+            const tabName = activeBtn.getAttribute('onclick').match(/'([^']+)'/)[1];
+            var c = document.getElementsByClassName("content");
+            for (var i = 0; i < c.length; i++) c[i].classList.remove("active");
+            document.getElementById(tabName).classList.add("active");
         }
     }
+
+    function clearSearchInput() {
+        if(searchInput) searchInput.value = '';
+        if(clearBtn) clearBtn.style.display = 'none';
+        exitSearchMode();
+    }
+
+    function showFullCategories(targetIds) {
+        let hasResult = false;
+        document.querySelectorAll('.content').forEach(section => {
+            if (targetIds.includes(section.id)) {
+                section.classList.remove('section-hidden');
+                section.querySelectorAll('.menu-card, .alcs-card').forEach(c => c.classList.remove('card-hidden'));
+                hasResult = true;
+            } else {
+                section.classList.add('section-hidden');
+            }
+        });
+        noResults.style.display = hasResult ? 'none' : 'block';
+    }
+
+    function filterSpecificItems(term) {
+        let hasResult = false;
+        document.querySelectorAll('.content').forEach(section => {
+            let visibleCardsCount = 0;
+            const cards = section.querySelectorAll('.menu-card, .alcs-card');
+            cards.forEach(card => {
+                const textContent = card.innerText.toLowerCase(); 
+                const imgAlt = card.querySelector('img') ? card.querySelector('img').alt.toLowerCase() : '';
+                const tags = card.getAttribute('data-tags') ? card.getAttribute('data-tags').toLowerCase() : ''; 
+                if (textContent.includes(term) || imgAlt.includes(term) || tags.includes(term)) {
+                    card.classList.remove('card-hidden');
+                    visibleCardsCount++;
+                    hasResult = true;
+                } else {
+                    card.classList.add('card-hidden');
+                }
+            });
+            if (visibleCardsCount > 0) {
+                section.classList.remove('section-hidden');
+            } else {
+                section.classList.add('section-hidden');
+            }
+        });
+        noResults.style.display = hasResult ? 'none' : 'block';
+    }
 </script>
+
 </body>
 </html>
