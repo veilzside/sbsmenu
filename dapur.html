@@ -16,17 +16,9 @@
         .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .menu-icon { font-size: 20px; }
-        
-        /* KOTAK KECIL DI SIDEBAR (HANYA MUNCUL DI LAPTOP) */
-        .sidebar-finance-box { margin-top: auto; background: var(--card-bg); padding: 15px; border-radius: 10px; border: 1px solid #444; }
-        .sidebar-finance-title { font-size: 12px; color: #888; }
-        .sidebar-finance-val { font-size: 18px; font-weight: bold; color: var(--green); }
-
-        /* KOTAK BESAR DI HALAMAN OMZET (MUNCUL DI SEMUA) */
-        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .stat-title { font-size: 14px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-val { font-size: 24px; font-weight: bold; color: var(--green); }
-
+        .finance-box { margin-top: auto; background: var(--card-bg); padding: 15px; border-radius: 10px; border: 1px solid #444; }
+        .finance-title { font-size: 12px; color: #888; }
+        .finance-val { font-size: 18px; font-weight: bold; color: var(--green); }
         .btn-reset { margin-top: 10px; background: #330000; color: #ff4444; border: 1px solid #ff4444; width: 100%; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 10px; text-align: center; }
 
         /* MAIN CONTENT */
@@ -41,6 +33,10 @@
         #btn-audio.active { background: var(--green); border-color: var(--green); box-shadow: 0 0 10px var(--green); animation: none; color: #fff; }
         #btn-audio.inactive { background: #330000; border-color: var(--red); color: var(--red); animation: pulse 2s infinite; }
 
+        /* FILTERS */
+        .filters { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+        .date-input, .select-input { background: var(--card-bg); border: 1px solid #444; color: white; padding: 8px; border-radius: 8px; font-family: 'Poppins'; }
+
         /* TABS */
         .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
         .tab { padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; flex-shrink: 0; white-space: nowrap; }
@@ -54,15 +50,21 @@
         .order-card.status-unpaid { border-left-color: var(--accent); }
         .order-card.status-processing { border-left-color: var(--blue); }
         .order-card.status-completed { border-left-color: var(--green); opacity: 0.8; }
+        .order-card.status-rejected { border-left-color: #555; opacity: 0.6; }
 
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .cust-name { font-size: 18px; font-weight: bold; color: #fff; display: block;}
         .timer-badge { font-size: 14px; font-weight: bold; background: #000; padding: 4px 8px; border-radius: 5px; color: var(--accent); font-family: monospace; display: inline-block; margin-top: 5px;}
         .time-label { font-size: 10px; color: #888; display: block; margin-bottom: 2px; }
 
+        /* LIST ITEM */
         .item-list { margin-bottom: 15px; max-height: 200px; overflow-y: auto; }
-        .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
+        .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; align-items: center; }
         .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: -2px; }
+        .item-unit-price { font-size: 10px; color: #888; display: block; }
+        .btn-trash { background: none; border: none; color: #666; cursor: pointer; font-size: 14px; padding: 5px; }
+        .btn-trash:hover { color: var(--red); }
+        
         .total-row { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
 
         /* HISTORY TEXT */
@@ -73,21 +75,31 @@
         .history-label { display: block; font-size: 10px; color: #888; margin-bottom: 2px; }
         .history-time { display: block; font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 5px; letter-spacing: 1px; }
         .history-date { font-size: 11px; color: var(--accent); font-weight: bold; }
+        
+        .rejected-label { color: var(--red); font-weight: 900; font-size: 20px; text-align: center; border: 2px solid var(--red); padding: 10px; transform: rotate(-5deg); margin-bottom: 10px; }
 
+        /* BUTTONS */
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #fff; font-size: 14px; }
         .btn-green { background: var(--green); } .btn-red { background: var(--red); }
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
         .btn-full { grid-column: span 2; }
 
+        /* STAT CARDS FOR FINANCE */
+        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .stat-title { font-size: 14px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-val { font-size: 24px; font-weight: bold; color: var(--green); }
+
+        /* MODAL */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
         .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
 
+        /* MOBILE */
         @media (max-width: 768px) {
             body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
             .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; background: #1a1a1a; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 9999; }
-            .brand, .sidebar-finance-box { display: none; } /* HANYA SEMBUNYIKAN YG DI SIDEBAR */
+            .brand, .finance-box { display: none; } 
             .menu-item { flex-direction: column; gap: 3px; font-size: 10px; padding: 10px; margin: 0; background: transparent !important; border-radius: 0; justify-content: center; flex: 1; text-align: center; color: #666; }
             .menu-item.active { color: var(--accent); }
             .menu-icon { font-size: 22px; margin-bottom: 2px; display: block; }
@@ -107,9 +119,9 @@
         <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat</span></div>
         <div class="menu-item" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Omzet</span></div>
         
-        <div class="sidebar-finance-box">
-            <div class="sidebar-finance-title">Omzet Hari Ini</div>
-            <div class="sidebar-finance-val" id="today-revenue">Rp 0</div>
+        <div class="finance-box">
+            <div class="finance-title">Omzet Hari Ini</div>
+            <div class="finance-val" id="sidebar-today-rev">Rp 0</div>
             <button class="btn-reset" onclick="resetAllData()">⚠ RESET SEMUA DATA</button>
         </div>
     </div>
@@ -133,31 +145,37 @@
 
     <div class="main" id="history-page" style="display: none;">
         <h2 class="page-title">RIWAYAT SELESAI</h2>
+        <div class="filters">
+            <input type="date" id="history-date-picker" class="date-input" onchange="renderOrders()">
+            <button onclick="clearHistoryFilter()" class="btn-grey" style="padding:8px 15px; font-size:12px;">Hari Ini</button>
+        </div>
         <div id="history-grid" class="orders-grid"></div>
     </div>
 
     <div class="main" id="finance-page" style="display: none;">
         <h2 class="page-title">LAPORAN OMZET</h2>
         
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px;">
-            <div class="stat-card">
-                <div class="stat-title">Harian</div>
-                <div class="stat-val" id="daily-rev">Rp 0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-title">Bulanan</div>
-                <div class="stat-val" id="monthly-rev">Rp 0</div>
-            </div>
-            <div class="stat-card" style="grid-column: span 2;">
-                <div class="stat-title">Tahunan</div>
-                <div class="stat-val" id="yearly-rev">Rp 0</div>
-            </div>
+        <div class="filters">
+            <select id="finance-mode" class="select-input" onchange="toggleFinanceFilter()">
+                <option value="daily">Harian</option>
+                <option value="monthly">Bulanan</option>
+                <option value="yearly">Tahunan</option>
+            </select>
+            <input type="date" id="finance-date" class="date-input" style="display:block;" onchange="calculateFinance()">
+            <input type="month" id="finance-month" class="date-input" style="display:none;" onchange="calculateFinance()">
+            <select id="finance-year" class="select-input" style="display:none;" onchange="calculateFinance()">
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+            </select>
         </div>
 
-        <div style="margin-top:20px; color:#555; font-size:10px; text-align:center;">
-            Status Data: <span id="debug-info">Menunggu...</span>
+        <div style="display: grid; grid-template-columns: repeat(1, 1fr); gap: 15px; margin-top: 20px;">
+            <div class="stat-card">
+                <div class="stat-title" id="stat-label">TOTAL PENDAPATAN</div>
+                <div class="stat-val" id="main-stat-rev">Rp 0</div>
+            </div>
         </div>
-        <button class="btn-reset" onclick="resetAllData()" style="margin-top:50px; padding:20px; font-size:14px;">⚠ HAPUS SEMUA DATA & HISTORY (RESET)</button>
     </div>
 
     <div id="edit-modal" class="modal">
@@ -199,6 +217,10 @@
         let currentTab = 'new';
         let editingOrderKey = null;
         let audioUnlocked = false;
+
+        // INIT DATE PICKERS
+        document.getElementById('history-date-picker').valueAsDate = new Date();
+        document.getElementById('finance-date').valueAsDate = new Date();
 
         function toggleAudio() {
             if (!audioUnlocked) {
@@ -251,7 +273,7 @@
             
             renderOrders();
             updateBadges();
-            calculateFinance();
+            calculateFinance(); // Update sidebox
         });
 
         setInterval(() => {
@@ -293,16 +315,30 @@
             });
         }
 
+        function clearHistoryFilter() {
+            document.getElementById('history-date-picker').valueAsDate = new Date();
+            renderOrders();
+        }
+
         function renderOrders() {
             const grid = document.getElementById('orders-grid');
             const historyGrid = document.getElementById('history-grid');
             grid.innerHTML = '';
             historyGrid.innerHTML = '';
 
+            // Filter History Date
+            const filterDateInput = document.getElementById('history-date-picker').value;
+            const filterDate = new Date(filterDateInput);
+
             allOrders.forEach(order => {
                 const card = createCard(order);
+                
                 if (order.status === 'completed' || order.status === 'rejected' || order.status === 'done') {
-                    historyGrid.appendChild(card);
+                    // Logic Filter Tanggal
+                    const orderDate = new Date(order.completedAt || order.timestamp);
+                    if (orderDate.toDateString() === filterDate.toDateString()) {
+                        historyGrid.appendChild(card);
+                    }
                 } else {
                     if (order.status === currentTab) grid.appendChild(card);
                 }
@@ -332,18 +368,42 @@
             const entryTimeStr = entryDate.getHours() + ":" + (entryDate.getMinutes()<10?'0':'') + entryDate.getMinutes();
 
             const div = document.createElement('div');
-            div.className = `order-card status-${order.status}`;
+            let statusClass = order.status;
+            if (statusClass === 'rejected') statusClass = 'rejected';
+            div.className = `order-card status-${statusClass}`;
             
-            let itemsHtml = (order.items || []).map((item) => `
-                <div class="item-row">
-                    <span>${item.qty}x ${item.name}</span>
-                    <span>${(parseInt(item.price) * parseInt(item.qty)).toLocaleString()}</span>
-                </div>
-                ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
-            `).join('');
+            // ITEM LIST WITH DELETE & UNIT PRICE
+            let itemsHtml = (order.items || []).map((item, idx) => {
+                const qty = parseInt(item.qty);
+                const price = parseInt(item.price);
+                const subtotal = qty * price;
+                
+                // Show Unit Price if Qty > 1
+                const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
+                
+                // Show Trash Icon only if status is NOT completed/rejected
+                const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') 
+                    ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` 
+                    : '';
 
+                return `
+                <div class="item-row">
+                    <div style="flex:1;">
+                        <span>${qty}x ${item.name}</span>
+                        ${unitPriceHtml}
+                        ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
+                    </div>
+                    <div style="display:flex; align-items:center;">
+                        <span style="font-weight:bold;">${subtotal.toLocaleString()}</span>
+                        ${trashBtn}
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            // HISTORY UI
             let historyHtml = '';
-            if(order.status === 'completed' || order.status === 'done') {
+            if(order.status === 'completed' || order.status === 'done' || order.status === 'rejected') {
                 const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
                 const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
                 const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
@@ -377,7 +437,15 @@
                     </div>
                 `;
 
+                // TAMPILAN DITOLAK
+                let rejectedLabel = '';
+                if(order.status === 'rejected') {
+                    rejectedLabel = `<div class="rejected-label">DITOLAK ❌</div>`;
+                    displayTimeHTML = ''; // Hide normal time info if rejected
+                }
+
                 historyHtml = `
+                    ${rejectedLabel}
                     <div class="history-details">
                         <div class="history-row"><span>Respon:</span> <span class="h-val">${fmtDur(durRespon)}</span></div>
                         <div class="history-row"><span>Bayar:</span> <span class="h-val">${fmtDur(durBayar)}</span></div>
@@ -411,7 +479,9 @@
                     <button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>
                 `;
             } else {
-                buttonsHtml = `<div style="text-align:center; color:var(--green); font-weight:bold;">SELESAI</div>`;
+                if(order.status !== 'rejected') {
+                    buttonsHtml = `<div style="text-align:center; color:var(--green); font-weight:bold;">SELESAI</div>`;
+                }
             }
 
             let rawTotal = order.total;
@@ -439,8 +509,34 @@
             const now = new Date().toISOString(); 
             if(status === 'unpaid') updates.acceptedAt = now; 
             if(status === 'processing') updates.paidAt = now; 
-            if(status === 'completed') updates.completedAt = now; 
+            if(status === 'completed' || status === 'rejected') updates.completedAt = now; 
             db.ref('orders/' + key).update(updates);
+        }
+
+        // --- HAPUS ITEM SATUAN ---
+        function deleteOrderItem(orderKey, itemIndex) {
+            if(!confirm("Hapus item ini dari pesanan?")) return;
+
+            const order = allOrders.find(o => o.id === orderKey);
+            if(!order || !order.items) return;
+
+            // Hapus item dari array lokal
+            const newItems = [...order.items];
+            const removedItem = newItems.splice(itemIndex, 1)[0];
+
+            // Hitung ulang total
+            let currentTotal = parseInt(order.total);
+            const deductPrice = parseInt(removedItem.price) * parseInt(removedItem.qty);
+            const newTotal = currentTotal - deductPrice;
+
+            // Update ke DB
+            if (newItems.length === 0) {
+                // Jika item habis, tolak pesanan otomatis? Atau biarkan kosong?
+                // Kita biarkan update dengan array kosong, total 0
+                db.ref('orders/' + orderKey).update({ items: [], total: 0 });
+            } else {
+                db.ref('orders/' + orderKey).update({ items: newItems, total: newTotal });
+            }
         }
 
         function resetAllData() {
@@ -451,35 +547,77 @@
             }
         }
 
+        // --- NEW FINANCE FILTER LOGIC ---
+        function toggleFinanceFilter() {
+            const mode = document.getElementById('finance-mode').value;
+            document.getElementById('finance-date').style.display = (mode === 'daily') ? 'block' : 'none';
+            document.getElementById('finance-month').style.display = (mode === 'monthly') ? 'block' : 'none';
+            document.getElementById('finance-year').style.display = (mode === 'yearly') ? 'block' : 'none';
+            calculateFinance();
+        }
+
         function calculateFinance() {
-            const now = new Date();
-            let daily = 0, monthly = 0, yearly = 0;
-            let count = 0;
+            const mode = document.getElementById('finance-mode').value;
+            let totalRev = 0;
+            let targetDate, targetMonth, targetYear;
+
+            // Set Target Filter
+            if (mode === 'daily') {
+                targetDate = new Date(document.getElementById('finance-date').value);
+            } else if (mode === 'monthly') {
+                const val = document.getElementById('finance-month').value; // YYYY-MM
+                targetYear = parseInt(val.split('-')[0]);
+                targetMonth = parseInt(val.split('-')[1]) - 1; // JS Month 0-11
+            } else if (mode === 'yearly') {
+                targetYear = parseInt(document.getElementById('finance-year').value);
+            }
+
+            // Hitung Hari Ini (Untuk Sidebar)
+            const today = new Date();
+            let todayRev = 0;
 
             allOrders.forEach(order => {
                 if (order.status !== 'completed' && order.status !== 'done') return;
                 
-                count++;
                 const rawDate = order.completedAt || order.timestamp;
+                if(!rawDate) return;
                 const oDate = new Date(rawDate);
                 
                 let rawTotal = order.total;
                 if (typeof rawTotal === 'string') rawTotal = rawTotal.replace(/[^0-9]/g, '');
                 const total = Number(rawTotal) || 0;
 
-                if(oDate.toDateString() === now.toDateString()) daily += total;
-                if(oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) monthly += total;
-                if(oDate.getFullYear() === now.getFullYear()) yearly += total;
+                // Sidebar Total (Selalu Hari Ini)
+                if(oDate.toDateString() === today.toDateString()) {
+                    todayRev += total;
+                }
+
+                // Filter Logic Utama
+                let match = false;
+                if (mode === 'daily') {
+                    if (oDate.toDateString() === targetDate.toDateString()) match = true;
+                } else if (mode === 'monthly') {
+                    if (oDate.getFullYear() === targetYear && oDate.getMonth() === targetMonth) match = true;
+                } else if (mode === 'yearly') {
+                    if (oDate.getFullYear() === targetYear) match = true;
+                }
+
+                if (match) totalRev += total;
             });
 
             const fmt = (n) => "Rp " + n.toLocaleString('id-ID');
-            document.getElementById('today-revenue').innerText = fmt(daily);
-            document.getElementById('daily-rev').innerText = fmt(daily);
-            document.getElementById('monthly-rev').innerText = fmt(monthly);
-            document.getElementById('yearly-rev').innerText = fmt(yearly);
-            document.getElementById('debug-info').innerText = `Terhitung: ${count} Pesanan Selesai`;
+            document.getElementById('sidebar-today-rev').innerText = fmt(todayRev);
+            document.getElementById('main-stat-rev').innerText = fmt(totalRev);
+            
+            // Update Label Judul
+            let label = "TOTAL PENDAPATAN";
+            if (mode === 'daily') label += " (HARIAN)";
+            if (mode === 'monthly') label += " (BULANAN)";
+            if (mode === 'yearly') label += " (TAHUNAN)";
+            document.getElementById('stat-label').innerText = label;
         }
 
+        // --- NAVIGATION ---
         function showPage(pageId) {
             document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
@@ -527,7 +665,7 @@
             const currentTotal = Number(oldTotalRaw) || 0;
             const newPrice = Number(price);
 
-            const newItems = [...order.items, { name: name, price: newPrice, qty: 1, note: 'Tambahan Manual' }];
+            const newItems = [...(order.items||[]), { name: name, price: newPrice, qty: 1, note: 'Tambahan Manual' }];
             const newTotal = currentTotal + newPrice;
 
             db.ref('orders/' + editingOrderKey).update({ items: newItems, total: newTotal }).then(() => {
