@@ -16,9 +16,17 @@
         .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .menu-icon { font-size: 20px; }
-        .finance-box { margin-top: auto; background: var(--card-bg); padding: 15px; border-radius: 10px; border: 1px solid #444; }
-        .finance-title { font-size: 12px; color: #888; }
-        .finance-val { font-size: 18px; font-weight: bold; color: var(--green); }
+        
+        /* KOTAK KECIL DI SIDEBAR (HANYA MUNCUL DI LAPTOP) */
+        .sidebar-finance-box { margin-top: auto; background: var(--card-bg); padding: 15px; border-radius: 10px; border: 1px solid #444; }
+        .sidebar-finance-title { font-size: 12px; color: #888; }
+        .sidebar-finance-val { font-size: 18px; font-weight: bold; color: var(--green); }
+
+        /* KOTAK BESAR DI HALAMAN OMZET (MUNCUL DI SEMUA) */
+        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .stat-title { font-size: 14px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-val { font-size: 24px; font-weight: bold; color: var(--green); }
+
         .btn-reset { margin-top: 10px; background: #330000; color: #ff4444; border: 1px solid #ff4444; width: 100%; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 10px; text-align: center; }
 
         /* MAIN CONTENT */
@@ -29,7 +37,6 @@
         .page-title { margin:0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
         .header-actions { display: flex; gap: 15px; align-items: center; }
         
-        /* AUDIO BELL */
         #btn-audio { background: transparent; border: 2px solid #555; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: 0.3s; color: #555; }
         #btn-audio.active { background: var(--green); border-color: var(--green); box-shadow: 0 0 10px var(--green); animation: none; color: #fff; }
         #btn-audio.inactive { background: #330000; border-color: var(--red); color: var(--red); animation: pulse 2s infinite; }
@@ -53,7 +60,6 @@
         .timer-badge { font-size: 14px; font-weight: bold; background: #000; padding: 4px 8px; border-radius: 5px; color: var(--accent); font-family: monospace; display: inline-block; margin-top: 5px;}
         .time-label { font-size: 10px; color: #888; display: block; margin-bottom: 2px; }
 
-        /* LIST ITEM */
         .item-list { margin-bottom: 15px; max-height: 200px; overflow-y: auto; }
         .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
         .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: -2px; }
@@ -68,23 +74,20 @@
         .history-time { display: block; font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 5px; letter-spacing: 1px; }
         .history-date { font-size: 11px; color: var(--accent); font-weight: bold; }
 
-        /* BUTTONS */
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #fff; font-size: 14px; }
         .btn-green { background: var(--green); } .btn-red { background: var(--red); }
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
         .btn-full { grid-column: span 2; }
 
-        /* MODAL */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
         .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
 
-        /* MOBILE */
         @media (max-width: 768px) {
             body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
             .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; background: #1a1a1a; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 9999; }
-            .brand, .finance-box { display: none; } 
+            .brand, .sidebar-finance-box { display: none; } /* HANYA SEMBUNYIKAN YG DI SIDEBAR */
             .menu-item { flex-direction: column; gap: 3px; font-size: 10px; padding: 10px; margin: 0; background: transparent !important; border-radius: 0; justify-content: center; flex: 1; text-align: center; color: #666; }
             .menu-item.active { color: var(--accent); }
             .menu-icon { font-size: 22px; margin-bottom: 2px; display: block; }
@@ -96,7 +99,7 @@
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
-<body>
+<body onclick="unlockAudio()">
 
     <div class="sidebar">
         <div class="brand">SBS ADMIN</div>
@@ -104,9 +107,9 @@
         <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat</span></div>
         <div class="menu-item" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Omzet</span></div>
         
-        <div class="finance-box">
-            <div class="finance-title">Omzet Hari Ini</div>
-            <div class="finance-val" id="today-revenue">Rp 0</div>
+        <div class="sidebar-finance-box">
+            <div class="sidebar-finance-title">Omzet Hari Ini</div>
+            <div class="sidebar-finance-val" id="today-revenue">Rp 0</div>
             <button class="btn-reset" onclick="resetAllData()">⚠ RESET SEMUA DATA</button>
         </div>
     </div>
@@ -135,24 +138,26 @@
 
     <div class="main" id="finance-page" style="display: none;">
         <h2 class="page-title">LAPORAN OMZET</h2>
+        
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px;">
-            <div class="finance-box" style="margin:0; text-align: center;">
-                <div class="finance-title">Harian</div>
-                <div class="finance-val" id="daily-rev">Rp 0</div>
+            <div class="stat-card">
+                <div class="stat-title">Harian</div>
+                <div class="stat-val" id="daily-rev">Rp 0</div>
             </div>
-            <div class="finance-box" style="margin:0; text-align: center;">
-                <div class="finance-title">Bulanan</div>
-                <div class="finance-val" id="monthly-rev">Rp 0</div>
+            <div class="stat-card">
+                <div class="stat-title">Bulanan</div>
+                <div class="stat-val" id="monthly-rev">Rp 0</div>
             </div>
-            <div class="finance-box" style="margin:0; grid-column: span 2; text-align: center;">
-                <div class="finance-title">Tahunan</div>
-                <div class="finance-val" id="yearly-rev">Rp 0</div>
+            <div class="stat-card" style="grid-column: span 2;">
+                <div class="stat-title">Tahunan</div>
+                <div class="stat-val" id="yearly-rev">Rp 0</div>
             </div>
         </div>
+
         <div style="margin-top:20px; color:#555; font-size:10px; text-align:center;">
-            Status Data: <span id="debug-info">Menghitung...</span>
+            Status Data: <span id="debug-info">Menunggu...</span>
         </div>
-        <button class="btn-reset" onclick="resetAllData()" style="margin-top:20px; padding:20px; font-size:14px;">⚠ HAPUS SEMUA DATA & HISTORY (RESET)</button>
+        <button class="btn-reset" onclick="resetAllData()" style="margin-top:50px; padding:20px; font-size:14px;">⚠ HAPUS SEMUA DATA & HISTORY (RESET)</button>
     </div>
 
     <div id="edit-modal" class="modal">
@@ -195,7 +200,6 @@
         let editingOrderKey = null;
         let audioUnlocked = false;
 
-        // --- AUDIO TOGGLE ---
         function toggleAudio() {
             if (!audioUnlocked) {
                 soundNew.play().then(() => {
@@ -214,7 +218,19 @@
             }
         }
 
-        // --- REALTIME LISTENER ---
+        function unlockAudio() {
+            if (!audioUnlocked) {
+                soundNew.play().then(() => {
+                    soundNew.pause();
+                    soundNew.currentTime = 0;
+                    audioUnlocked = true;
+                    btnAudio.classList.remove('inactive');
+                    btnAudio.classList.add('active');
+                    btnAudio.innerHTML = "🔔";
+                }).catch(e => console.log("Silent unlock failed"));
+            }
+        }
+
         db.ref('orders').on('value', (snapshot) => {
             const data = snapshot.val();
             const previousCount = allOrders.length;
@@ -326,7 +342,6 @@
                 ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
             `).join('');
 
-            // --- HISTORY UI ---
             let historyHtml = '';
             if(order.status === 'completed' || order.status === 'done') {
                 const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
@@ -399,7 +414,6 @@
                 buttonsHtml = `<div style="text-align:center; color:var(--green); font-weight:bold;">SELESAI</div>`;
             }
 
-            // CLEAN TOTAL FORCE NUMBER
             let rawTotal = order.total;
             if (typeof rawTotal === 'string') rawTotal = rawTotal.replace(/[^0-9]/g, '');
             const safeTotal = Number(rawTotal) || 0;
@@ -437,20 +451,18 @@
             }
         }
 
-        // --- NEW CALCULATE FINANCE (V3) ---
         function calculateFinance() {
             const now = new Date();
             let daily = 0, monthly = 0, yearly = 0;
-            let countCompleted = 0;
+            let count = 0;
 
             allOrders.forEach(order => {
                 if (order.status !== 'completed' && order.status !== 'done') return;
                 
-                countCompleted++;
+                count++;
                 const rawDate = order.completedAt || order.timestamp;
                 const oDate = new Date(rawDate);
                 
-                // Parsing Super Aman
                 let rawTotal = order.total;
                 if (typeof rawTotal === 'string') rawTotal = rawTotal.replace(/[^0-9]/g, '');
                 const total = Number(rawTotal) || 0;
@@ -461,13 +473,11 @@
             });
 
             const fmt = (n) => "Rp " + n.toLocaleString('id-ID');
-            if(document.getElementById('today-revenue')) document.getElementById('today-revenue').innerText = fmt(daily);
-            if(document.getElementById('daily-rev')) document.getElementById('daily-rev').innerText = fmt(daily);
-            if(document.getElementById('monthly-rev')) document.getElementById('monthly-rev').innerText = fmt(monthly);
-            if(document.getElementById('yearly-rev')) document.getElementById('yearly-rev').innerText = fmt(yearly);
-            
-            // Debugging Info
-            document.getElementById('debug-info').innerText = `Terhitung: ${countCompleted} Pesanan Selesai`;
+            document.getElementById('today-revenue').innerText = fmt(daily);
+            document.getElementById('daily-rev').innerText = fmt(daily);
+            document.getElementById('monthly-rev').innerText = fmt(monthly);
+            document.getElementById('yearly-rev').innerText = fmt(yearly);
+            document.getElementById('debug-info').innerText = `Terhitung: ${count} Pesanan Selesai`;
         }
 
         function showPage(pageId) {
@@ -512,7 +522,6 @@
             if(!name || !price) return alert("Isi data dengan benar");
 
             const order = allOrders.find(o => o.id === editingOrderKey);
-            // Aman convert
             let oldTotalRaw = order.total;
             if(typeof oldTotalRaw === 'string') oldTotalRaw = oldTotalRaw.replace(/[^0-9]/g, '');
             const currentTotal = Number(oldTotalRaw) || 0;
