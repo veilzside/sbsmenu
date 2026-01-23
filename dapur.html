@@ -24,6 +24,16 @@
         /* MAIN CONTENT */
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
         
+        /* TOP BAR (AUDIO & REFRESH) */
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .page-title { margin:0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
+        .header-actions { display: flex; gap: 15px; align-items: center; }
+        
+        /* AUDIO BELL STYLE */
+        #btn-audio { background: transparent; border: 2px solid #555; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        #btn-audio.active { background: var(--green); border-color: var(--green); box-shadow: 0 0 10px var(--green); animation: none; }
+        #btn-audio.inactive { background: #330000; border-color: var(--red); color: var(--red); animation: pulse 2s infinite; }
+
         /* TABS */
         .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
         .tab { padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; flex-shrink: 0; white-space: nowrap; }
@@ -49,12 +59,15 @@
         .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: -2px; }
         .total-row { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
 
-        /* HISTORY TEXT (PERBAIKAN WARNA & UKURAN) */
+        /* HISTORY TEXT */
         .history-details { font-size: 11px; color: #aaa; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
         .history-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
         .h-val { color: #fff; font-weight: bold; }
-        .history-big-text { font-size: 14px; font-weight: bold; color: #fff; display: block; margin-bottom: 4px; text-align: right;}
-        .history-date { font-size: 10px; color: #888; display: block; text-align: right; margin-bottom: 8px;}
+        
+        .history-info { text-align: right; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        .history-label { display: block; font-size: 10px; color: #888; margin-bottom: 2px; }
+        .history-time { display: block; font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 5px; letter-spacing: 1px; }
+        .history-date { font-size: 11px; color: var(--accent); font-weight: bold; }
 
         /* BUTTONS */
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -80,10 +93,11 @@
             .status-tabs { position: sticky; top: 0; background: var(--bg-dark); z-index: 50; padding-top: 10px; margin-top: -10px; }
             .orders-grid { grid-template-columns: 1fr; gap: 20px; padding-bottom: 0; } 
         }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
-<body onclick="unlockAudio()">
+<body>
 
     <div class="sidebar">
         <div class="brand">SBS ADMIN</div>
@@ -99,9 +113,12 @@
     </div>
 
     <div class="main" id="orders-page">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2 style="margin:0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px;">PESANAN AKTIF</h2>
-            <button onclick="calculateFinance()" style="background:none; border:none; color:#666; font-size:24px;">↻</button>
+        <div class="top-header">
+            <h2 class="page-title">PESANAN AKTIF</h2>
+            <div class="header-actions">
+                <button id="btn-audio" class="inactive" onclick="toggleAudio()">🔕</button>
+                <button onclick="calculateFinance()" style="background:none; border:none; color:#666; font-size:24px; cursor:pointer;">↻</button>
+            </div>
         </div>
 
         <div class="status-tabs">
@@ -113,12 +130,12 @@
     </div>
 
     <div class="main" id="history-page" style="display: none;">
-        <h2 style="font-family:'Bebas Neue'; color:var(--accent);">RIWAYAT SELESAI</h2>
+        <h2 class="page-title">RIWAYAT SELESAI</h2>
         <div id="history-grid" class="orders-grid"></div>
     </div>
 
     <div class="main" id="finance-page" style="display: none;">
-        <h2 style="font-family:'Bebas Neue'; color:var(--accent);">LAPORAN OMZET</h2>
+        <h2 class="page-title">LAPORAN OMZET</h2>
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px;">
             <div class="finance-box" style="margin:0; text-align: center;">
                 <div class="finance-title">Harian</div>
@@ -175,16 +192,26 @@
         let editingOrderKey = null;
         let audioUnlocked = false;
 
-        // --- UNLOCK AUDIO (Tanpa Tombol) ---
-        // User cukup klik 1x di mana saja saat pertama buka web
-        function unlockAudio() {
+        // --- AUDIO TOGGLE MANUAL ---
+        function toggleAudio() {
+            const btn = document.getElementById('btn-audio');
+            
             if (!audioUnlocked) {
+                // Aktifkan Audio
                 soundNew.play().then(() => {
                     soundNew.pause();
                     soundNew.currentTime = 0;
                     audioUnlocked = true;
-                    console.log("🔊 Audio System Aktif!");
-                }).catch(e => console.log("Silakan klik layar untuk aktifkan audio"));
+                    btn.classList.remove('inactive');
+                    btn.classList.add('active');
+                    btn.innerHTML = "🔔";
+                }).catch(e => alert("Gagal akses audio. Coba lagi."));
+            } else {
+                // Matikan Audio
+                audioUnlocked = false;
+                btn.classList.remove('active');
+                btn.classList.add('inactive');
+                btn.innerHTML = "🔕";
             }
         }
 
@@ -200,7 +227,7 @@
                 });
             }
             
-            // Bunyi TING hanya jika order bertambah
+            // Bunyi TING hanya jika order bertambah & audio aktif
             if (allOrders.length > previousCount && audioUnlocked) {
                 const hasNew = allOrders.some(o => o.status === 'new');
                 if(hasNew) soundNew.play().catch(e => console.log("Audio blocked", e));
@@ -213,14 +240,14 @@
             calculateFinance();
         });
 
-        // --- GLOBAL TIMER & ALARM ---
+        // --- GLOBAL TIMER & ALARM BAWEL ---
         setInterval(() => {
             updateLiveTimers();
             checkNaggingAlarm();
         }, 1000);
 
         function checkNaggingAlarm() {
-            if (!audioUnlocked) return;
+            if (!audioUnlocked) return; // Silent kalau belum diaktifkan
 
             const now = Date.now();
             let shouldAlarm = false;
@@ -230,8 +257,8 @@
                     const orderTime = new Date(order.timestamp).getTime();
                     const diffSeconds = (now - orderTime) / 1000;
                     
-                    // Bunyi SETIAP 2 MENIT (120 detik)
-                    // Menggunakan modulo dengan toleransi 1 detik agar tidak kelewat
+                    // ALARM BUNYI SETIAP 2 MENIT (120 Detik)
+                    // Menggunakan range toleransi 1.5 detik
                     if (diffSeconds > 120 && (diffSeconds % 120) < 1.5) {
                         shouldAlarm = true;
                     }
@@ -266,7 +293,7 @@
 
             allOrders.forEach(order => {
                 const card = createCard(order);
-                if (order.status === 'completed' || order.status === 'rejected') {
+                if (order.status === 'completed' || order.status === 'rejected' || order.status === 'done') {
                     historyGrid.appendChild(card);
                 } else {
                     if (order.status === currentTab) grid.appendChild(card);
@@ -307,9 +334,9 @@
                 ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
             `).join('');
 
-            // --- HISTORY (PERBAIKAN TAMPILAN) ---
+            // --- HISTORY UI ---
             let historyHtml = '';
-            if(order.status === 'completed') {
+            if(order.status === 'completed' || order.status === 'done') {
                 const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
                 const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
                 const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
@@ -322,20 +349,23 @@
                     return m > 0 ? `${m}m ${sc}s` : `${sc}s`;
                 };
 
-                // Format Jam & Tanggal
                 const dateIn = new Date(created);
-                const dateInStr = dateIn.toLocaleDateString('id-ID', {day: 'numeric', month: 'short'});
+                const dateInStr = dateIn.toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
                 const timeIn = dateIn.getHours() + ":" + (dateIn.getMinutes()<10?'0':'') + dateIn.getMinutes();
                 
                 const dateOut = new Date(completed || Date.now());
-                const dateOutStr = dateOut.toLocaleDateString('id-ID', {day: 'numeric', month: 'short'});
+                const dateOutStr = dateOut.toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
                 const timeOut = dateOut.getHours() + ":" + (dateOut.getMinutes()<10?'0':'') + dateOut.getMinutes();
 
                 displayTimeHTML = `
-                    <div style="text-align:right;">
-                        <span class="history-big-text">MASUK: ${timeIn}</span>
+                    <div class="history-info">
+                        <span class="history-label">MASUK:</span>
+                        <span class="history-time">${timeIn}</span>
                         <span class="history-date">${dateInStr}</span>
-                        <span class="history-big-text" style="color:var(--green)">SELESAI: ${timeOut}</span>
+                    </div>
+                    <div class="history-info" style="border:none;">
+                        <span class="history-label">SELESAI:</span>
+                        <span class="history-time" style="color:var(--green)">${timeOut}</span>
                         <span class="history-date">${dateOutStr}</span>
                     </div>
                 `;
@@ -377,8 +407,12 @@
                 buttonsHtml = `<div style="text-align:center; color:var(--green); font-weight:bold;">SELESAI</div>`;
             }
 
-            // HITUNG TOTAL AMAN (Number)
-            const safeTotal = Number(order.total) || 0;
+            // CLEAN TOTAL (REMOVE NON-NUMERIC CHARACTERS)
+            let rawTotal = order.total;
+            if (typeof rawTotal === 'string') {
+                rawTotal = rawTotal.replace(/[^0-9]/g, '');
+            }
+            const safeTotal = Number(rawTotal) || 0;
 
             div.innerHTML = `
                 <div class="card-header">
@@ -413,54 +447,52 @@
             }
         }
 
-        // --- FINANCE CALCULATION (FIXED DATA TYPE) ---
+        // --- ROBUST FINANCE CALCULATION ---
         function calculateFinance() {
             const now = new Date();
             let daily = 0, monthly = 0, yearly = 0;
 
             allOrders.forEach(order => {
-                if (order.status !== 'completed') return;
+                // Support 'completed' dan 'done' (data lama)
+                if (order.status !== 'completed' && order.status !== 'done') return;
                 
-                // Gunakan tanggal selesai atau timestamp
+                // Gunakan tanggal completedAt jika ada, fallback ke timestamp
                 const rawDate = order.completedAt || order.timestamp;
+                if(!rawDate) return;
                 const oDate = new Date(rawDate);
-                
-                // FORCE CONVERT TO NUMBER (Agar tidak error jika data string)
-                const total = Number(order.total) || 0; 
+                if(isNaN(oDate.getTime())) return;
 
-                // Cek Harian
+                // BERSIHKAN TOTAL DARI KARAKTER "Rp" atau "."
+                let rawTotal = order.total;
+                if (typeof rawTotal === 'string') {
+                    rawTotal = rawTotal.replace(/[^0-9]/g, '');
+                }
+                const total = Number(rawTotal) || 0;
+
+                // Hitung Harian (String Comparison Date Only)
                 if(oDate.toDateString() === now.toDateString()) {
                     daily += total;
                 }
                 
-                // Cek Bulanan
+                // Hitung Bulanan
                 if(oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) {
                     monthly += total;
                 }
                 
-                // Cek Tahunan
+                // Hitung Tahunan
                 if(oDate.getFullYear() === now.getFullYear()) {
                     yearly += total;
                 }
             });
 
             const fmt = (n) => "Rp " + n.toLocaleString('id-ID');
-            
-            // Update UI dengan Safety Check
-            const elToday = document.getElementById('today-revenue');
-            if(elToday) elToday.innerText = fmt(daily);
-
-            const elDaily = document.getElementById('daily-rev');
-            if(elDaily) elDaily.innerText = fmt(daily);
-
-            const elMonthly = document.getElementById('monthly-rev');
-            if(elMonthly) elMonthly.innerText = fmt(monthly);
-
-            const elYearly = document.getElementById('yearly-rev');
-            if(elYearly) elYearly.innerText = fmt(yearly);
+            if(document.getElementById('today-revenue')) document.getElementById('today-revenue').innerText = fmt(daily);
+            if(document.getElementById('daily-rev')) document.getElementById('daily-rev').innerText = fmt(daily);
+            if(document.getElementById('monthly-rev')) document.getElementById('monthly-rev').innerText = fmt(monthly);
+            if(document.getElementById('yearly-rev')) document.getElementById('yearly-rev').innerText = fmt(yearly);
         }
 
-        // --- NAVIGASI HALAMAN ---
+        // --- NAVIGATION ---
         function showPage(pageId) {
             document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
@@ -503,9 +535,11 @@
             if(!name || !price) return alert("Isi data dengan benar");
 
             const order = allOrders.find(o => o.id === editingOrderKey);
-            // Convert to Number untuk keamanan
+            // Bersihkan total lama sebelum dijumlah
+            let oldTotalRaw = order.total;
+            if(typeof oldTotalRaw === 'string') oldTotalRaw = oldTotalRaw.replace(/[^0-9]/g, '');
+            const currentTotal = Number(oldTotalRaw) || 0;
             const newPrice = Number(price);
-            const currentTotal = Number(order.total);
 
             const newItems = [...order.items, { name: name, price: newPrice, qty: 1, note: 'Tambahan Manual' }];
             const newTotal = currentTotal + newPrice;
