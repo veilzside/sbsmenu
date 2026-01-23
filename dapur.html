@@ -18,32 +18,38 @@
             display: flex; height: 100vh; overflow: hidden; 
         }
         
+        /* --- START OVERLAY (Audio Fix) --- */
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .btn-start {
+            padding: 20px 40px; font-size: 24px; background: var(--accent); color: #000;
+            border: none; border-radius: 50px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 20px var(--accent); animation: pulse 1.5s infinite;
+        }
+        
         /* --- SIDEBAR --- */
         .sidebar { 
             width: 260px; background: #15151a; padding: 20px; 
             display: flex; flex-direction: column; border-right: 1px solid #333; 
             flex-shrink: 0; z-index: 100;
         }
-        
         .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
-        
         .menu-item { 
             padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; 
             font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; 
         }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .menu-icon { font-size: 20px; }
-        
         .finance-box { margin-top: auto; background: var(--card-bg); padding: 15px; border-radius: 10px; border: 1px solid #444; }
         .finance-title { font-size: 12px; color: #888; }
         .finance-val { font-size: 18px; font-weight: bold; color: var(--green); }
-
         .btn-reset { margin-top: 10px; background: #330000; color: #ff4444; border: 1px solid #ff4444; width: 100%; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 10px; text-align: center; }
 
         /* --- MAIN CONTENT --- */
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
-        
-        /* TABS STATUS */
         .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
         .tab { padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; flex-shrink: 0; white-space: nowrap; }
         .tab.active { opacity: 1; background: var(--card-bg); border-color: var(--accent); color: var(--accent); }
@@ -86,7 +92,6 @@
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
         .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
 
-        /* --- MOBILE RESPONSIVE --- */
         @media (max-width: 768px) {
             body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
             .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; background: #1a1a1a; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 9999; }
@@ -99,10 +104,17 @@
             .orders-grid { grid-template-columns: 1fr; gap: 20px; padding-bottom: 0; } 
         }
 
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
+
+    <div id="start-overlay">
+        <h1 style="color:white; margin-bottom:20px;">DAPUR SBS</h1>
+        <button class="btn-start" onclick="startApp()">MULAI SHIFT 🔔</button>
+        <p style="color:#aaa; margin-top:20px;">Klik untuk mengaktifkan Alarm</p>
+    </div>
 
     <div class="sidebar">
         <div class="brand">SBS ADMIN</div>
@@ -167,13 +179,10 @@
         </div>
     </div>
 
-    <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
-
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <audio id="sound-new" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio> <audio id="sound-nag" src="https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3"></audio> <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
-        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
             authDomain: "sbs-menu-d1611.firebaseapp.com",
@@ -186,53 +195,79 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const audio = document.getElementById('notif-sound');
+        const soundNew = document.getElementById('sound-new');
+        const soundNag = document.getElementById('sound-nag');
         
         let allOrders = [];
         let currentTab = 'new';
         let editingOrderKey = null;
+        let audioEnabled = false;
 
-        // REALTIME LISTENER (Hanya update data array, JANGAN render ulang semuanya di sini)
+        // --- AKTIVASI AUDIO ---
+        function startApp() {
+            document.getElementById('start-overlay').style.display = 'none';
+            // Play dummy sound to unlock audio context on iOS/Android
+            soundNew.play().then(() => {
+                soundNew.pause();
+                soundNew.currentTime = 0;
+                audioEnabled = true;
+            });
+        }
+
+        // --- REALTIME LISTENER ---
         db.ref('orders').on('value', (snapshot) => {
             const data = snapshot.val();
+            const previousCount = allOrders.length; // Cek jumlah sebelumnya
             allOrders = [];
+            
             if (data) {
                 Object.keys(data).forEach(key => {
                     allOrders.push({ id: key, ...data[key] });
                 });
             }
-            // Sort Descending (Terbaru diatas)
+            
+            // Bunyi TING hanya jika jumlah order bertambah (order baru masuk)
+            if (allOrders.length > previousCount && audioEnabled) {
+                const newOrders = allOrders.filter(o => o.status === 'new');
+                if(newOrders.length > 0) soundNew.play().catch(e => console.log(e));
+            }
+
             allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             
-            // Panggil Render UTAMA hanya jika ada perubahan Data
             renderOrders();
             updateBadges();
             calculateFinance();
         });
 
-        // GLOBAL TIMER (Update HANYA TEKS WAKTU setiap detik, TANPA render ulang layout)
+        // --- GLOBAL INTERVAL (TIMER & ALARM NAGGING) ---
         setInterval(() => {
             updateLiveTimers();
-        }, 1000);
+            checkNaggingAlarm();
+        }, 1000); // Cek tiap detik
+
+        // ALARM BAWEL (Setiap 2 menit / 120 detik jika ada order 'new' belum direspon)
+        let alarmCounter = 0;
+        function checkNaggingAlarm() {
+            const hasNewOrders = allOrders.some(o => o.status === 'new');
+            if (hasNewOrders && audioEnabled) {
+                alarmCounter++;
+                // 120 detik = 2 menit
+                if (alarmCounter >= 120) {
+                    soundNag.play().catch(e => console.log(e));
+                    alarmCounter = 0; // Reset counter
+                }
+            } else {
+                alarmCounter = 0;
+            }
+        }
 
         function updateLiveTimers() {
-            // Cari semua elemen yang punya class 'live-timer'
             const timerElements = document.querySelectorAll('.live-timer');
-            
             timerElements.forEach(el => {
                 const startTime = parseInt(el.getAttribute('data-start'));
-                if (!startTime || isNaN(startTime)) {
-                    el.innerText = "--:--";
-                    return;
-                }
-
+                if (!startTime || isNaN(startTime)) { el.innerText = "--:--"; return; }
                 const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                // Jika waktu > 24 jam (data lama), stop hitung
-                if (elapsed > 86400) {
-                    el.innerText = "> 24h";
-                    return;
-                }
-
+                if (elapsed > 86400) { el.innerText = "> 24h"; return; }
                 const min = Math.floor(elapsed / 60);
                 const sec = elapsed % 60;
                 el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
@@ -242,7 +277,6 @@
         function renderOrders() {
             const grid = document.getElementById('orders-grid');
             const historyGrid = document.getElementById('history-grid');
-            
             grid.innerHTML = '';
             historyGrid.innerHTML = '';
 
@@ -251,23 +285,18 @@
                 if (order.status === 'completed' || order.status === 'rejected') {
                     historyGrid.appendChild(card);
                 } else {
-                    if (order.status === currentTab) {
-                        grid.appendChild(card);
-                    }
+                    if (order.status === currentTab) grid.appendChild(card);
                 }
             });
-            // Langsung update timer setelah render agar tidak menunggu 1 detik
             updateLiveTimers();
         }
 
         function createCard(order) {
-            // 1. FORMAT NAMA MEJA
             let displayName = order.customer;
             if(!isNaN(order.customer) && order.customer.trim() !== '') {
                 displayName = "MEJA " + order.customer;
             }
 
-            // 2. TIMELINE LOGIC
             const created = new Date(order.timestamp).getTime();
             const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : 0;
             const paid = order.paidAt ? new Date(order.paidAt).getTime() : 0;
@@ -275,21 +304,12 @@
 
             let displayTimeHTML = "";
             let timerStart = 0;
-            let timerLabel = "";
 
-            if(order.status === 'new') {
-                timerStart = created;
-                timerLabel = "Menunggu Respon";
-            } else if (order.status === 'unpaid') {
-                timerStart = accepted;
-                timerLabel = "Menunggu Bayar";
-            } else if (order.status === 'processing') {
-                timerStart = paid;
-                timerLabel = "Sedang Dimasak";
-            }
+            if(order.status === 'new') timerStart = created;
+            else if (order.status === 'unpaid') timerStart = accepted;
+            else if (order.status === 'processing') timerStart = paid;
 
-            // Format Jam Masuk (Sesuai Tab)
-            const entryDate = new Date(timerStart || created); // Fallback ke created jika 0
+            const entryDate = new Date(timerStart || created);
             const entryTimeStr = entryDate.getHours() + ":" + (entryDate.getMinutes()<10?'0':'') + entryDate.getMinutes();
 
             const div = document.createElement('div');
@@ -303,10 +323,9 @@
                 ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
             `).join('');
 
-            // Tampilan Khusus History
+            // HISTORY DETAILS (Fixed & Added Entry Time)
             let historyHtml = '';
             if(order.status === 'completed') {
-                // Hitung durasi (Gunakan 0 jika data lama tidak ada timestamp)
                 const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
                 const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
                 const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
@@ -319,6 +338,14 @@
                     return m > 0 ? `${m}m ${sc}s` : `${sc}s`;
                 };
 
+                // Format Jam Masuk Awal & Jam Selesai
+                const dateIn = new Date(created);
+                const timeIn = dateIn.getHours() + ":" + (dateIn.getMinutes()<10?'0':'') + dateIn.getMinutes();
+                const dateOut = new Date(completed || Date.now());
+                const timeOut = dateOut.getHours() + ":" + (dateOut.getMinutes()<10?'0':'') + dateOut.getMinutes();
+
+                displayTimeHTML = `<div style="text-align:right; font-size:11px; color:#888;">Masuk: ${timeIn}<br>Selesai: ${timeOut}</div>`;
+
                 historyHtml = `
                     <div class="history-details">
                         <div class="history-row"><span>Respon:</span> <span class="h-val">${fmtDur(durRespon)}</span></div>
@@ -329,18 +356,9 @@
                         </div>
                     </div>
                 `;
-                
-                const doneDate = new Date(completed || Date.now());
-                const doneTimeStr = doneDate.getHours() + ":" + (doneDate.getMinutes()<10?'0':'') + doneDate.getMinutes();
-                displayTimeHTML = `Selesai: ${doneTimeStr}`;
             } else {
-                // Di tab aktif, berikan CLASS 'live-timer' agar bisa diupdate JS tanpa render ulang
-                // Jika timerStart 0 (data lama), jangan pasang data-start agar tampil --:--
                 const dataStartAttr = timerStart > 0 ? `data-start="${timerStart}"` : '';
-                displayTimeHTML = `
-                    <span class="time-label">Masuk: ${entryTimeStr}</span>
-                    <span class="timer-badge live-timer" ${dataStartAttr}>--:--</span>
-                `;
+                displayTimeHTML = `<span class="time-label">Masuk: ${entryTimeStr}</span><span class="timer-badge live-timer" ${dataStartAttr}>--:--</span>`;
             }
 
             let buttonsHtml = '';
@@ -352,13 +370,13 @@
                 `;
             } else if (order.status === 'unpaid') {
                 buttonsHtml = `
-                    <div style="grid-column: span 2; text-align:center; color:#888; font-size:11px; margin-bottom:5px;">Customer belum bayar</div>
+                    <div style="grid-column: span 2; text-align:center; color:#888; font-size:11px; margin-bottom:5px;">Tunggu Bayar</div>
                     <button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button>
                     <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>
                 `;
             } else if (order.status === 'processing') {
                 buttonsHtml = `
-                     <div style="grid-column: span 2; text-align:center; color:#FFD200; font-size:11px; margin-bottom:5px; font-weight:bold;">SEDANG DIMASAK</div>
+                     <div style="grid-column: span 2; text-align:center; color:#FFD200; font-size:11px; margin-bottom:5px; font-weight:bold;">SEDANG DISIAPKAN</div>
                     <button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>
                 `;
             } else {
@@ -371,13 +389,11 @@
                         <span class="cust-name">${displayName}</span>
                         <span style="font-size:10px; color:#666;">ID: ...${order.id.slice(-4)}</span>
                     </div>
-                    <div style="text-align:right;">
-                        ${displayTimeHTML}
-                    </div>
+                    <div>${displayTimeHTML}</div>
                 </div>
                 <div class="item-list">${itemsHtml}</div>
                 ${historyHtml}
-                <div class="total-row">Total: Rp ${order.total.toLocaleString()}</div>
+                <div class="total-row">Total: Rp ${parseInt(order.total).toLocaleString()}</div>
                 <div class="actions">${buttonsHtml}</div>
             `;
             return div;
@@ -385,12 +401,10 @@
 
         function updateStatus(key, status) {
             const updates = { status: status };
-            const now = new Date().toISOString(); // Simpan ISO String agar aman
-
+            const now = new Date().toISOString(); 
             if(status === 'unpaid') updates.acceptedAt = now; 
             if(status === 'processing') updates.paidAt = now; 
             if(status === 'completed') updates.completedAt = now; 
-
             db.ref('orders/' + key).update(updates);
         }
 
@@ -402,7 +416,43 @@
             }
         }
 
-        // --- FUNGSI NAVIGASI ---
+        // --- FINANCE CALCULATION FIX ---
+        function calculateFinance() {
+            const now = new Date();
+            let daily = 0, monthly = 0, yearly = 0;
+
+            allOrders.forEach(order => {
+                if (order.status !== 'completed') return;
+                
+                // Gunakan tanggal selesai (CompletedAt) atau timestamp awal
+                const rawDate = order.completedAt || order.timestamp;
+                const oDate = new Date(rawDate);
+                const total = parseInt(order.total); // Pastikan angka
+
+                // Cek Tanggal Sama (Harian) - Pakai toDateString lebih aman
+                if(oDate.toDateString() === now.toDateString()) {
+                    daily += total;
+                }
+                
+                // Cek Bulan & Tahun
+                if(oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) {
+                    monthly += total;
+                }
+                
+                // Cek Tahun
+                if(oDate.getFullYear() === now.getFullYear()) {
+                    yearly += total;
+                }
+            });
+
+            const fmt = (n) => "Rp " + n.toLocaleString('id-ID');
+            if(document.getElementById('today-revenue')) document.getElementById('today-revenue').innerText = fmt(daily);
+            if(document.getElementById('daily-rev')) document.getElementById('daily-rev').innerText = fmt(daily);
+            if(document.getElementById('monthly-rev')) document.getElementById('monthly-rev').innerText = fmt(monthly);
+            if(document.getElementById('yearly-rev')) document.getElementById('yearly-rev').innerText = fmt(yearly);
+        }
+
+        // --- NAVIGATION ---
         function showPage(pageId) {
             document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
@@ -446,33 +496,13 @@
 
             const order = allOrders.find(o => o.id === editingOrderKey);
             const newItems = [...order.items, { name: name, price: price, qty: 1, note: 'Tambahan Manual' }];
-            const newTotal = order.total + price;
+            const newTotal = parseInt(order.total) + price;
 
             db.ref('orders/' + editingOrderKey).update({ items: newItems, total: newTotal }).then(() => {
                 closeModal();
                 document.getElementById('extra-name').value = '';
                 document.getElementById('extra-price').value = '';
             });
-        }
-
-        function calculateFinance() {
-            const now = new Date();
-            let daily = 0, monthly = 0, yearly = 0;
-
-            allOrders.forEach(order => {
-                if (order.status !== 'completed') return;
-                const oDate = new Date(order.completedAt || order.timestamp);
-                
-                if(oDate.getDate() === now.getDate() && oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) daily += order.total;
-                if(oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) monthly += order.total;
-                if(oDate.getFullYear() === now.getFullYear()) yearly += order.total;
-            });
-
-            const fmt = (n) => "Rp " + n.toLocaleString('id-ID');
-            if(document.getElementById('today-revenue')) document.getElementById('today-revenue').innerText = fmt(daily);
-            if(document.getElementById('daily-rev')) document.getElementById('daily-rev').innerText = fmt(daily);
-            if(document.getElementById('monthly-rev')) document.getElementById('monthly-rev').innerText = fmt(monthly);
-            if(document.getElementById('yearly-rev')) document.getElementById('yearly-rev').innerText = fmt(yearly);
         }
     </script>
 </body>
