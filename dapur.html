@@ -67,15 +67,14 @@
         
         .total-row { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
 
-        /* HISTORY TEXT (PERBAIKAN TAMPILAN SATU TANGGAL) */
+        /* HISTORY TEXT */
         .history-details { font-size: 11px; color: #aaa; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
         .history-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
         .h-val { color: #fff; font-weight: bold; }
-        
-        .history-compact { text-align: right; }
-        .h-date { font-size: 14px; font-weight: bold; color: var(--accent); margin-bottom: 5px; display: block; text-transform: uppercase; }
-        .h-times { font-size: 12px; color: #ccc; display: block; }
-        .h-time-val { color: #fff; font-weight: bold; }
+        .history-info { text-align: right; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        .history-label { display: block; font-size: 10px; color: #888; margin-bottom: 2px; }
+        .history-time { display: block; font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 5px; letter-spacing: 1px; }
+        .history-date { font-size: 11px; color: var(--accent); font-weight: bold; }
         
         .rejected-label { color: var(--red); font-weight: 900; font-size: 20px; text-align: center; border: 2px solid var(--red); padding: 10px; transform: rotate(-5deg); margin-bottom: 10px; }
 
@@ -86,7 +85,7 @@
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
         .btn-full { grid-column: span 2; }
 
-        /* STAT CARDS */
+        /* STAT CARDS FOR FINANCE */
         .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .stat-title { font-size: 14px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
         .stat-val { font-size: 24px; font-weight: bold; color: var(--green); }
@@ -95,6 +94,10 @@
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
         .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
+
+        /* CUSTOM CONFIRM MODAL */
+        #custom-confirm-modal .modal-content { text-align: center; }
+        #confirm-msg { margin-bottom: 20px; font-size: 16px; }
 
         /* MOBILE */
         @media (max-width: 768px) {
@@ -108,8 +111,8 @@
             .status-tabs { position: sticky; top: 0; background: var(--bg-dark); z-index: 50; padding-top: 10px; margin-top: -10px; }
             .orders-grid { grid-template-columns: 1fr; gap: 20px; padding-bottom: 0; } 
         }
-        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body onclick="unlockAudio()">
@@ -123,7 +126,7 @@
         <div class="finance-box">
             <div class="finance-title">Omzet Hari Ini</div>
             <div class="finance-val" id="sidebar-today-rev">Rp 0</div>
-            <button class="btn-reset" onclick="resetAllData()">⚠ RESET SEMUA DATA</button>
+            <button class="btn-reset" onclick="confirmReset()">⚠ RESET SEMUA DATA</button>
         </div>
     </div>
 
@@ -155,6 +158,7 @@
 
     <div class="main" id="finance-page" style="display: none;">
         <h2 class="page-title">LAPORAN OMZET</h2>
+        
         <div class="filters">
             <select id="finance-mode" class="select-input" onchange="toggleFinanceFilter()">
                 <option value="daily">Harian</option>
@@ -177,7 +181,7 @@
             </div>
         </div>
         
-        <button class="btn-reset" onclick="resetAllData()" style="margin-top:50px; padding:20px; font-size:14px;">⚠ HAPUS SEMUA DATA & HISTORY (RESET)</button>
+        <button class="btn-reset" onclick="confirmReset()" style="margin-top:50px; padding:20px; font-size:14px;">⚠ HAPUS SEMUA DATA & HISTORY (RESET)</button>
     </div>
 
     <div id="edit-modal" class="modal">
@@ -189,6 +193,25 @@
                 <button class="btn btn-grey" onclick="closeModal()">Batal</button>
                 <button class="btn btn-green" onclick="saveExtraItem()">Simpan</button>
             </div>
+        </div>
+    </div>
+
+    <div id="custom-confirm-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="color:var(--accent);">KONFIRMASI</h3>
+            <p id="confirm-msg" style="color:#ddd;">Apakah Anda yakin?</p>
+            <div class="actions" style="margin-top:20px;">
+                <button class="btn btn-grey" onclick="closeConfirm()">BATAL</button>
+                <button class="btn btn-red" id="btn-confirm-yes">YA, LANJUTKAN</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="alert-modal" class="modal">
+        <div class="modal-content" style="text-align:center;">
+            <div style="font-size:40px; margin-bottom:10px;">⚠️</div>
+            <p id="alert-text">Pesan Error</p>
+            <button class="btn btn-green" onclick="document.getElementById('alert-modal').style.display='none'" style="width:100%;">OK</button>
         </div>
     </div>
 
@@ -219,10 +242,34 @@
         let currentTab = 'new';
         let editingOrderKey = null;
         let audioUnlocked = false;
+        let confirmCallback = null; // Callback for custom confirm
 
         document.getElementById('history-date-picker').valueAsDate = new Date();
         document.getElementById('finance-date').valueAsDate = new Date();
 
+        // --- CUSTOM MODAL FUNCTIONS ---
+        function showAlert(msg) {
+            document.getElementById('alert-text').innerText = msg;
+            document.getElementById('alert-modal').style.display = 'flex';
+        }
+
+        function showConfirm(msg, callback) {
+            document.getElementById('confirm-msg').innerText = msg;
+            confirmCallback = callback;
+            document.getElementById('custom-confirm-modal').style.display = 'flex';
+        }
+
+        function closeConfirm() {
+            document.getElementById('custom-confirm-modal').style.display = 'none';
+            confirmCallback = null;
+        }
+
+        document.getElementById('btn-confirm-yes').addEventListener('click', function() {
+            if (confirmCallback) confirmCallback();
+            closeConfirm();
+        });
+
+        // --- AUDIO ---
         function toggleAudio() {
             if (!audioUnlocked) {
                 soundNew.play().then(() => {
@@ -232,7 +279,7 @@
                     btnAudio.classList.remove('inactive');
                     btnAudio.classList.add('active');
                     btnAudio.innerHTML = "🔔";
-                }).catch(e => alert("Error Audio: " + e.message));
+                }).catch(e => showAlert("Error Audio: " + e.message));
             } else {
                 audioUnlocked = false;
                 btnAudio.classList.remove('active');
@@ -370,7 +417,6 @@
             if (statusClass === 'rejected') statusClass = 'rejected';
             div.className = `order-card status-${statusClass}`;
             
-            // ITEMS
             let itemsHtml = (order.items || []).map((item, idx) => {
                 const qty = parseInt(item.qty);
                 const price = parseInt(item.price);
@@ -396,7 +442,7 @@
                 `;
             }).join('');
 
-            // HISTORY UI (TANGGAL GABUNG)
+            // HISTORY UI
             let historyHtml = '';
             if(order.status === 'completed' || order.status === 'done' || order.status === 'rejected') {
                 const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
@@ -502,30 +548,31 @@
         }
 
         function deleteOrderItem(orderKey, itemIndex) {
-            if(!confirm("Hapus item ini dari pesanan?")) return;
-            const order = allOrders.find(o => o.id === orderKey);
-            if(!order || !order.items) return;
+            showConfirm("Hapus item ini dari pesanan?", function() {
+                const order = allOrders.find(o => o.id === orderKey);
+                if(!order || !order.items) return;
 
-            const newItems = [...order.items];
-            const removedItem = newItems.splice(itemIndex, 1)[0];
+                const newItems = [...order.items];
+                const removedItem = newItems.splice(itemIndex, 1)[0];
 
-            let currentTotal = parseInt(order.total);
-            const deductPrice = parseInt(removedItem.price) * parseInt(removedItem.qty);
-            const newTotal = currentTotal - deductPrice;
+                let currentTotal = parseInt(order.total);
+                const deductPrice = parseInt(removedItem.price) * parseInt(removedItem.qty);
+                const newTotal = currentTotal - deductPrice;
 
-            if (newItems.length === 0) {
-                db.ref('orders/' + orderKey).update({ items: [], total: 0 });
-            } else {
-                db.ref('orders/' + orderKey).update({ items: newItems, total: newTotal });
-            }
+                if (newItems.length === 0) {
+                    db.ref('orders/' + orderKey).update({ items: [], total: 0 });
+                } else {
+                    db.ref('orders/' + orderKey).update({ items: newItems, total: newTotal });
+                }
+            });
         }
 
-        function resetAllData() {
-            if(confirm("YAKIN HAPUS SEMUA DATA? Omzet & History akan hilang selamanya.")) {
+        function confirmReset() {
+            showConfirm("RESET SEMUA DATA? Data omzet & history akan hilang!", function() {
                 db.ref('orders').remove()
-                .then(() => alert("Data berhasil di-reset bersih!"))
-                .catch(e => alert("Gagal: " + e.message));
-            }
+                .then(() => showAlert("Data berhasil di-reset bersih!"))
+                .catch(e => showAlert("Gagal: " + e.message));
+            });
         }
 
         function toggleFinanceFilter() {
@@ -631,7 +678,10 @@
         function saveExtraItem() {
             const name = document.getElementById('extra-name').value;
             const price = parseInt(document.getElementById('extra-price').value);
-            if(!name || !price) return alert("Isi data dengan benar");
+            if(!name || !price) {
+                showAlert("Isi data dengan benar");
+                return;
+            }
 
             const order = allOrders.find(o => o.id === editingOrderKey);
             let oldTotalRaw = order.total;
