@@ -18,38 +18,32 @@
             display: flex; height: 100vh; overflow: hidden; 
         }
         
-        /* --- START OVERLAY (Audio Fix) --- */
-        #start-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .btn-start {
-            padding: 20px 40px; font-size: 24px; background: var(--accent); color: #000;
-            border: none; border-radius: 50px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 0 20px var(--accent); animation: pulse 1.5s infinite;
-        }
-        
         /* --- SIDEBAR --- */
         .sidebar { 
             width: 260px; background: #15151a; padding: 20px; 
             display: flex; flex-direction: column; border-right: 1px solid #333; 
             flex-shrink: 0; z-index: 100;
         }
+        
         .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
+        
         .menu-item { 
             padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; 
             font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; 
         }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .menu-icon { font-size: 20px; }
+        
         .finance-box { margin-top: auto; background: var(--card-bg); padding: 15px; border-radius: 10px; border: 1px solid #444; }
         .finance-title { font-size: 12px; color: #888; }
         .finance-val { font-size: 18px; font-weight: bold; color: var(--green); }
+
         .btn-reset { margin-top: 10px; background: #330000; color: #ff4444; border: 1px solid #ff4444; width: 100%; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 10px; text-align: center; }
 
         /* --- MAIN CONTENT --- */
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
+        
+        /* TABS STATUS */
         .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
         .tab { padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; flex-shrink: 0; white-space: nowrap; }
         .tab.active { opacity: 1; background: var(--card-bg); border-color: var(--accent); color: var(--accent); }
@@ -92,6 +86,7 @@
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
         .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
 
+        /* --- MOBILE RESPONSIVE --- */
         @media (max-width: 768px) {
             body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
             .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; background: #1a1a1a; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 9999; }
@@ -104,17 +99,10 @@
             .orders-grid { grid-template-columns: 1fr; gap: 20px; padding-bottom: 0; } 
         }
 
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
-<body>
-
-    <div id="start-overlay">
-        <h1 style="color:white; margin-bottom:20px;">DAPUR SBS</h1>
-        <button class="btn-start" onclick="startApp()">MULAI SHIFT 🔔</button>
-        <p style="color:#aaa; margin-top:20px;">Klik untuk mengaktifkan Alarm</p>
-    </div>
+<body onclick="unlockAudio()">
 
     <div class="sidebar">
         <div class="brand">SBS ADMIN</div>
@@ -179,7 +167,10 @@
         </div>
     </div>
 
-    <audio id="sound-new" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio> <audio id="sound-nag" src="https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3"></audio> <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <audio id="sound-new" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+    <audio id="sound-nag" src="https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3" preload="auto"></audio>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
@@ -201,23 +192,26 @@
         let allOrders = [];
         let currentTab = 'new';
         let editingOrderKey = null;
-        let audioEnabled = false;
+        let audioUnlocked = false;
 
-        // --- AKTIVASI AUDIO ---
-        function startApp() {
-            document.getElementById('start-overlay').style.display = 'none';
-            // Play dummy sound to unlock audio context on iOS/Android
-            soundNew.play().then(() => {
-                soundNew.pause();
-                soundNew.currentTime = 0;
-                audioEnabled = true;
-            });
+        // --- TRIK UNLOCK AUDIO (Tanpa Tombol Start) ---
+        // Browser akan mengizinkan audio setelah user klik APAPUN di halaman
+        function unlockAudio() {
+            if (!audioUnlocked) {
+                // Play & Pause kilat untuk "memancing" izin browser
+                soundNew.play().then(() => {
+                    soundNew.pause();
+                    soundNew.currentTime = 0;
+                    audioUnlocked = true;
+                    console.log("Audio Unlocked!");
+                }).catch(e => console.log("Klik lagi untuk unlock audio"));
+            }
         }
 
         // --- REALTIME LISTENER ---
         db.ref('orders').on('value', (snapshot) => {
             const data = snapshot.val();
-            const previousCount = allOrders.length; // Cek jumlah sebelumnya
+            const previousCount = allOrders.length;
             allOrders = [];
             
             if (data) {
@@ -226,38 +220,50 @@
                 });
             }
             
-            // Bunyi TING hanya jika jumlah order bertambah (order baru masuk)
-            if (allOrders.length > previousCount && audioEnabled) {
-                const newOrders = allOrders.filter(o => o.status === 'new');
-                if(newOrders.length > 0) soundNew.play().catch(e => console.log(e));
+            // Bunyi TING hanya jika ada order baru masuk (bukan saat refresh)
+            // Logika: Jumlah order bertambah DAN ada yang statusnya 'new'
+            if (allOrders.length > previousCount && audioUnlocked) {
+                const hasNew = allOrders.some(o => o.status === 'new');
+                if(hasNew) soundNew.play().catch(e => console.log("Audio blocked", e));
             }
 
             allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             
             renderOrders();
             updateBadges();
-            calculateFinance();
+            calculateFinance(); // Hitung ulang omzet setiap ada perubahan data
         });
 
-        // --- GLOBAL INTERVAL (TIMER & ALARM NAGGING) ---
+        // --- GLOBAL INTERVAL (1 DETIK) ---
+        // Mengatur Timer Berjalan & Alarm Bawel
         setInterval(() => {
             updateLiveTimers();
             checkNaggingAlarm();
-        }, 1000); // Cek tiap detik
+        }, 1000);
 
-        // ALARM BAWEL (Setiap 2 menit / 120 detik jika ada order 'new' belum direspon)
-        let alarmCounter = 0;
+        // LOGIKA ALARM BAWEL (Setiap 2 Menit / 120 Detik)
         function checkNaggingAlarm() {
-            const hasNewOrders = allOrders.some(o => o.status === 'new');
-            if (hasNewOrders && audioEnabled) {
-                alarmCounter++;
-                // 120 detik = 2 menit
-                if (alarmCounter >= 120) {
-                    soundNag.play().catch(e => console.log(e));
-                    alarmCounter = 0; // Reset counter
+            if (!audioUnlocked) return; // Jangan bunyi kalau belum unlock
+
+            const now = Date.now();
+            let shouldAlarm = false;
+
+            allOrders.forEach(order => {
+                // Hanya cek yang status 'new' (belum direspon)
+                if (order.status === 'new') {
+                    const orderTime = new Date(order.timestamp).getTime();
+                    const diffSeconds = Math.floor((now - orderTime) / 1000);
+                    
+                    // Bunyi setiap kelipatan 120 detik (2 menit), mulai dari menit ke-2
+                    if (diffSeconds > 0 && diffSeconds % 120 === 0) {
+                        shouldAlarm = true;
+                    }
                 }
-            } else {
-                alarmCounter = 0;
+            });
+
+            if (shouldAlarm) {
+                console.log("Alarm Nagging Bunyi!");
+                soundNag.play().catch(e => console.log(e));
             }
         }
 
@@ -323,7 +329,7 @@
                 ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
             `).join('');
 
-            // HISTORY DETAILS (Fixed & Added Entry Time)
+            // HISTORY DETAILS (Fixed Jam Masuk & Selesai)
             let historyHtml = '';
             if(order.status === 'completed') {
                 const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
@@ -338,7 +344,6 @@
                     return m > 0 ? `${m}m ${sc}s` : `${sc}s`;
                 };
 
-                // Format Jam Masuk Awal & Jam Selesai
                 const dateIn = new Date(created);
                 const timeIn = dateIn.getHours() + ":" + (dateIn.getMinutes()<10?'0':'') + dateIn.getMinutes();
                 const dateOut = new Date(completed || Date.now());
@@ -370,7 +375,7 @@
                 `;
             } else if (order.status === 'unpaid') {
                 buttonsHtml = `
-                    <div style="grid-column: span 2; text-align:center; color:#888; font-size:11px; margin-bottom:5px;">Tunggu Bayar</div>
+                    <div style="grid-column: span 2; text-align:center; color:#888; font-size:11px; margin-bottom:5px;">Customer belum bayar</div>
                     <button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button>
                     <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>
                 `;
@@ -416,43 +421,48 @@
             }
         }
 
-        // --- FINANCE CALCULATION FIX ---
+        // --- FINANCE CALCULATION FIX (OMZET) ---
         function calculateFinance() {
             const now = new Date();
             let daily = 0, monthly = 0, yearly = 0;
 
             allOrders.forEach(order => {
+                // Hanya hitung yang status 'completed'
                 if (order.status !== 'completed') return;
                 
-                // Gunakan tanggal selesai (CompletedAt) atau timestamp awal
+                // Gunakan tanggal completedAt jika ada, fallback ke timestamp
                 const rawDate = order.completedAt || order.timestamp;
                 const oDate = new Date(rawDate);
-                const total = parseInt(order.total); // Pastikan angka
+                const total = parseInt(order.total); 
 
-                // Cek Tanggal Sama (Harian) - Pakai toDateString lebih aman
+                // Debugging: Cek di console jika masih error
+                // console.log("Cek Order:", total, oDate.toDateString(), now.toDateString());
+
+                // Cek Harian (Metode String Comparison lebih aman)
                 if(oDate.toDateString() === now.toDateString()) {
                     daily += total;
                 }
                 
-                // Cek Bulan & Tahun
+                // Cek Bulanan
                 if(oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) {
                     monthly += total;
                 }
                 
-                // Cek Tahun
+                // Cek Tahunan
                 if(oDate.getFullYear() === now.getFullYear()) {
                     yearly += total;
                 }
             });
 
             const fmt = (n) => "Rp " + n.toLocaleString('id-ID');
+            // Update UI dengan pengecekan elemen null
             if(document.getElementById('today-revenue')) document.getElementById('today-revenue').innerText = fmt(daily);
             if(document.getElementById('daily-rev')) document.getElementById('daily-rev').innerText = fmt(daily);
             if(document.getElementById('monthly-rev')) document.getElementById('monthly-rev').innerText = fmt(monthly);
             if(document.getElementById('yearly-rev')) document.getElementById('yearly-rev').innerText = fmt(yearly);
         }
 
-        // --- NAVIGATION ---
+        // --- NAVIGASI HALAMAN ---
         function showPage(pageId) {
             document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
