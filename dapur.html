@@ -14,24 +14,15 @@
             font-family: 'Poppins', sans-serif; 
             background: var(--bg-dark); 
             color: var(--text); 
-            margin: 0; 
-            padding: 0;
-            /* Default Desktop: App Style (Fixed) */
-            display: flex; 
-            height: 100vh; 
-            overflow: hidden; 
+            margin: 0; padding: 0;
+            display: flex; height: 100vh; overflow: hidden; 
         }
         
-        /* --- SIDEBAR (DESKTOP) --- */
+        /* --- SIDEBAR --- */
         .sidebar { 
-            width: 260px; 
-            background: #15151a; 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            border-right: 1px solid #333; 
-            flex-shrink: 0; 
-            z-index: 100;
+            width: 260px; background: #15151a; padding: 20px; 
+            display: flex; flex-direction: column; border-right: 1px solid #333; 
+            flex-shrink: 0; z-index: 100;
         }
         
         .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
@@ -47,14 +38,10 @@
         .finance-title { font-size: 12px; color: #888; }
         .finance-val { font-size: 18px; font-weight: bold; color: var(--green); }
 
-        /* --- MAIN CONTENT (DESKTOP) --- */
-        .main { 
-            flex: 1; 
-            padding: 20px; 
-            overflow-y: auto; /* Scrollable area */
-            position: relative; 
-            scroll-behavior: smooth; 
-        }
+        .btn-reset { margin-top: 10px; background: #330000; color: #ff4444; border: 1px solid #ff4444; width: 100%; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 10px; text-align: center; }
+
+        /* --- MAIN CONTENT --- */
+        .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
         
         /* TABS STATUS */
         .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
@@ -63,25 +50,27 @@
         .badge { background: var(--red); color: white; padding: 2px 6px; border-radius: 50%; font-size: 10px; margin-left: 5px; vertical-align: top; }
 
         /* ORDERS GRID */
-        .orders-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
-            gap: 20px; 
-            padding-bottom: 80px; 
-        }
-        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 5px solid #555; animation: slideIn 0.3s ease; }
+        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 80px; }
+        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 5px solid #555; animation: slideIn 0.3s ease; position: relative; }
         .order-card.status-new { border-left-color: var(--red); }
         .order-card.status-unpaid { border-left-color: var(--accent); }
         .order-card.status-processing { border-left-color: var(--blue); }
         .order-card.status-completed { border-left-color: var(--green); opacity: 0.8; }
 
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        .cust-name { font-size: 18px; font-weight: bold; color: #fff; }
-        .order-time { font-size: 12px; color: #888; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .cust-name { font-size: 18px; font-weight: bold; color: #fff; display: block;}
+        .timer-badge { font-size: 14px; font-weight: bold; background: #000; padding: 4px 8px; border-radius: 5px; color: var(--accent); font-family: monospace; display: inline-block; margin-top: 5px;}
+        .time-label { font-size: 10px; color: #888; display: block; margin-bottom: 2px; }
+
         .item-list { margin-bottom: 15px; max-height: 200px; overflow-y: auto; }
         .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
         .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: -2px; }
         .total-row { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
+
+        /* HISTORY DETAILS */
+        .history-details { font-size: 11px; color: #aaa; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+        .history-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+        .h-val { color: #fff; font-weight: bold; }
 
         /* BUTTONS */
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -97,75 +86,17 @@
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
         .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
 
-        /* --- MOBILE RESPONSIVE FIX (SCROLLING ENABLED) --- */
+        /* --- MOBILE RESPONSIVE --- */
         @media (max-width: 768px) {
-            body { 
-                flex-direction: column; 
-                height: auto;      /* Biarkan tinggi otomatis sesuai konten */
-                min-height: 100vh;
-                overflow-y: auto;  /* Aktifkan scroll browser native */
-                overflow-x: hidden;
-            }
-
-            /* Ubah Sidebar jadi Bottom Nav Bar */
-            .sidebar { 
-                position: fixed; 
-                bottom: 0; 
-                left: 0; 
-                width: 100%; 
-                height: 70px; 
-                flex-direction: row; 
-                justify-content: space-around; 
-                padding: 0; 
-                border-right: none; 
-                border-top: 1px solid #333; 
-                background: #1a1a1a;
-                box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
-                z-index: 9999;
-            }
-
+            body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
+            .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; background: #1a1a1a; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 9999; }
             .brand, .finance-box { display: none; } 
-
-            .menu-item { 
-                flex-direction: column; 
-                gap: 3px; 
-                font-size: 10px; 
-                padding: 10px; 
-                margin: 0; 
-                background: transparent !important; 
-                border-radius: 0;
-                justify-content: center;
-                flex: 1;
-                text-align: center;
-                color: #666;
-            }
-            
+            .menu-item { flex-direction: column; gap: 3px; font-size: 10px; padding: 10px; margin: 0; background: transparent !important; border-radius: 0; justify-content: center; flex: 1; text-align: center; color: #666; }
             .menu-item.active { color: var(--accent); }
             .menu-icon { font-size: 22px; margin-bottom: 2px; display: block; }
-
-            /* Konten Utama di HP */
-            .main { 
-                height: auto;
-                overflow: visible; /* Biarkan konten memanjang */
-                padding: 15px; 
-                padding-bottom: 100px; /* Ruang lebih besar di bawah agar tidak ketutup menu */
-                width: 100%;
-            }
-
-            .status-tabs { 
-                position: sticky; 
-                top: 0; 
-                background: var(--bg-dark); 
-                z-index: 50; 
-                padding-top: 10px; 
-                margin-top: -10px; /* Kompensasi padding */
-            }
-            
-            .orders-grid { 
-                grid-template-columns: 1fr; /* Kartu jadi 1 kolom full */
-                gap: 20px;
-                padding-bottom: 0; 
-            } 
+            .main { height: auto; overflow: visible; padding: 15px; padding-bottom: 100px; width: 100%; }
+            .status-tabs { position: sticky; top: 0; background: var(--bg-dark); z-index: 50; padding-top: 10px; margin-top: -10px; }
+            .orders-grid { grid-template-columns: 1fr; gap: 20px; padding-bottom: 0; } 
         }
 
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -175,23 +106,14 @@
 
     <div class="sidebar">
         <div class="brand">SBS ADMIN</div>
-        
-        <div class="menu-item active" onclick="showPage('orders')">
-            <span class="menu-icon">📦</span> 
-            <span>Pesanan</span>
-        </div>
-        <div class="menu-item" onclick="showPage('history')">
-            <span class="menu-icon">📜</span> 
-            <span>Riwayat</span>
-        </div>
-        <div class="menu-item" onclick="showPage('finance')">
-            <span class="menu-icon">💰</span> 
-            <span>Omzet</span>
-        </div>
+        <div class="menu-item active" onclick="showPage('orders')"><span class="menu-icon">📦</span><span>Pesanan</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat</span></div>
+        <div class="menu-item" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Omzet</span></div>
         
         <div class="finance-box">
             <div class="finance-title">Omzet Hari Ini</div>
             <div class="finance-val" id="today-revenue">Rp 0</div>
+            <button class="btn-reset" onclick="resetAllData()">⚠ RESET DATA (DEMO)</button>
         </div>
     </div>
 
@@ -206,7 +128,6 @@
             <div class="tab" onclick="filterTab('unpaid')">BAYAR <span class="badge" id="badge-unpaid">0</span></div>
             <div class="tab" onclick="filterTab('processing')">PROSES <span class="badge" id="badge-processing">0</span></div>
         </div>
-        
         <div id="orders-grid" class="orders-grid"></div>
     </div>
 
@@ -231,12 +152,13 @@
                 <div class="finance-val" id="yearly-rev">Rp 0</div>
             </div>
         </div>
+        <button class="btn-reset" onclick="resetAllData()" style="margin-top:50px; padding:20px; font-size:14px;">⚠ HAPUS SEMUA DATA & HISTORY (RESET)</button>
     </div>
 
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0;">Tambah Item Manual</h3>
-            <input type="text" id="extra-name" placeholder="Nama Item (Misal: Extra Joss)">
+            <input type="text" id="extra-name" placeholder="Nama Item">
             <input type="number" id="extra-price" placeholder="Harga (Rp)">
             <div class="actions">
                 <button class="btn btn-grey" onclick="closeModal()">Batal</button>
@@ -251,6 +173,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
+        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
             authDomain: "sbs-menu-d1611.firebaseapp.com",
@@ -269,16 +192,16 @@
         let currentTab = 'new';
         let editingOrderKey = null;
 
+        // REALTIME LISTENER
         db.ref('orders').on('value', (snapshot) => {
             const data = snapshot.val();
             allOrders = [];
-            
             if (data) {
                 Object.keys(data).forEach(key => {
                     allOrders.push({ id: key, ...data[key] });
                 });
             }
-
+            // Sort Descending (Terbaru diatas)
             allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             
             renderOrders();
@@ -286,9 +209,16 @@
             calculateFinance();
         });
 
+        // GLOBAL TIMER (Agar jam terus berjalan tanpa refresh page)
+        setInterval(() => {
+            renderOrders(); // Re-render text timer
+        }, 1000);
+
         function renderOrders() {
             const grid = document.getElementById('orders-grid');
             const historyGrid = document.getElementById('history-grid');
+            // Kita clear hanya jika struktur berubah drastis, tapi untuk timer kita update element saja 
+            // Untuk simplifikasi, kita re-render.
             grid.innerHTML = '';
             historyGrid.innerHTML = '';
 
@@ -305,11 +235,48 @@
         }
 
         function createCard(order) {
-            const date = new Date(order.timestamp);
-            const time = date.getHours() + ":" + (date.getMinutes()<10?'0':'') + date.getMinutes();
+            // 1. FORMAT NAMA MEJA
+            let displayName = order.customer;
+            // Cek apakah isinya angka saja (Input Number)
+            if(!isNaN(order.customer) && order.customer.trim() !== '') {
+                displayName = "MEJA " + order.customer;
+            }
+
+            // 2. TIMELINE LOGIC (Waktu Masuk per Tab)
+            const created = new Date(order.timestamp).getTime();
+            const accepted = order.acceptedAt || created; // Waktu masuk tab Bayar
+            const paid = order.paidAt || accepted; // Waktu masuk tab Proses
+            const completed = order.completedAt || Date.now(); // Waktu selesai
+
+            let displayTime = "";
+            let timerStart = 0;
+            let timerLabel = "";
+
+            if(order.status === 'new') {
+                timerStart = created;
+                timerLabel = "Menunggu Respon";
+            } else if (order.status === 'unpaid') {
+                timerStart = accepted;
+                timerLabel = "Menunggu Bayar";
+            } else if (order.status === 'processing') {
+                timerStart = paid;
+                timerLabel = "Sedang Dimasak";
+            }
+
+            // Hitung durasi timer berjalan
+            const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+            const min = Math.floor(elapsed / 60);
+            const sec = elapsed % 60;
+            const timerStr = `${min}:${sec < 10 ? '0'+sec : sec}`;
+
+            // Format Jam Masuk (Sesuai Tab)
+            const entryDate = new Date(timerStart);
+            const entryTimeStr = entryDate.getHours() + ":" + (entryDate.getMinutes()<10?'0':'') + entryDate.getMinutes();
+
             const div = document.createElement('div');
             div.className = `order-card status-${order.status}`;
             
+            // Render Items
             let itemsHtml = order.items.map((item) => `
                 <div class="item-row">
                     <span>${item.qty}x ${item.name}</span>
@@ -318,6 +285,42 @@
                 ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
             `).join('');
 
+            // Tampilan Khusus History
+            let historyHtml = '';
+            if(order.status === 'completed') {
+                const durRespon = Math.floor((accepted - created)/1000);
+                const durBayar = Math.floor((paid - accepted)/1000);
+                const durMasak = Math.floor((completed - paid)/1000);
+                const durTotal = Math.floor((completed - created)/1000);
+                
+                // Format durasi jadi Xm Ys
+                const fmtDur = (s) => {
+                    const m = Math.floor(s/60);
+                    const sc = s%60;
+                    return m > 0 ? `${m}m ${sc}s` : `${sc}s`;
+                };
+
+                historyHtml = `
+                    <div class="history-details">
+                        <div class="history-row"><span>Respon:</span> <span class="h-val">${fmtDur(durRespon)}</span></div>
+                        <div class="history-row"><span>Bayar:</span> <span class="h-val">${fmtDur(durBayar)}</span></div>
+                        <div class="history-row"><span>Masak:</span> <span class="h-val">${fmtDur(durMasak)}</span></div>
+                        <div style="border-top:1px dashed #666; margin-top:5px; padding-top:2px;" class="history-row">
+                            <span>TOTAL:</span> <span class="h-val" style="color:var(--accent);">${fmtDur(durTotal)}</span>
+                        </div>
+                    </div>
+                `;
+                
+                // Di history jamnya adalah jam selesai
+                const doneDate = new Date(completed);
+                const doneTimeStr = doneDate.getHours() + ":" + (doneDate.getMinutes()<10?'0':'') + doneDate.getMinutes();
+                displayTime = `Selesai: ${doneTimeStr}`;
+            } else {
+                // Di tab aktif, tampilkan Timer
+                displayTime = `<span class="time-label">Masuk: ${entryTimeStr}</span><span class="timer-badge">⏱ ${timerStr}</span>`;
+            }
+
+            // Buttons
             let buttonsHtml = '';
             if (order.status === 'new') {
                 buttonsHtml = `
@@ -327,13 +330,13 @@
                 `;
             } else if (order.status === 'unpaid') {
                 buttonsHtml = `
-                    <div style="grid-column: span 2; text-align:center; color:#888; font-size:11px; margin-bottom:5px;">Tunggu Bayar</div>
+                    <div style="grid-column: span 2; text-align:center; color:#888; font-size:11px; margin-bottom:5px;">Customer belum bayar</div>
                     <button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button>
                     <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>
                 `;
             } else if (order.status === 'processing') {
                 buttonsHtml = `
-                     <div style="grid-column: span 2; text-align:center; color:#FFD200; font-size:11px; margin-bottom:5px; font-weight:bold;">SEDANG DISIAPKAN</div>
+                     <div style="grid-column: span 2; text-align:center; color:#FFD200; font-size:11px; margin-bottom:5px; font-weight:bold;">SEDANG DIMASAK</div>
                     <button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>
                 `;
             } else {
@@ -342,30 +345,55 @@
 
             div.innerHTML = `
                 <div class="card-header">
-                    <span class="cust-name">${order.customer}</span>
-                    <span class="order-time">${time}</span>
+                    <div>
+                        <span class="cust-name">${displayName}</span>
+                        <span style="font-size:10px; color:#666;">ID: ...${order.id.slice(-4)}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        ${displayTime}
+                    </div>
                 </div>
                 <div class="item-list">${itemsHtml}</div>
+                ${historyHtml}
                 <div class="total-row">Total: Rp ${order.total.toLocaleString()}</div>
                 <div class="actions">${buttonsHtml}</div>
             `;
             return div;
         }
 
+        function updateStatus(key, status) {
+            // Kita simpan timestamp saat status berubah agar timer valid
+            const updates = { status: status };
+            const now = Date.now();
+
+            if(status === 'unpaid') updates.acceptedAt = now; // Jam masuk tab Bayar
+            if(status === 'processing') updates.paidAt = now; // Jam masuk tab Proses
+            if(status === 'completed') updates.completedAt = now; // Jam Selesai
+
+            db.ref('orders/' + key).update(updates);
+        }
+
+        // --- RESET DATA (HAPUS SEMUA) ---
+        function resetAllData() {
+            if(confirm("YAKIN HAPUS SEMUA DATA? Omzet & History akan hilang selamanya.")) {
+                db.ref('orders').remove()
+                .then(() => alert("Data berhasil di-reset bersih!"))
+                .catch(e => alert("Gagal: " + e.message));
+            }
+        }
+
+        // --- FUNGSI STANDAR LAINNYA ---
         function showPage(pageId) {
             document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-            
             document.getElementById(pageId + '-page').style.display = 'block';
             
-            // Highlight menu yang diklik (Looping manual karena event target di HP suka meleset ke icon)
             const menuItems = document.querySelectorAll('.menu-item');
             menuItems.forEach(item => item.classList.remove('active'));
-            
             if(pageId === 'orders') menuItems[0].classList.add('active');
             if(pageId === 'history') menuItems[1].classList.add('active');
             if(pageId === 'finance') menuItems[2].classList.add('active');
-
+            
             if(pageId === 'finance') calculateFinance();
         }
 
@@ -380,10 +408,6 @@
             document.getElementById('badge-new').innerText = allOrders.filter(o => o.status === 'new').length;
             document.getElementById('badge-unpaid').innerText = allOrders.filter(o => o.status === 'unpaid').length;
             document.getElementById('badge-processing').innerText = allOrders.filter(o => o.status === 'processing').length;
-        }
-
-        function updateStatus(key, status) {
-            db.ref('orders/' + key).update({ status: status });
         }
 
         function openEditModal(key) {
@@ -417,7 +441,8 @@
 
             allOrders.forEach(order => {
                 if (order.status !== 'completed') return;
-                const oDate = new Date(order.timestamp);
+                const oDate = new Date(order.completedAt || order.timestamp); // Pakai waktu selesai
+                
                 if(oDate.getDate() === now.getDate() && oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) daily += order.total;
                 if(oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) monthly += order.total;
                 if(oDate.getFullYear() === now.getFullYear()) yearly += order.total;
