@@ -97,7 +97,11 @@
 
         /* CUSTOM CONFIRM MODAL */
         #custom-confirm-modal .modal-content { text-align: center; }
-        #confirm-msg { margin-bottom: 20px; font-size: 16px; }
+        #confirm-msg { margin-bottom: 20px; font-size: 16px; color:#ddd; }
+
+        /* CUSTOM ALERT MODAL */
+        #alert-modal .modal-content { text-align: center; }
+        #alert-text { margin-bottom: 20px; font-size: 16px; color:#ddd; }
 
         /* MOBILE */
         @media (max-width: 768px) {
@@ -198,8 +202,8 @@
 
     <div id="custom-confirm-modal" class="modal">
         <div class="modal-content">
-            <h3 style="color:var(--accent);">KONFIRMASI</h3>
-            <p id="confirm-msg" style="color:#ddd;">Apakah Anda yakin?</p>
+            <h3 style="color:var(--accent); margin-top:0;">KONFIRMASI</h3>
+            <p id="confirm-msg">Apakah Anda yakin?</p>
             <div class="actions" style="margin-top:20px;">
                 <button class="btn btn-grey" onclick="closeConfirm()">BATAL</button>
                 <button class="btn btn-red" id="btn-confirm-yes">YA, LANJUTKAN</button>
@@ -208,9 +212,9 @@
     </div>
 
     <div id="alert-modal" class="modal">
-        <div class="modal-content" style="text-align:center;">
-            <div style="font-size:40px; margin-bottom:10px;">⚠️</div>
-            <p id="alert-text">Pesan Error</p>
+        <div class="modal-content">
+            <h3 style="color:var(--accent); margin-top:0;">INFO</h3>
+            <p id="alert-text">Pesan</p>
             <button class="btn btn-green" onclick="document.getElementById('alert-modal').style.display='none'" style="width:100%;">OK</button>
         </div>
     </div>
@@ -242,12 +246,12 @@
         let currentTab = 'new';
         let editingOrderKey = null;
         let audioUnlocked = false;
-        let confirmCallback = null; // Callback for custom confirm
+        let confirmCallback = null;
 
         document.getElementById('history-date-picker').valueAsDate = new Date();
         document.getElementById('finance-date').valueAsDate = new Date();
 
-        // --- CUSTOM MODAL FUNCTIONS ---
+        // --- CUSTOM MODAL UTILS ---
         function showAlert(msg) {
             document.getElementById('alert-text').innerText = msg;
             document.getElementById('alert-modal').style.display = 'flex';
@@ -497,7 +501,7 @@
             let buttonsHtml = '';
             if (order.status === 'new') {
                 buttonsHtml = `
-                    <button class="btn btn-red" onclick="updateStatus('${order.id}', 'rejected')">Tolak</button>
+                    <button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>
                     <button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button>
                     <button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">Terima</button>
                 `;
@@ -545,6 +549,12 @@
             if(status === 'processing') updates.paidAt = now; 
             if(status === 'completed' || status === 'rejected') updates.completedAt = now; 
             db.ref('orders/' + key).update(updates);
+        }
+
+        function confirmReject(key) {
+            showConfirm("Yakin tolak pesanan ini?", function() {
+                updateStatus(key, 'rejected');
+            });
         }
 
         function deleteOrderItem(orderKey, itemIndex) {
