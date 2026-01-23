@@ -7,12 +7,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
-        body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* SIDEBAR */
-        .sidebar { width: 250px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; }
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: var(--bg-dark); 
+            color: var(--text); 
+            margin: 0; 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+        
+        /* SIDEBAR DEFAULT (DESKTOP) */
+        .sidebar { width: 250px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; }
         .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
-        .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; }
+        .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .finance-box { margin-top: auto; background: var(--card-bg); padding: 15px; border-radius: 10px; border: 1px solid #444; }
         .finance-title { font-size: 12px; color: #888; }
@@ -22,8 +31,8 @@
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; }
         
         /* TABS STATUS */
-        .status-tabs { display: flex; gap: 15px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .tab { padding: 8px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 14px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; }
+        .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+        .tab { padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; flex-shrink: 0; }
         .tab.active { opacity: 1; background: var(--card-bg); border-color: var(--accent); color: var(--accent); }
         .badge { background: var(--red); color: white; padding: 2px 6px; border-radius: 50%; font-size: 10px; margin-left: 5px; vertical-align: top; }
 
@@ -45,17 +54,53 @@
 
         /* BUTTONS */
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #fff; }
-        .btn-green { background: var(--green); } .btn-green:hover { background: #27ae60; }
-        .btn-red { background: var(--red); } .btn-red:hover { background: #c0392b; }
-        .btn-blue { background: var(--blue); } .btn-blue:hover { background: #2980b9; }
-        .btn-grey { background: #555; } .btn-grey:hover { background: #666; }
+        .btn { border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #fff; font-size: 13px; }
+        .btn-green { background: var(--green); }
+        .btn-red { background: var(--red); }
+        .btn-blue { background: var(--blue); }
+        .btn-grey { background: #555; }
         .btn-full { grid-column: span 2; }
 
-        /* MODAL EDIT */
+        /* MODAL */
         .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
-        .modal-content { background: var(--card-bg); padding: 30px; border-radius: 15px; width: 400px; border: 2px solid var(--accent); }
-        .modal input { width: 100%; padding: 10px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; }
+        .modal-content { background: var(--card-bg); padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; border: 2px solid var(--accent); }
+        .modal input { width: 100%; padding: 10px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
+
+        /* --- RESPONSIVE MOBILE (HP) --- */
+        @media (max-width: 768px) {
+            body { flex-direction: column; } /* Jadi Tumpuk ke Bawah */
+            
+            .sidebar { 
+                width: 100%; 
+                height: auto; 
+                flex-direction: row; 
+                padding: 10px 15px; 
+                overflow-x: auto; 
+                border-right: none; 
+                border-bottom: 1px solid #333;
+                align-items: center;
+                box-sizing: border-box;
+            }
+            
+            .brand { 
+                font-size: 24px; 
+                margin-bottom: 0; 
+                margin-right: 20px; 
+                white-space: nowrap;
+            }
+            
+            .menu-item { 
+                margin-bottom: 0; 
+                padding: 8px 12px; 
+                font-size: 12px; 
+                white-space: nowrap;
+            }
+            
+            .finance-box { display: none; } /* Sembunyikan ringkasan uang di menu HP */
+            
+            .main { padding: 15px; }
+            .orders-grid { grid-template-columns: 1fr; } /* Kartu jadi 1 kolom full */
+        }
 
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
@@ -64,9 +109,9 @@
 
     <div class="sidebar">
         <div class="brand">SBS ADMIN</div>
-        <div class="menu-item active" onclick="showPage('orders')">📦 Pesanan Aktif</div>
-        <div class="menu-item" onclick="showPage('history')">📜 Riwayat Selesai</div>
-        <div class="menu-item" onclick="showPage('finance')">💰 Laporan Omzet</div>
+        <div class="menu-item active" onclick="showPage('orders')">📦 Pesanan</div>
+        <div class="menu-item" onclick="showPage('history')">📜 Riwayat</div>
+        <div class="menu-item" onclick="showPage('finance')">💰 Omzet</div>
         
         <div class="finance-box">
             <div class="finance-title">Omzet Hari Ini</div>
@@ -76,31 +121,32 @@
 
     <div class="main" id="orders-page">
         <div class="status-tabs">
-            <div class="tab active" onclick="filterTab('new')">BARU MASUK <span class="badge" id="badge-new">0</span></div>
-            <div class="tab" onclick="filterTab('unpaid')">MENUNGGU BAYAR <span class="badge" id="badge-unpaid">0</span></div>
-            <div class="tab" onclick="filterTab('processing')">DIPROSES <span class="badge" id="badge-processing">0</span></div>
+            <div class="tab active" onclick="filterTab('new')">BARU <span class="badge" id="badge-new">0</span></div>
+            <div class="tab" onclick="filterTab('unpaid')">BAYAR <span class="badge" id="badge-unpaid">0</span></div>
+            <div class="tab" onclick="filterTab('processing')">PROSES <span class="badge" id="badge-processing">0</span></div>
         </div>
+        
         <div id="orders-grid" class="orders-grid"></div>
     </div>
 
     <div class="main" id="history-page" style="display: none;">
-        <h2>Riwayat Pesanan Selesai</h2>
+        <h2 style="font-family:'Bebas Neue'; color:var(--accent);">Riwayat Selesai</h2>
         <div id="history-grid" class="orders-grid"></div>
     </div>
 
     <div class="main" id="finance-page" style="display: none;">
-        <h2>Laporan Keuangan</h2>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px;">
-            <div class="finance-box">
-                <div class="finance-title">Omzet Harian</div>
+        <h2 style="font-family:'Bebas Neue'; color:var(--accent);">Laporan Keuangan</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px;">
+            <div class="finance-box" style="margin:0;">
+                <div class="finance-title">Harian</div>
                 <div class="finance-val" id="daily-rev">Rp 0</div>
             </div>
-            <div class="finance-box">
-                <div class="finance-title">Omzet Bulanan</div>
+            <div class="finance-box" style="margin:0;">
+                <div class="finance-title">Bulanan</div>
                 <div class="finance-val" id="monthly-rev">Rp 0</div>
             </div>
-            <div class="finance-box">
-                <div class="finance-title">Omzet Tahunan</div>
+            <div class="finance-box" style="margin:0;">
+                <div class="finance-title">Tahunan</div>
                 <div class="finance-val" id="yearly-rev">Rp 0</div>
             </div>
         </div>
@@ -108,7 +154,7 @@
 
     <div id="edit-modal" class="modal">
         <div class="modal-content">
-            <h3>Tambah Item Manual</h3>
+            <h3 style="margin-top:0;">Tambah Item Manual</h3>
             <input type="text" id="extra-name" placeholder="Nama Item (Misal: Extra Joss)">
             <input type="number" id="extra-price" placeholder="Harga (Rp)">
             <div class="actions">
@@ -124,6 +170,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
+        // CONFIG FIREBASE (SAMA SEPERTI SEBELUMNYA)
         const firebaseConfig = {
             apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
             authDomain: "sbs-menu-d1611.firebaseapp.com",
@@ -142,7 +189,7 @@
         let currentTab = 'new';
         let editingOrderKey = null;
 
-        // --- LISTENER UTAMA (REALTIME) ---
+        // LISTENER DATABASE
         db.ref('orders').on('value', (snapshot) => {
             const data = snapshot.val();
             allOrders = [];
@@ -153,7 +200,7 @@
                 });
             }
 
-            // Urutkan dari yang terbaru
+            // Urutkan Terbaru
             allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             
             renderOrders();
@@ -161,7 +208,7 @@
             calculateFinance();
         });
 
-        // --- RENDER LOGIC ---
+        // RENDER TAMPILAN
         function renderOrders() {
             const grid = document.getElementById('orders-grid');
             const historyGrid = document.getElementById('history-grid');
@@ -174,7 +221,6 @@
                 if (order.status === 'completed' || order.status === 'rejected') {
                     historyGrid.appendChild(card);
                 } else {
-                    // Filter sesuai Tab yang aktif
                     if (order.status === currentTab) {
                         grid.appendChild(card);
                     }
@@ -196,25 +242,24 @@
                 ${item.note ? `<span class="item-note">Catatan: ${item.note}</span>` : ''}
             `).join('');
 
-            // LOGIKA TOMBOL BERDASARKAN STATUS
             let buttonsHtml = '';
             
             if (order.status === 'new') {
                 buttonsHtml = `
                     <button class="btn btn-red" onclick="updateStatus('${order.id}', 'rejected')">Tolak</button>
                     <button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button>
-                    <button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">Terima Pesanan</button>
+                    <button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">Terima</button>
                 `;
             } else if (order.status === 'unpaid') {
                 buttonsHtml = `
-                    <div style="grid-column: span 2; text-align:center; color:#888; font-size:12px; margin-bottom:5px;">Menunggu Pembayaran Customer</div>
+                    <div style="grid-column: span 2; text-align:center; color:#888; font-size:11px; margin-bottom:5px;">Tunggu Bayar</div>
                     <button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button>
-                    <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Sudah Bayar -> Proses</button>
+                    <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>
                 `;
             } else if (order.status === 'processing') {
                 buttonsHtml = `
-                     <div style="grid-column: span 2; text-align:center; color:#FFD200; font-size:12px; margin-bottom:5px; font-weight:bold;">SEDANG DIMASAK / DISIAPKAN</div>
-                    <button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Pesanan Selesai / Diantar</button>
+                     <div style="grid-column: span 2; text-align:center; color:#FFD200; font-size:11px; margin-bottom:5px; font-weight:bold;">SEDANG DISIAPKAN</div>
+                    <button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>
                 `;
             } else {
                 buttonsHtml = `<div style="text-align:center; color:var(--green); font-weight:bold;">SELESAI</div>`;
@@ -232,22 +277,14 @@
             return div;
         }
 
-        // --- NAVIGATION & TABS ---
         function showPage(pageId) {
             document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
             
-            if(pageId === 'orders') {
-                document.getElementById('orders-page').style.display = 'block';
-                event.target.classList.add('active');
-            } else if (pageId === 'history') {
-                document.getElementById('history-page').style.display = 'block';
-                event.target.classList.add('active');
-            } else {
-                document.getElementById('finance-page').style.display = 'block';
-                event.target.classList.add('active');
-                calculateFinance();
-            }
+            document.getElementById(pageId + '-page').style.display = 'block';
+            event.currentTarget.classList.add('active'); // Fixed target issue
+            
+            if(pageId === 'finance') calculateFinance();
         }
 
         function filterTab(status) {
@@ -261,21 +298,12 @@
             document.getElementById('badge-new').innerText = allOrders.filter(o => o.status === 'new').length;
             document.getElementById('badge-unpaid').innerText = allOrders.filter(o => o.status === 'unpaid').length;
             document.getElementById('badge-processing').innerText = allOrders.filter(o => o.status === 'processing').length;
-            
-            // Play sound if new order comes in
-            const newCount = allOrders.filter(o => o.status === 'new').length;
-            if(newCount > 0 && currentTab !== 'new') {
-                // Opsional: Bunyi hanya jika ada order baru dan kita tidak sedang melihat tab baru
-                // audio.play(); 
-            }
         }
 
-        // --- DATABASE ACTIONS ---
         function updateStatus(key, status) {
             db.ref('orders/' + key).update({ status: status });
         }
 
-        // --- EDIT ORDER (TAMBAH ITEM) ---
         function openEditModal(key) {
             editingOrderKey = key;
             document.getElementById('edit-modal').style.display = 'flex';
@@ -291,7 +319,6 @@
             
             if(!name || !price) return alert("Isi data dengan benar");
 
-            // Ambil data order lama
             const order = allOrders.find(o => o.id === editingOrderKey);
             const newItems = [...order.items, { name: name, price: price, qty: 1, note: 'Tambahan Manual' }];
             const newTotal = order.total + price;
@@ -306,7 +333,6 @@
             });
         }
 
-        // --- FINANCE CALCULATION ---
         function calculateFinance() {
             const now = new Date();
             let daily = 0, monthly = 0, yearly = 0;
@@ -316,15 +342,12 @@
 
                 const oDate = new Date(order.timestamp);
                 
-                // Cek Hari Ini
                 if(oDate.getDate() === now.getDate() && oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) {
                     daily += order.total;
                 }
-                // Cek Bulan Ini
                 if(oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) {
                     monthly += order.total;
                 }
-                // Cek Tahun Ini
                 if(oDate.getFullYear() === now.getFullYear()) {
                     yearly += order.total;
                 }
@@ -336,7 +359,6 @@
             document.getElementById('monthly-rev').innerText = fmt(monthly);
             document.getElementById('yearly-rev').innerText = fmt(yearly);
         }
-
     </script>
 </body>
 </html>
