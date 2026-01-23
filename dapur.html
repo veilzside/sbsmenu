@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SBS Kitchen</title>
+    <title>SBS Kitchen Command Center</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
@@ -16,12 +16,13 @@
             color: var(--text); 
             margin: 0; 
             padding: 0;
+            /* Default Desktop: App Style (Fixed) */
             display: flex; 
             height: 100vh; 
             overflow: hidden; 
         }
         
-        /* --- SIDEBAR (DESKTOP DEFAULT) --- */
+        /* --- SIDEBAR (DESKTOP) --- */
         .sidebar { 
             width: 260px; 
             background: #15151a; 
@@ -46,8 +47,14 @@
         .finance-title { font-size: 12px; color: #888; }
         .finance-val { font-size: 18px; font-weight: bold; color: var(--green); }
 
-        /* --- MAIN CONTENT --- */
-        .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
+        /* --- MAIN CONTENT (DESKTOP) --- */
+        .main { 
+            flex: 1; 
+            padding: 20px; 
+            overflow-y: auto; /* Scrollable area */
+            position: relative; 
+            scroll-behavior: smooth; 
+        }
         
         /* TABS STATUS */
         .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
@@ -56,7 +63,12 @@
         .badge { background: var(--red); color: white; padding: 2px 6px; border-radius: 50%; font-size: 10px; margin-left: 5px; vertical-align: top; }
 
         /* ORDERS GRID */
-        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 80px; }
+        .orders-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 20px; 
+            padding-bottom: 80px; 
+        }
         .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 5px solid #555; animation: slideIn 0.3s ease; }
         .order-card.status-new { border-left-color: var(--red); }
         .order-card.status-unpaid { border-left-color: var(--accent); }
@@ -73,7 +85,7 @@
 
         /* BUTTONS */
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #fff; font-size: 13px; }
+        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #fff; font-size: 14px; }
         .btn-green { background: var(--green); }
         .btn-red { background: var(--red); }
         .btn-blue { background: var(--blue); }
@@ -85,11 +97,14 @@
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
         .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
 
-        /* --- MOBILE MODE (APP STYLE) --- */
+        /* --- MOBILE RESPONSIVE FIX (SCROLLING ENABLED) --- */
         @media (max-width: 768px) {
             body { 
                 flex-direction: column; 
-                height: 100%; /* Allow scroll on body */
+                height: auto;      /* Biarkan tinggi otomatis sesuai konten */
+                min-height: 100vh;
+                overflow-y: auto;  /* Aktifkan scroll browser native */
+                overflow-x: hidden;
             }
 
             /* Ubah Sidebar jadi Bottom Nav Bar */
@@ -98,7 +113,7 @@
                 bottom: 0; 
                 left: 0; 
                 width: 100%; 
-                height: 65px; 
+                height: 70px; 
                 flex-direction: row; 
                 justify-content: space-around; 
                 padding: 0; 
@@ -106,13 +121,14 @@
                 border-top: 1px solid #333; 
                 background: #1a1a1a;
                 box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+                z-index: 9999;
             }
 
-            .brand, .finance-box { display: none; } /* Sembunyikan Logo & Box Uang di HP */
+            .brand, .finance-box { display: none; } 
 
             .menu-item { 
                 flex-direction: column; 
-                gap: 2px; 
+                gap: 3px; 
                 font-size: 10px; 
                 padding: 10px; 
                 margin: 0; 
@@ -121,20 +137,35 @@
                 justify-content: center;
                 flex: 1;
                 text-align: center;
+                color: #666;
             }
             
             .menu-item.active { color: var(--accent); }
-            .menu-icon { font-size: 20px; margin-bottom: 2px; display: block; }
+            .menu-icon { font-size: 22px; margin-bottom: 2px; display: block; }
 
             /* Konten Utama di HP */
             .main { 
+                height: auto;
+                overflow: visible; /* Biarkan konten memanjang */
                 padding: 15px; 
-                padding-bottom: 80px; /* Ruang untuk Nav Bar Bawah */
+                padding-bottom: 100px; /* Ruang lebih besar di bawah agar tidak ketutup menu */
                 width: 100%;
             }
 
-            .status-tabs { justify-content: flex-start; }
-            .orders-grid { grid-template-columns: 1fr; gap: 15px; } /* Kartu 1 kolom */
+            .status-tabs { 
+                position: sticky; 
+                top: 0; 
+                background: var(--bg-dark); 
+                z-index: 50; 
+                padding-top: 10px; 
+                margin-top: -10px; /* Kompensasi padding */
+            }
+            
+            .orders-grid { 
+                grid-template-columns: 1fr; /* Kartu jadi 1 kolom full */
+                gap: 20px;
+                padding-bottom: 0; 
+            } 
         }
 
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -167,7 +198,7 @@
     <div class="main" id="orders-page">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h2 style="margin:0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px;">PESANAN AKTIF</h2>
-            <button onclick="calculateFinance()" style="background:none; border:none; color:#666; font-size:20px;">↻</button>
+            <button onclick="calculateFinance()" style="background:none; border:none; color:#666; font-size:24px;">↻</button>
         </div>
 
         <div class="status-tabs">
@@ -327,8 +358,10 @@
             
             document.getElementById(pageId + '-page').style.display = 'block';
             
-            // Highlight menu yang diklik
+            // Highlight menu yang diklik (Looping manual karena event target di HP suka meleset ke icon)
             const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+            
             if(pageId === 'orders') menuItems[0].classList.add('active');
             if(pageId === 'history') menuItems[1].classList.add('active');
             if(pageId === 'finance') menuItems[2].classList.add('active');
