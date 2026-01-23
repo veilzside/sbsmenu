@@ -113,7 +113,7 @@
         <div class="finance-box">
             <div class="finance-title">Omzet Hari Ini</div>
             <div class="finance-val" id="today-revenue">Rp 0</div>
-            <button class="btn-reset" onclick="resetAllData()">⚠ RESET DATA (DEMO)</button>
+            <button class="btn-reset" onclick="resetAllData()">⚠ RESET SEMUA DATA</button>
         </div>
     </div>
 
@@ -192,7 +192,7 @@
         let currentTab = 'new';
         let editingOrderKey = null;
 
-        // REALTIME LISTENER
+        // REALTIME LISTENER (Hanya update data array, JANGAN render ulang semuanya di sini)
         db.ref('orders').on('value', (snapshot) => {
             const data = snapshot.val();
             allOrders = [];
@@ -204,21 +204,45 @@
             // Sort Descending (Terbaru diatas)
             allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             
+            // Panggil Render UTAMA hanya jika ada perubahan Data
             renderOrders();
             updateBadges();
             calculateFinance();
         });
 
-        // GLOBAL TIMER (Agar jam terus berjalan tanpa refresh page)
+        // GLOBAL TIMER (Update HANYA TEKS WAKTU setiap detik, TANPA render ulang layout)
         setInterval(() => {
-            renderOrders(); // Re-render text timer
+            updateLiveTimers();
         }, 1000);
+
+        function updateLiveTimers() {
+            // Cari semua elemen yang punya class 'live-timer'
+            const timerElements = document.querySelectorAll('.live-timer');
+            
+            timerElements.forEach(el => {
+                const startTime = parseInt(el.getAttribute('data-start'));
+                if (!startTime || isNaN(startTime)) {
+                    el.innerText = "--:--";
+                    return;
+                }
+
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                // Jika waktu > 24 jam (data lama), stop hitung
+                if (elapsed > 86400) {
+                    el.innerText = "> 24h";
+                    return;
+                }
+
+                const min = Math.floor(elapsed / 60);
+                const sec = elapsed % 60;
+                el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
+            });
+        }
 
         function renderOrders() {
             const grid = document.getElementById('orders-grid');
             const historyGrid = document.getElementById('history-grid');
-            // Kita clear hanya jika struktur berubah drastis, tapi untuk timer kita update element saja 
-            // Untuk simplifikasi, kita re-render.
+            
             grid.innerHTML = '';
             historyGrid.innerHTML = '';
 
@@ -232,23 +256,24 @@
                     }
                 }
             });
+            // Langsung update timer setelah render agar tidak menunggu 1 detik
+            updateLiveTimers();
         }
 
         function createCard(order) {
             // 1. FORMAT NAMA MEJA
             let displayName = order.customer;
-            // Cek apakah isinya angka saja (Input Number)
             if(!isNaN(order.customer) && order.customer.trim() !== '') {
                 displayName = "MEJA " + order.customer;
             }
 
-            // 2. TIMELINE LOGIC (Waktu Masuk per Tab)
+            // 2. TIMELINE LOGIC
             const created = new Date(order.timestamp).getTime();
-            const accepted = order.acceptedAt || created; // Waktu masuk tab Bayar
-            const paid = order.paidAt || accepted; // Waktu masuk tab Proses
-            const completed = order.completedAt || Date.now(); // Waktu selesai
+            const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : 0;
+            const paid = order.paidAt ? new Date(order.paidAt).getTime() : 0;
+            const completed = order.completedAt ? new Date(order.completedAt).getTime() : 0;
 
-            let displayTime = "";
+            let displayTimeHTML = "";
             let timerStart = 0;
             let timerLabel = "";
 
@@ -263,20 +288,13 @@
                 timerLabel = "Sedang Dimasak";
             }
 
-            // Hitung durasi timer berjalan
-            const elapsed = Math.floor((Date.now() - timerStart) / 1000);
-            const min = Math.floor(elapsed / 60);
-            const sec = elapsed % 60;
-            const timerStr = `${min}:${sec < 10 ? '0'+sec : sec}`;
-
             // Format Jam Masuk (Sesuai Tab)
-            const entryDate = new Date(timerStart);
+            const entryDate = new Date(timerStart || created); // Fallback ke created jika 0
             const entryTimeStr = entryDate.getHours() + ":" + (entryDate.getMinutes()<10?'0':'') + entryDate.getMinutes();
 
             const div = document.createElement('div');
             div.className = `order-card status-${order.status}`;
             
-            // Render Items
             let itemsHtml = order.items.map((item) => `
                 <div class="item-row">
                     <span>${item.qty}x ${item.name}</span>
@@ -288,13 +306,14 @@
             // Tampilan Khusus History
             let historyHtml = '';
             if(order.status === 'completed') {
-                const durRespon = Math.floor((accepted - created)/1000);
-                const durBayar = Math.floor((paid - accepted)/1000);
-                const durMasak = Math.floor((completed - paid)/1000);
-                const durTotal = Math.floor((completed - created)/1000);
+                // Hitung durasi (Gunakan 0 jika data lama tidak ada timestamp)
+                const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
+                const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
+                const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
+                const durTotal = completed > 0 ? Math.floor((completed - created)/1000) : 0;
                 
-                // Format durasi jadi Xm Ys
                 const fmtDur = (s) => {
+                    if (s <= 0) return "-";
                     const m = Math.floor(s/60);
                     const sc = s%60;
                     return m > 0 ? `${m}m ${sc}s` : `${sc}s`;
@@ -311,16 +330,19 @@
                     </div>
                 `;
                 
-                // Di history jamnya adalah jam selesai
-                const doneDate = new Date(completed);
+                const doneDate = new Date(completed || Date.now());
                 const doneTimeStr = doneDate.getHours() + ":" + (doneDate.getMinutes()<10?'0':'') + doneDate.getMinutes();
-                displayTime = `Selesai: ${doneTimeStr}`;
+                displayTimeHTML = `Selesai: ${doneTimeStr}`;
             } else {
-                // Di tab aktif, tampilkan Timer
-                displayTime = `<span class="time-label">Masuk: ${entryTimeStr}</span><span class="timer-badge">⏱ ${timerStr}</span>`;
+                // Di tab aktif, berikan CLASS 'live-timer' agar bisa diupdate JS tanpa render ulang
+                // Jika timerStart 0 (data lama), jangan pasang data-start agar tampil --:--
+                const dataStartAttr = timerStart > 0 ? `data-start="${timerStart}"` : '';
+                displayTimeHTML = `
+                    <span class="time-label">Masuk: ${entryTimeStr}</span>
+                    <span class="timer-badge live-timer" ${dataStartAttr}>--:--</span>
+                `;
             }
 
-            // Buttons
             let buttonsHtml = '';
             if (order.status === 'new') {
                 buttonsHtml = `
@@ -350,7 +372,7 @@
                         <span style="font-size:10px; color:#666;">ID: ...${order.id.slice(-4)}</span>
                     </div>
                     <div style="text-align:right;">
-                        ${displayTime}
+                        ${displayTimeHTML}
                     </div>
                 </div>
                 <div class="item-list">${itemsHtml}</div>
@@ -362,18 +384,16 @@
         }
 
         function updateStatus(key, status) {
-            // Kita simpan timestamp saat status berubah agar timer valid
             const updates = { status: status };
-            const now = Date.now();
+            const now = new Date().toISOString(); // Simpan ISO String agar aman
 
-            if(status === 'unpaid') updates.acceptedAt = now; // Jam masuk tab Bayar
-            if(status === 'processing') updates.paidAt = now; // Jam masuk tab Proses
-            if(status === 'completed') updates.completedAt = now; // Jam Selesai
+            if(status === 'unpaid') updates.acceptedAt = now; 
+            if(status === 'processing') updates.paidAt = now; 
+            if(status === 'completed') updates.completedAt = now; 
 
             db.ref('orders/' + key).update(updates);
         }
 
-        // --- RESET DATA (HAPUS SEMUA) ---
         function resetAllData() {
             if(confirm("YAKIN HAPUS SEMUA DATA? Omzet & History akan hilang selamanya.")) {
                 db.ref('orders').remove()
@@ -382,7 +402,7 @@
             }
         }
 
-        // --- FUNGSI STANDAR LAINNYA ---
+        // --- FUNGSI NAVIGASI ---
         function showPage(pageId) {
             document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
@@ -441,7 +461,7 @@
 
             allOrders.forEach(order => {
                 if (order.status !== 'completed') return;
-                const oDate = new Date(order.completedAt || order.timestamp); // Pakai waktu selesai
+                const oDate = new Date(order.completedAt || order.timestamp);
                 
                 if(oDate.getDate() === now.getDate() && oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) daily += order.total;
                 if(oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) monthly += order.total;
