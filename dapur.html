@@ -2,47 +2,66 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SBS Kitchen Command Center</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SBS Kitchen</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         
+        * { box-sizing: border-box; }
+
         body { 
             font-family: 'Poppins', sans-serif; 
             background: var(--bg-dark); 
             color: var(--text); 
             margin: 0; 
+            padding: 0;
             display: flex; 
             height: 100vh; 
             overflow: hidden; 
         }
         
-        /* SIDEBAR DEFAULT (DESKTOP) */
-        .sidebar { width: 250px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; }
+        /* --- SIDEBAR (DESKTOP DEFAULT) --- */
+        .sidebar { 
+            width: 260px; 
+            background: #15151a; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            border-right: 1px solid #333; 
+            flex-shrink: 0; 
+            z-index: 100;
+        }
+        
         .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
-        .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
+        
+        .menu-item { 
+            padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; 
+            font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; 
+        }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
+        .menu-icon { font-size: 20px; }
+        
         .finance-box { margin-top: auto; background: var(--card-bg); padding: 15px; border-radius: 10px; border: 1px solid #444; }
         .finance-title { font-size: 12px; color: #888; }
         .finance-val { font-size: 18px; font-weight: bold; color: var(--green); }
 
-        /* MAIN CONTENT */
-        .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; }
+        /* --- MAIN CONTENT --- */
+        .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
         
         /* TABS STATUS */
-        .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
-        .tab { padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; flex-shrink: 0; }
+        .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
+        .tab { padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; flex-shrink: 0; white-space: nowrap; }
         .tab.active { opacity: 1; background: var(--card-bg); border-color: var(--accent); color: var(--accent); }
         .badge { background: var(--red); color: white; padding: 2px 6px; border-radius: 50%; font-size: 10px; margin-left: 5px; vertical-align: top; }
 
-        /* ORDER CARD */
-        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 5px solid #555; animation: slideIn 0.3s ease; position: relative; }
+        /* ORDERS GRID */
+        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 80px; }
+        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 5px solid #555; animation: slideIn 0.3s ease; }
         .order-card.status-new { border-left-color: var(--red); }
         .order-card.status-unpaid { border-left-color: var(--accent); }
         .order-card.status-processing { border-left-color: var(--blue); }
-        .order-card.status-completed { border-left-color: var(--green); opacity: 0.7; }
+        .order-card.status-completed { border-left-color: var(--green); opacity: 0.8; }
 
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .cust-name { font-size: 18px; font-weight: bold; color: #fff; }
@@ -62,44 +81,60 @@
         .btn-full { grid-column: span 2; }
 
         /* MODAL */
-        .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
-        .modal-content { background: var(--card-bg); padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; border: 2px solid var(--accent); }
-        .modal input { width: 100%; padding: 10px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
+        .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
+        .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
 
-        /* --- RESPONSIVE MOBILE (HP) --- */
+        /* --- MOBILE MODE (APP STYLE) --- */
         @media (max-width: 768px) {
-            body { flex-direction: column; } /* Jadi Tumpuk ke Bawah */
-            
+            body { 
+                flex-direction: column; 
+                height: 100%; /* Allow scroll on body */
+            }
+
+            /* Ubah Sidebar jadi Bottom Nav Bar */
             .sidebar { 
+                position: fixed; 
+                bottom: 0; 
+                left: 0; 
                 width: 100%; 
-                height: auto; 
+                height: 65px; 
                 flex-direction: row; 
-                padding: 10px 15px; 
-                overflow-x: auto; 
+                justify-content: space-around; 
+                padding: 0; 
                 border-right: none; 
-                border-bottom: 1px solid #333;
-                align-items: center;
-                box-sizing: border-box;
+                border-top: 1px solid #333; 
+                background: #1a1a1a;
+                box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
             }
-            
-            .brand { 
-                font-size: 24px; 
-                margin-bottom: 0; 
-                margin-right: 20px; 
-                white-space: nowrap;
-            }
-            
+
+            .brand, .finance-box { display: none; } /* Sembunyikan Logo & Box Uang di HP */
+
             .menu-item { 
-                margin-bottom: 0; 
-                padding: 8px 12px; 
-                font-size: 12px; 
-                white-space: nowrap;
+                flex-direction: column; 
+                gap: 2px; 
+                font-size: 10px; 
+                padding: 10px; 
+                margin: 0; 
+                background: transparent !important; 
+                border-radius: 0;
+                justify-content: center;
+                flex: 1;
+                text-align: center;
             }
             
-            .finance-box { display: none; } /* Sembunyikan ringkasan uang di menu HP */
-            
-            .main { padding: 15px; }
-            .orders-grid { grid-template-columns: 1fr; } /* Kartu jadi 1 kolom full */
+            .menu-item.active { color: var(--accent); }
+            .menu-icon { font-size: 20px; margin-bottom: 2px; display: block; }
+
+            /* Konten Utama di HP */
+            .main { 
+                padding: 15px; 
+                padding-bottom: 80px; /* Ruang untuk Nav Bar Bawah */
+                width: 100%;
+            }
+
+            .status-tabs { justify-content: flex-start; }
+            .orders-grid { grid-template-columns: 1fr; gap: 15px; } /* Kartu 1 kolom */
         }
 
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -109,9 +144,19 @@
 
     <div class="sidebar">
         <div class="brand">SBS ADMIN</div>
-        <div class="menu-item active" onclick="showPage('orders')">📦 Pesanan</div>
-        <div class="menu-item" onclick="showPage('history')">📜 Riwayat</div>
-        <div class="menu-item" onclick="showPage('finance')">💰 Omzet</div>
+        
+        <div class="menu-item active" onclick="showPage('orders')">
+            <span class="menu-icon">📦</span> 
+            <span>Pesanan</span>
+        </div>
+        <div class="menu-item" onclick="showPage('history')">
+            <span class="menu-icon">📜</span> 
+            <span>Riwayat</span>
+        </div>
+        <div class="menu-item" onclick="showPage('finance')">
+            <span class="menu-icon">💰</span> 
+            <span>Omzet</span>
+        </div>
         
         <div class="finance-box">
             <div class="finance-title">Omzet Hari Ini</div>
@@ -120,6 +165,11 @@
     </div>
 
     <div class="main" id="orders-page">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin:0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px;">PESANAN AKTIF</h2>
+            <button onclick="calculateFinance()" style="background:none; border:none; color:#666; font-size:20px;">↻</button>
+        </div>
+
         <div class="status-tabs">
             <div class="tab active" onclick="filterTab('new')">BARU <span class="badge" id="badge-new">0</span></div>
             <div class="tab" onclick="filterTab('unpaid')">BAYAR <span class="badge" id="badge-unpaid">0</span></div>
@@ -130,22 +180,22 @@
     </div>
 
     <div class="main" id="history-page" style="display: none;">
-        <h2 style="font-family:'Bebas Neue'; color:var(--accent);">Riwayat Selesai</h2>
+        <h2 style="font-family:'Bebas Neue'; color:var(--accent);">RIWAYAT SELESAI</h2>
         <div id="history-grid" class="orders-grid"></div>
     </div>
 
     <div class="main" id="finance-page" style="display: none;">
-        <h2 style="font-family:'Bebas Neue'; color:var(--accent);">Laporan Keuangan</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px;">
-            <div class="finance-box" style="margin:0;">
+        <h2 style="font-family:'Bebas Neue'; color:var(--accent);">LAPORAN OMZET</h2>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px;">
+            <div class="finance-box" style="margin:0; text-align: center;">
                 <div class="finance-title">Harian</div>
                 <div class="finance-val" id="daily-rev">Rp 0</div>
             </div>
-            <div class="finance-box" style="margin:0;">
+            <div class="finance-box" style="margin:0; text-align: center;">
                 <div class="finance-title">Bulanan</div>
                 <div class="finance-val" id="monthly-rev">Rp 0</div>
             </div>
-            <div class="finance-box" style="margin:0;">
+            <div class="finance-box" style="margin:0; grid-column: span 2; text-align: center;">
                 <div class="finance-title">Tahunan</div>
                 <div class="finance-val" id="yearly-rev">Rp 0</div>
             </div>
@@ -170,7 +220,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
-        // CONFIG FIREBASE (SAMA SEPERTI SEBELUMNYA)
         const firebaseConfig = {
             apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
             authDomain: "sbs-menu-d1611.firebaseapp.com",
@@ -189,7 +238,6 @@
         let currentTab = 'new';
         let editingOrderKey = null;
 
-        // LISTENER DATABASE
         db.ref('orders').on('value', (snapshot) => {
             const data = snapshot.val();
             allOrders = [];
@@ -200,7 +248,6 @@
                 });
             }
 
-            // Urutkan Terbaru
             allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             
             renderOrders();
@@ -208,7 +255,6 @@
             calculateFinance();
         });
 
-        // RENDER TAMPILAN
         function renderOrders() {
             const grid = document.getElementById('orders-grid');
             const historyGrid = document.getElementById('history-grid');
@@ -217,7 +263,6 @@
 
             allOrders.forEach(order => {
                 const card = createCard(order);
-                
                 if (order.status === 'completed' || order.status === 'rejected') {
                     historyGrid.appendChild(card);
                 } else {
@@ -234,16 +279,15 @@
             const div = document.createElement('div');
             div.className = `order-card status-${order.status}`;
             
-            let itemsHtml = order.items.map((item, idx) => `
+            let itemsHtml = order.items.map((item) => `
                 <div class="item-row">
                     <span>${item.qty}x ${item.name}</span>
                     <span>${(item.price * item.qty).toLocaleString()}</span>
                 </div>
-                ${item.note ? `<span class="item-note">Catatan: ${item.note}</span>` : ''}
+                ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
             `).join('');
 
             let buttonsHtml = '';
-            
             if (order.status === 'new') {
                 buttonsHtml = `
                     <button class="btn btn-red" onclick="updateStatus('${order.id}', 'rejected')">Tolak</button>
@@ -282,8 +326,13 @@
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
             
             document.getElementById(pageId + '-page').style.display = 'block';
-            event.currentTarget.classList.add('active'); // Fixed target issue
             
+            // Highlight menu yang diklik
+            const menuItems = document.querySelectorAll('.menu-item');
+            if(pageId === 'orders') menuItems[0].classList.add('active');
+            if(pageId === 'history') menuItems[1].classList.add('active');
+            if(pageId === 'finance') menuItems[2].classList.add('active');
+
             if(pageId === 'finance') calculateFinance();
         }
 
@@ -316,17 +365,13 @@
         function saveExtraItem() {
             const name = document.getElementById('extra-name').value;
             const price = parseInt(document.getElementById('extra-price').value);
-            
             if(!name || !price) return alert("Isi data dengan benar");
 
             const order = allOrders.find(o => o.id === editingOrderKey);
             const newItems = [...order.items, { name: name, price: price, qty: 1, note: 'Tambahan Manual' }];
             const newTotal = order.total + price;
 
-            db.ref('orders/' + editingOrderKey).update({
-                items: newItems,
-                total: newTotal
-            }).then(() => {
+            db.ref('orders/' + editingOrderKey).update({ items: newItems, total: newTotal }).then(() => {
                 closeModal();
                 document.getElementById('extra-name').value = '';
                 document.getElementById('extra-price').value = '';
@@ -339,25 +384,17 @@
 
             allOrders.forEach(order => {
                 if (order.status !== 'completed') return;
-
                 const oDate = new Date(order.timestamp);
-                
-                if(oDate.getDate() === now.getDate() && oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) {
-                    daily += order.total;
-                }
-                if(oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) {
-                    monthly += order.total;
-                }
-                if(oDate.getFullYear() === now.getFullYear()) {
-                    yearly += order.total;
-                }
+                if(oDate.getDate() === now.getDate() && oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) daily += order.total;
+                if(oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear()) monthly += order.total;
+                if(oDate.getFullYear() === now.getFullYear()) yearly += order.total;
             });
 
             const fmt = (n) => "Rp " + n.toLocaleString('id-ID');
-            document.getElementById('today-revenue').innerText = fmt(daily);
-            document.getElementById('daily-rev').innerText = fmt(daily);
-            document.getElementById('monthly-rev').innerText = fmt(monthly);
-            document.getElementById('yearly-rev').innerText = fmt(yearly);
+            if(document.getElementById('today-revenue')) document.getElementById('today-revenue').innerText = fmt(daily);
+            if(document.getElementById('daily-rev')) document.getElementById('daily-rev').innerText = fmt(daily);
+            if(document.getElementById('monthly-rev')) document.getElementById('monthly-rev').innerText = fmt(monthly);
+            if(document.getElementById('yearly-rev')) document.getElementById('yearly-rev').innerText = fmt(yearly);
         }
     </script>
 </body>
