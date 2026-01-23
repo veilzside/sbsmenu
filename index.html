@@ -13,18 +13,7 @@
         .logo-container { width: 70px; height: 70px; background: var(--sbs-black); border-radius: 50%; border: 3px solid #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
         .logo-container img { width: 100%; height: auto; }
         .header-title h1 { font-family: 'Bebas Neue', cursive; font-size: 55px; margin: 0; line-height: 0.8; letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff; }
-
-        /* --- TRACKING STATUS BAR (NEW) --- */
-#status-tracker {
-    position: fixed; top: 0; left: 0; width: 100%; 
-    background: var(--sbs-black); color: #fff; padding: 10px; 
-    z-index: 2000; text-align: center; font-size: 14px; 
-    font-weight: bold; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-.status-badge { 
-    background: var(--sbs-orange); color: #fff; padding: 3px 10px; 
-    border-radius: 5px; margin-left: 10px; text-transform: uppercase; 
-}
+        
         /* Search & Tabs */
         .search-wrapper { position: relative; margin-bottom: 20px; z-index: 101; }
         .search-box { width: 100%; box-sizing: border-box; background: #fff; border: 3px solid var(--sbs-black); border-radius: 50px; padding: 12px 20px 12px 45px; font-family: 'Montserrat', sans-serif; font-weight: 700; text-transform: uppercase; outline: none; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); }
@@ -41,26 +30,25 @@
         .search-mode-active .content { display: grid !important; animation: none; }
         .card-hidden, .section-hidden { display: none !important; }
         
-        /* CARD MENU */
         .menu-card { background: #fff; border: 3px solid var(--sbs-black); border-radius: 25px; overflow: hidden; box-shadow: 10px 10px 0px var(--sbs-black); position: relative; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.1s; }
         .menu-card:active { transform: scale(0.98); }
         .card-img-box { width: 100%; height: auto; aspect-ratio: 1 / 1; position: relative; background: #eee; border-bottom: 3px solid var(--sbs-black); }
         .card-img-box img { width: 100%; height: 100%; object-fit: cover; }
         .best-rec { border-color: var(--sbs-orange); box-shadow: 10px 10px 0px var(--sbs-orange); }
 
-        /* Visual Hints (UPDATED) */
+        /* --- NEW ADD BUTTON (CART ICON) --- */
         .add-badge { 
             position: absolute; bottom: 15px; right: 15px; 
             background: var(--sbs-orange); color: #fff; 
-            width: 45px; height: 45px; border-radius: 50%; 
+            width: 50px; height: 50px; border-radius: 50%; 
             border: 3px solid var(--sbs-black); 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 24px; font-weight: bold; 
             box-shadow: 3px 3px 0px var(--sbs-black); 
             transition: 0.2s; z-index: 10;
-            opacity: 0.8; /* Transparansi 80% */
+            opacity: 0.9; 
         }
-        .menu-card:active .add-badge { transform: scale(1.2) rotate(90deg); background: var(--sbs-black); opacity: 1; }
+        .add-badge svg { width: 24px; height: 24px; fill: white; }
+        .menu-card:active .add-badge { transform: scale(1.1); background: var(--sbs-black); opacity: 1; }
         
         /* ALCS Style */
         .alcs-card { background: #fff; border: 3px solid var(--sbs-black); box-shadow: 8px 8px 0px var(--sbs-black); border-radius: 20px; padding: 20px; margin-bottom: 0; position: relative; }
@@ -104,11 +92,23 @@
         .btn-order { background: var(--sbs-orange); color: #fff; border: 3px solid var(--sbs-black); width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; margin-top: 15px; cursor: pointer; font-size: 16px; }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; font-weight: bold; }
 
-        /* Success Message Styling */
+        /* Success Message */
         #success-modal .modal-content { text-align: center; border-color: #28a745; }
         .success-icon { font-size: 60px; color: #28a745; margin-bottom: 15px; }
         .success-msg { font-size: 16px; line-height: 1.6; color: #444; margin-bottom: 20px; }
         .btn-close-final { background: var(--sbs-black); color: #fff; padding: 12px 30px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; width: 100%; }
+
+        /* --- TRACKING STATUS BAR --- */
+        #status-tracker {
+            position: fixed; top: 0; left: 0; width: 100%; 
+            background: var(--sbs-black); color: #fff; padding: 10px; 
+            z-index: 2000; text-align: center; font-size: 14px; 
+            font-weight: bold; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .status-badge { 
+            background: var(--sbs-orange); color: #fff; padding: 3px 10px; 
+            border-radius: 5px; margin-left: 10px; text-transform: uppercase; 
+        }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUp { from { transform: translateY(100px); } to { transform: translateY(0); } }
@@ -119,7 +119,7 @@
 <div id="status-tracker">
     Pesananmu: <span id="tracker-status" class="status-badge">MENUNGGU</span>
 </div>
-    
+
 <div class="top-bar">
     <div class="logo-container"><img src="img/sbslogo.jpg" alt="SBS Logo"></div>
     <div class="header-title"><h1>OUR MENU</h1></div>
@@ -147,224 +147,21 @@
     <div id="makan" class="content active">
         <div class="menu-card" onclick="addToCart('Kalter', 20000)" data-name="Kalter" data-price="20000" data-tags="nasi tahu telor rice tofu egg telur vegetarian kalter">
             <div class="card-img-box"><img src="img/kalter.webp" alt="Kalter"></div>
-            <div class="add-badge">+</div>
+            <div class="add-badge">
+                <svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg>
+            </div>
         </div>
         <div class="menu-card" onclick="addToCart('Obama', 25000)" data-name="Obama" data-price="25000" data-tags="nasi ayam geprek sambal matah rice chicken pedas spicy hot chili obama">
             <div class="card-img-box"><img src="img/obama.webp" alt="Obama"></div>
-            <div class="add-badge">+</div>
+            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
         </div>
         <div class="menu-card best-rec" onclick="addToCart('Mangku Koe', 28000)" data-name="Mangku Koe" data-price="28000" data-tags="nasi chicken katsu kari rice ayam curry japanese food mangku koe">
             <div class="card-img-box"><img src="img/mangkukoe.webp" alt="Mangku Koe"></div>
-            <div class="add-badge">+</div>
+            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
         </div>
-        <div class="menu-card best-rec" onclick="addToCart('Mangku Ayang', 25000)" data-name="Mangku Ayang" data-price="25000" data-tags="nasi ayam siram rice chicken gravy sauce mangku ayang">
-            <div class="card-img-box"><img src="img/mangkuayang.webp" alt="Mangku Ayang"></div>
-            <div class="add-badge">+</div>
         </div>
-        <div class="menu-card best-rec" onclick="addToCart('Barudak', 20000)" data-name="Barudak" data-price="20000" data-tags="bakmie katsu sambal matah mie noodle noodles ayam chicken pedas spicy hot barudak">
-            <div class="card-img-box"><img src="img/barudak.webp" alt="Barudak"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Sekena Gomes', 22000)" data-name="Sekena Gomes" data-price="22000" data-tags="nasgor merah katsu sambal matah nasi goreng fried rice red ayam chicken pedas spicy hot sekena gomes">
-            <div class="card-img-box"><img src="img/sekenagomes.webp" alt="Sekena Gomes"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Sekena Goput', 22000)" data-name="Sekena Goput" data-price="22000" data-tags="nasgor putih katsu sambal matah nasi goreng fried rice white ayam chicken pedas spicy hot sekena goput">
-            <div class="card-img-box"><img src="img/sekenagoput.webp" alt="Sekena Goput"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card best-rec" onclick="addToCart('Sekena Keren', 25000)" data-name="Sekena Keren" data-price="25000" data-tags="nasgor kari katsu sambal matah nasi goreng fried rice curry ayam chicken pedas spicy hot sekena keren">
-            <div class="card-img-box"><img src="img/sekenakeren.webp" alt="Sekena Keren"></div>
-            <div class="add-badge">+</div>
-        </div>
+    
     </div>
-
-    <div id="cemil" class="content">
-        <div class="menu-card best-rec" onclick="addToCart('Paket Sambat', 35000)" data-name="Paket Sambat" data-price="35000" data-tags="aneka camilan snack platter sosis sausage kentang fries gorengan paket sambat">
-            <div class="card-img-box"><img src="img/paketsambat.webp" alt="Paket Sambat"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Cricket', 25000)" data-name="Cricket" data-price="25000" data-tags="chicken fillet lava ayam boneless pedas spicy hot snack cricket">
-            <div class="card-img-box"><img src="img/cricket.webp" alt="Cricket"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Potato Freak', 17000)" data-name="Potato Freak" data-price="17000" data-tags="french fries kentang goreng potato chips asin salty snack potato freak">
-            <div class="card-img-box"><img src="img/potatofreak.webp" alt="Potato Freak"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Uhat Lawik', 17000)" data-name="Uhat Lawik" data-price="17000" data-tags="tahu walik tofu aci goreng crispy snack uhat lawik">
-            <div class="card-img-box"><img src="img/uhatlawik.webp" alt="Uhat Lawik"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Gyozable', 18000)" data-name="Gyozable" data-price="18000" data-tags="gyoza dimsum dumpling ayam chicken kukus steam goreng fried gyozable">
-            <div class="card-img-box"><img src="img/gyozable.webp" alt="Gyozable"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card best-rec" onclick="addToCart('Tahu Julit', 19000)" data-name="Tahu Julit" data-price="19000" data-tags="tahu cabe garam tofu chili salt pedas spicy hot asin snack tahu julit">
-            <div class="card-img-box"><img src="img/tahujulit.webp" alt="Tahu Julit"></div>
-            <div class="add-badge">+</div>
-        </div>
-    </div>
-
-    <div id="black" class="content">
-        <div class="menu-card best-rec" onclick="addToCart('Fressa', 25000)" data-name="Fressa" data-price="25000" data-tags="berry soda coffee kopi buah segar fizz fressa">
-            <div class="card-img-box"><img src="img/fressa.webp" alt="Fressa"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Americano', 16000)" data-name="Americano" data-price="16000" data-tags="americano kopi hitam black coffee pahit bitter no sugar">
-            <div class="card-img-box"><img src="img/americano.webp" alt="Americano"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card best-rec" onclick="addToCart('Dark Freshly', 19000)" data-name="Dark Freshly" data-price="19000" data-tags="americano lemon kopi coffee citrus segar fresh dark freshly">
-            <div class="card-img-box"><img src="img/darkfreshly.webp" alt="Dark Freshly"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Darkberry', 19000)" data-name="Darkberry" data-price="19000" data-tags="americano berry kopi coffee strawberry fruity darkberry">
-            <div class="card-img-box"><img src="img/darkberry.webp" alt="Darkberry"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Tubruk Syari', 13000)" data-name="Tubruk Syari" data-price="13000" data-tags="kopi tubruk traditional black coffee ampas tubruk syari">
-            <div class="card-img-box"><img src="img/tubruksyari.webp" alt="Tubruk Syari"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Hanoi Tears', 15000)" data-name="Hanoi Tears" data-price="15000" data-tags="vietnam drip kopi susu milk condensed manis sweet hanoi tears">
-            <div class="card-img-box"><img src="img/hanoitears.webp" alt="Hanoi Tears"></div>
-            <div class="add-badge">+</div>
-        </div>
-    </div>
-
-    <div id="white" class="content">
-        <div class="menu-card best-rec" onclick="addToCart('Penkopi', 23000)" data-name="Penkopi" data-price="23000" data-tags="creamy coffee kopi susu milk latte palm sugar gula aren penkopi">
-            <div class="card-img-box"><img src="img/penkopi.webp" alt="Penkopi"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Macch Favorito', 20000)" data-name="Macch Favorito" data-price="20000" data-tags="caramel macchiato kopi coffee susu milk karamel manis sweet macch favorito">
-            <div class="card-img-box"><img src="img/macchfavorito.webp" alt="Macch Favorito"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Specta', 25000)" data-name="Specta" data-price="25000" data-tags="peanut coffee kopi kacang skippy jam susu milk specta">
-            <div class="card-img-box"><img src="img/specta.webp" alt="Specta"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Comica', 22000)" data-name="Comica" data-price="22000" data-tags="hazelnut coffee kopi susu milk kacang wangi comica">
-            <div class="card-img-box"><img src="img/comica.webp" alt="Comica"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Rhumpee', 20000)" data-name="Rhumpee" data-price="20000" data-tags="rhum coffee rum non alkohol kopi susu milk wangi rhumpee">
-            <div class="card-img-box"><img src="img/rhumpee.webp" alt="Rhumpee"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Crush', 22000)" data-name="Crush" data-price="22000" data-tags="rhum regal coffee rum biskuit biscuit marie susu milk crush">
-            <div class="card-img-box"><img src="img/crush.webp" alt="Crush"></div>
-            <div class="add-badge">+</div>
-        </div>
-    </div>
-
-    <div id="comfy" class="content">
-        <div class="menu-card best-rec" onclick="addToCart('Mammy', 18000)" data-name="Mammy" data-price="18000" data-tags="matcha latte green tea teh hijau susu milk japanese mammy">
-            <div class="card-img-box"><img src="img/mammy.webp" alt="Mammy"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Deep Choc', 18000)" data-name="Deep Choc" data-price="18000" data-tags="chocolate coklat cocoa susu milk manis sweet deep choc">
-            <div class="card-img-box"><img src="img/deepchoc.webp" alt="Deep Choc"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Schopea', 25000)" data-name="Schopea" data-price="25000" data-tags="peanut chocolate coklat kacang susu milk schopea">
-            <div class="card-img-box"><img src="img/schopea.webp" alt="Schopea"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Creamberry', 23000)" data-name="Creamberry" data-price="23000" data-tags="berry latte strawberry susu milk fruity creamberry">
-            <div class="card-img-box"><img src="img/creamberry.webp" alt="Creamberry"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Jandu', 18000)" data-name="Jandu" data-price="18000" data-tags="jahe madu ginger honey hangat warm herbal wedang jandu">
-            <div class="card-img-box"><img src="img/jandu.webp" alt="Jandu"></div>
-            <div class="add-badge">+</div>
-        </div>
-    </div>
-
-    <div id="refresh" class="content">
-        <div class="menu-card" onclick="addToCart('Threepi', 15000)" data-name="Threepi" data-price="15000" data-tags="tropical tea teh buah fruit segar fresh threepi">
-            <div class="card-img-box"><img src="img/threepi.webp" alt="Threepi"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Teh Gelies', 10000)" data-name="Teh Gelies" data-price="10000" data-tags="jasmine tea teh melati manis sweet es ice teh gelies">
-            <div class="card-img-box"><img src="img/tehgelies.webp" alt="Teh Gelies"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card best-rec" onclick="addToCart('Red Bloom', 18000)" data-name="Red Bloom" data-price="18000" data-tags="yakult berry yogurt strawberry probiotik asam manis sour sweet red bloom">
-            <div class="card-img-box"><img src="img/redbloom.webp" alt="Red Bloom"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Yagustea', 15000)" data-name="Yagustea" data-price="15000" data-tags="yakult sugus grape anggur permen candy ungu purple yagustea">
-            <div class="card-img-box"><img src="img/yagustea.webp" alt="Yagustea"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Chenteal', 15000)" data-name="Chenteal" data-price="15000" data-tags="yakult lychee tea leci teh fruit chenteal">
-            <div class="card-img-box"><img src="img/chenteal.webp" alt="Chenteal"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Trustey', 18000)" data-name="Trustey" data-price="18000" data-tags="honey yuzu madu jeruk citrus orange lemon segar trustey">
-            <div class="card-img-box"><img src="img/trustey.webp" alt="Trustey"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Rindu', 15000)" data-name="Rindu" data-price="15000" data-tags="winter melon kundur buah manis segar rindu">
-            <div class="card-img-box"><img src="img/rindu.webp" alt="Rindu"></div>
-            <div class="add-badge">+</div>
-        </div>
-        <div class="menu-card" onclick="addToCart('Literally Water', 5000)" data-name="Literally Water" data-price="5000" data-tags="air mineral water bening tawar literally water">
-             <div class="card-img-box"><img src="img/literallywater.webp" alt="Literally Water"></div>
-             <div class="add-badge">+</div>
-        </div>
-    </div>
-
-    <div id="alcs" class="content">
-        <div class="alcs-card" data-tags="bintang beer bir pilsener alkohol alcohol">
-            <div class="alcs-brand">BINTANG</div>
-            <div class="alcs-list">
-                <div class="alcs-row" onclick="addToCart('Bintang Small', 32000)"><span class="alcs-variant">Small</span><span class="alcs-price-tag">32K</span></div>
-                <div class="alcs-row" onclick="addToCart('Bintang Radler', 32000)"><span class="alcs-variant">Radler</span><span class="alcs-price-tag">32K</span></div>
-                <div class="alcs-row" onclick="addToCart('Bintang Large', 50000)"><span class="alcs-variant">Large</span><span class="alcs-price-tag">50K</span></div>
-            </div>
-        </div>
-        <div class="alcs-card" data-tags="anker beer bir lychee leci pineapple nanas alkohol alcohol">
-            <div class="alcs-brand">ANKER</div>
-            <div class="alcs-list">
-                <div class="alcs-row" onclick="addToCart('Anker Lychee', 29000)"><span class="alcs-variant">Lychee</span><span class="alcs-price-tag">29K</span></div>
-                <div class="alcs-row" onclick="addToCart('Anker Pineapple', 29000)"><span class="alcs-variant">Pineapple</span><span class="alcs-price-tag">29K</span></div>
-            </div>
-        </div>
-        <div class="alcs-card" data-tags="smirnoff vodka raspberry berry green apple apel hijau lemon lychee leci pink lemonade alkohol alcohol">
-            <div class="alcs-brand">SMIRNOFF</div>
-            <div class="alcs-list">
-                <div class="alcs-row" onclick="addToCart('Smirnoff Raspberry', 33000)"><span class="alcs-variant">Raspberry</span><span class="alcs-price-tag">33K</span></div>
-                <div class="alcs-row" onclick="addToCart('Smirnoff Green Apple', 33000)"><span class="alcs-variant">Green Apple</span><span class="alcs-price-tag">33K</span></div>
-                <div class="alcs-row" onclick="addToCart('Smirnoff Lemon Lyc', 33000)"><span class="alcs-variant">Lemon Lychee</span><span class="alcs-price-tag">33K</span></div>
-                <div class="alcs-row" onclick="addToCart('Smirnoff Pink Lem', 33000)"><span class="alcs-variant">Pink Lemonade</span><span class="alcs-price-tag">33K</span></div>
-            </div>
-        </div>
-        <div class="alcs-card" data-tags="mix max vodka anggur merah red grape exotic blue biru alkohol alcohol">
-            <div class="alcs-brand">MIX MAX</div>
-            <div class="alcs-list">
-                <div class="alcs-row" onclick="addToCart('Mix Max Anggur', 34000)"><span class="alcs-variant">Anggur Merah</span><span class="alcs-price-tag">34K</span></div>
-                <div class="alcs-row" onclick="addToCart('Mix Max Blue', 34000)"><span class="alcs-variant">Exotic Blue</span><span class="alcs-price-tag">34K</span></div>
-            </div>
-        </div>
-        <div class="alcs-card" data-tags="iceland vodka lychee leci long island alkohol alcohol">
-            <div class="alcs-brand">ICELAND</div>
-            <div class="alcs-list">
-                <div class="alcs-row" onclick="addToCart('Iceland Lychee', 34000)"><span class="alcs-variant">Lychee</span><span class="alcs-price-tag">34K</span></div>
-                <div class="alcs-row" onclick="addToCart('Iceland L. Island', 34000)"><span class="alcs-variant">Long Island</span><span class="alcs-price-tag">34K</span></div>
-            </div>
-        </div>
-        <div class="alcs-card" data-tags="api anggur hijau green grape kawa kawi arak bali alkohol alcohol">
-            <div class="alcs-brand">API</div>
-            <div class="alcs-list">
-                <div class="alcs-row" onclick="addToCart('Api Anggur Hijau', 106000)"><span class="alcs-variant">Anggur Hijau</span><span class="alcs-price-tag">106K</span></div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div id="cart-bar" onclick="openCart()">
     <div class="cart-left">
@@ -410,15 +207,15 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
 <script>
-    // --- KONFIGURASI FIREBASE (TETAP SAMA) ---
-     const firebaseConfig = {
-    apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
-    authDomain: "sbs-menu-d1611.firebaseapp.com",
-    databaseURL: "https://sbs-menu-d1611-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "sbs-menu-d1611",
-    storageBucket: "sbs-menu-d1611.firebasestorage.app",
-    messagingSenderId: "530098727952",
-    appId: "1:530098727952:web:1bb3072d93be9564fbee95"
+    // --- KONFIGURASI FIREBASE ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
+        authDomain: "sbs-menu-d1611.firebaseapp.com",
+        databaseURL: "https://sbs-menu-d1611-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "sbs-menu-d1611",
+        storageBucket: "sbs-menu-d1611.firebasestorage.app",
+        messagingSenderId: "530098727952",
+        appId: "1:530098727952:web:1bb3072d93be9564fbee95"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -432,7 +229,6 @@
         if (existingItem) {
             existingItem.qty++;
         } else {
-            // Added note property
             cart.push({ name: name, price: price, qty: 1, note: '' });
         }
         updateCartUI();
@@ -467,7 +263,6 @@
 
         cart.forEach((item, index) => {
             totalPrice += (item.price * item.qty);
-            // Updated innerHTML with input note
             container.innerHTML += `
                 <div class="cart-item">
                     <div class="item-main">
@@ -508,7 +303,6 @@
         document.getElementById('cart-modal').style.display = 'none';
     }
 
-    // --- UPDATED SUBMIT ORDER (SIMPAN ID LOKAL) ---
     function submitOrder() {
         const name = document.getElementById('customer-name').value;
         if (!name) {
@@ -526,16 +320,14 @@
             items: cart,
             total: totalPrice,
             timestamp: new Date().toISOString(),
-            status: 'new' // Status Awal
+            status: 'new' 
         };
 
         const newOrderRef = db.ref().child('orders').push();
         newOrderRef.set(orderData)
         .then(() => {
-            // SIMPAN ID PESANAN DI HP USER UNTUK PELACAKAN
             localStorage.setItem('myActiveOrder', newOrderRef.key);
-            startTracking(newOrderRef.key); // Mulai tracking
-
+            startTracking(newOrderRef.key);
             cart = []; 
             updateCartUI();
             closeCart();
@@ -547,7 +339,11 @@
         });
     }
 
-    // --- FUNGSI TRACKING STATUS (TAMBAHKAN DI BAWAH SCRIPT) ---
+    function closeSuccess() {
+        document.getElementById('success-modal').style.display = 'none';
+    }
+
+    // --- TRACKING STATUS ---
     function startTracking(orderId) {
         if(!orderId) return;
         
@@ -559,7 +355,7 @@
             if(data) {
                 trackerUI.style.display = 'block';
                 let text = '';
-                let color = '#FFD200'; // Default kuning
+                let color = '#FFD200';
 
                 if(data.status === 'new') { text = 'MENUNGGU KONFIRMASI'; color = '#888'; }
                 else if(data.status === 'unpaid') { text = 'MENUNGGU PEMBAYARAN'; color = '#FF6600'; }
@@ -570,7 +366,7 @@
                     setTimeout(() => {
                         localStorage.removeItem('myActiveOrder');
                         trackerUI.style.display = 'none';
-                    }, 10000); // Hilang setelah 10 detik
+                    }, 10000);
                 }
                 else if(data.status === 'rejected') { text = 'DITOLAK / KOSONG'; color = 'red'; }
 
@@ -580,17 +376,10 @@
         });
     }
 
-    // Cek saat halaman dibuka apakah ada pesanan aktif
     const activeOrder = localStorage.getItem('myActiveOrder');
-    if(activeOrder) {
-        startTracking(activeOrder);
-    }
+    if(activeOrder) { startTracking(activeOrder); }
 
-    function closeSuccess() {
-        document.getElementById('success-modal').style.display = 'none';
-    }
-
-    // --- TAB & SWIPE LOGIC (ASLI DARI KODE SEBELUMNYA) ---
+    // --- TAB & SWIPE LOGIC ---
     function openT(e, n) {
         const searchInput = document.getElementById('menuSearch');
         if(searchInput && searchInput.value !== '') { clearSearchInput(); }
