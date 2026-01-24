@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SBS Admin & Finance</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
@@ -19,32 +19,58 @@
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; }
         .page-title { margin:0 0 20px 0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
 
-        /* KARTU RIWAYAT (SAMA DENGAN DAPUR.HTML) */
         .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 50px; }
-        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 5px solid #555; position: relative; }
-        .order-card.status-completed { border-left-color: var(--green); }
-        .order-card.status-rejected { border-left-color: #555; opacity: 0.7; }
-
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        .cust-name { font-size: 18px; font-weight: bold; color: #fff; display: block;}
         
-        /* DETAIL HARGA & NOTES */
-        .item-list { margin-bottom: 15px; max-height: 300px; overflow-y: auto; }
-        .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; align-items: flex-start; }
-        .item-unit-price { font-size: 10px; color: #888; display: block; }
+        /* CARD STYLE (SAMA DENGAN DAPUR) */
+        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 6px solid #555; position: relative; }
+        .order-card.status-completed { border-left-color: var(--green); opacity: 1; }
+        .order-card.status-rejected { border-left-color: #444; background: #222; opacity: 0.8; }
+
+        /* HEADER LAYOUT */
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .header-left { display: flex; flex-direction: column; }
+        .cust-name { font-size: 16px; font-weight: 800; color: #fff; text-transform: uppercase; margin-bottom: 2px; }
+        .order-id { font-size: 11px; color: #666; font-family: monospace; }
+        
+        .header-right { text-align: right; }
+        .meta-date { font-size: 13px; color: #ccc; margin-bottom: 2px; display: block; font-weight: 500; }
+        .meta-time-block { font-size: 11px; color: #aaa; line-height: 1.4; }
+        .time-label { color: #777; margin-right: 3px; }
+        .time-val { color: #ddd; font-weight: bold; }
+        .time-highlight { color: var(--green); font-weight: bold; }
+
+        /* ITEMS */
+        .item-list { margin-bottom: 15px; max-height: 300px; overflow-y: auto; padding-right: 5px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
+        .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; align-items: flex-start; }
+        .item-name { font-weight: 600; color: #eee; }
         .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: 2px; }
-        
-        .total-row { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--accent); border-top: 1px dashed #444; padding-top: 10px; }
+        .item-price { font-weight: bold; color: #fff; }
+        .item-unit-price { font-size: 10px; color: #888; display: block; }
 
-        /* REKAP DURASI (METRICS) */
-        .history-details { font-size: 11px; color: #aaa; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-        .history-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
-        .h-val { color: #fff; font-weight: bold; }
-        .history-compact { text-align: right; }
-        .h-date { display: block; font-size: 10px; color: #888; margin-bottom: 2px; }
-        .h-times { font-size: 11px; color: #ccc; }
-        .h-time-val { font-weight: bold; color: #fff; }
-        .rejected-label { color: var(--red); font-weight: 900; font-size: 20px; text-align: center; border: 2px solid var(--red); padding: 10px; transform: rotate(-5deg); margin-bottom: 10px; }
+        /* METRICS (SAMA DENGAN DAPUR) */
+        .duration-box { margin-bottom: 15px; font-size: 12px; color: #aaa; padding: 0 5px; }
+        .dur-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .dur-val { color: #fff; font-weight: bold; }
+        .dur-total-row { border-top: 1px dashed #666; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-size: 13px; }
+        .dur-total-val { color: var(--accent); font-weight: 900; }
+
+        /* TOTAL */
+        .total-display { text-align: right; font-size: 18px; font-weight: 900; color: var(--accent); margin-bottom: 20px; }
+
+        /* STATUS / STAMP */
+        .status-footer { text-align: center; margin-top: 10px; }
+        .status-text-done { color: var(--green); font-weight: 900; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; }
+        .rejected-label { 
+            color: var(--red); 
+            font-weight: 900; 
+            font-size: 20px; 
+            text-align: center; 
+            border: 2px solid var(--red); 
+            padding: 10px; 
+            transform: rotate(-5deg); 
+            margin: 15px 0; 
+            display: inline-block;
+        }
 
         /* FINANCE & OTHERS */
         .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; margin-bottom: 20px; }
@@ -52,7 +78,6 @@
         .filters { margin-bottom: 20px; display: flex; gap: 10px; }
         .form-input, .form-select { background: #15151a; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; font-family: 'Poppins'; }
 
-        /* LOG TABLE */
         .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .log-table th { text-align: left; padding: 10px; background: #111; color: #888; }
         .log-table td { padding: 10px; border-bottom: 1px solid #333; }
@@ -72,7 +97,7 @@
     <div class="sidebar">
         <div class="brand">SBS OWNER</div>
         <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Keuangan</span></div>
-        <div class="menu-item" onclick="showPage('logs')"><span class="menu-icon">👁</span><span>Audit Log Stok</span></div>
+        <div class="menu-item" onclick="showPage('logs')"><span class="menu-icon">📋</span><span>Audit Log Stok</span></div>
         <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat Pesanan</span></div>
     </div>
 
@@ -144,9 +169,16 @@
             });
         });
 
-        // --- FUNGSI CREATE CARD DETIL (IDENTIK DENGAN DAPUR.HTML) ---
+        // --- FUNGSI HISTORY CARD (SAMA DENGAN DAPUR.HTML) ---
         function createHistoryCard(order) {
-            let displayName = isNaN(order.customer) ? order.customer : "MEJA " + order.customer;
+            let displayName = "Pelanggan";
+            if (order.tableNumber) {
+                displayName = "MEJA " + order.tableNumber;
+                if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
+            } else if (order.customer) {
+                if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
+                else displayName = order.customer;
+            }
             
             const created = new Date(order.timestamp).getTime();
             const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : 0;
@@ -156,65 +188,79 @@
             const div = document.createElement('div');
             div.className = `order-card status-${order.status}`;
             
-            // Detail Items (Termasuk Harga Satuan & Notes)
+            // ITEM LIST
             let itemsHtml = (order.items || []).map(item => {
                 const qty = parseInt(item.qty);
                 const price = parseInt(item.price);
+                const subtotal = qty * price;
                 const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
                 return `
                 <div class="item-row">
                     <div style="flex:1;">
-                        <span>${qty}x ${item.name}</span>
+                        <span class="item-name">${qty}x ${item.name}</span>
                         ${unitPriceHtml}
                         ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
                     </div>
-                    <span style="font-weight:bold;">${(qty * price).toLocaleString()}</span>
+                    <div style="text-align:right;">
+                        <span class="item-price">${subtotal.toLocaleString()}</span>
+                    </div>
                 </div>`;
             }).join('');
 
-            // Perhitungan Durasi
-            const fmtDur = (s) => {
-                if (s <= 0) return "-";
-                const m = Math.floor(s/60);
-                const sc = s%60;
-                return m > 0 ? `${m}m ${sc}s` : `${sc}s`;
-            };
+            // HEADER INFO
+            const dateStr = new Date(created).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
+            const timeIn = new Date(created).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            let timeOut = '-';
+            if(order.completedAt) {
+                timeOut = new Date(order.completedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            }
 
-            const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
-            const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
-            const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
-            const durTotal = completed > 0 ? Math.floor((completed - created)/1000) : 0;
+            // METRICS & FOOTER
+            let metricsHtml = '';
+            let statusFooter = '';
+            
+            if(order.status === 'rejected') {
+                statusFooter = `<div class="status-footer"><div class="rejected-label">DITOLAK</div></div>`;
+            } else {
+                statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
+                const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
+                const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
+                const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
+                const durTotal = completed > 0 ? Math.floor((completed - created)/1000) : 0;
+                const fmt = (s) => { if (s <= 0) return "-"; const m = Math.floor(s/60); const sc = s%60; return m > 0 ? `${m}m ${sc}s` : `${sc}s`; };
 
-            const timeIn = new Date(created).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const timeOut = completed > 0 ? new Date(completed).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-';
-
-            let historyHtml = `
-                <div class="history-details">
-                    <div class="history-row"><span>Respon:</span> <span class="h-val">${fmtDur(durRespon)}</span></div>
-                    <div class="history-row"><span>Bayar:</span> <span class="h-val">${fmtDur(durBayar)}</span></div>
-                    <div class="history-row"><span>Masak:</span> <span class="h-val">${fmtDur(durMasak)}</span></div>
-                    <div style="border-top:1px dashed #666; margin-top:5px; padding-top:2px;" class="history-row">
-                        <span>TOTAL DURASI:</span> <span class="h-val" style="color:var(--accent);">${fmtDur(durTotal)}</span>
+                metricsHtml = `
+                <div class="duration-box">
+                    <div class="dur-row"><span>Respon:</span> <span class="dur-val">${fmt(durRespon)}</span></div>
+                    <div class="dur-row"><span>Bayar:</span> <span class="dur-val">${fmt(durBayar)}</span></div>
+                    <div class="dur-row"><span>Masak:</span> <span class="dur-val">${fmt(durMasak)}</span></div>
+                    <div class="dur-total-row">
+                        <span>TOTAL DURASI:</span> <span class="dur-total-val">${fmt(durTotal)}</span>
                     </div>
-                </div>
-            `;
-
-            if(order.status === 'rejected') historyHtml = `<div class="rejected-label">DITOLAK ❌</div>`;
+                </div>`;
+            }
 
             let rawTotal = String(order.total).replace(/[^0-9]/g, '');
             const safeTotal = Number(rawTotal) || 0;
 
             div.innerHTML = `
                 <div class="card-header">
-                    <div><span class="cust-name">${displayName}</span><small style="color:#666">...${order.id.slice(-4)}</small></div>
-                    <div class="history-compact">
-                        <span class="h-date">${new Date(completed || created).toLocaleDateString('id-ID', {day:'numeric', month:'short'})}</span>
-                        <div class="h-times">In: ${timeIn} | Out: <span class="h-time-val" style="color:var(--green)">${timeOut}</span></div>
+                    <div class="header-left">
+                        <span class="cust-name">${displayName}</span>
+                        <span class="order-id">ID: ...${order.id.slice(-4)}</span>
+                    </div>
+                    <div class="header-right">
+                        <span class="meta-date">${dateStr}</span>
+                        <div class="meta-time-block">
+                            <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br>
+                            <span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="item-list">${itemsHtml}</div>
-                ${historyHtml}
-                <div class="total-row">TOTAL: Rp ${safeTotal.toLocaleString()}</div>
+                ${metricsHtml}
+                <div class="total-display">Total: Rp ${safeTotal.toLocaleString()}</div>
+                ${statusFooter}
             `;
             return div;
         }
