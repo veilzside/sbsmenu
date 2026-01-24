@@ -32,31 +32,47 @@
 
         .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 80px; }
         
-        /* --- CARD STYLE BARU --- */
+        /* CARD STYLE */
         .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 6px solid #555; animation: slideIn 0.3s ease; position: relative; }
         .order-card.status-new { border-left-color: var(--red); }
         .order-card.status-unpaid { border-left-color: var(--accent); }
         .order-card.status-processing { border-left-color: var(--blue); }
-        .order-card.status-completed { border-left-color: var(--green); }
-        /* Tampilan Gelap untuk Ditolak */
+        .order-card.status-completed { border-left-color: var(--green); opacity: 1; }
         .order-card.status-rejected { border-left-color: #444; background: #222; opacity: 0.8; }
 
-        /* HEADER LAYOUT: KIRI (NAMA) & KANAN (TANGGAL) */
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        /* HEADER LAYOUT: DIPERBAIKI (GARIS TIPIS KEMBALI) */
+        .card-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            margin-bottom: 10px; 
+            border-bottom: 1px solid #444; /* GARIS TIPIS DIKEMBALIKAN */
+            padding-bottom: 10px;
+        }
+        
         .header-left { display: flex; flex-direction: column; }
-        .cust-name { font-size: 20px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        
+        /* FONT NAMA DIKECILKAN AGAR RAPI */
+        .cust-name { 
+            font-size: 16px; /* Dikecilkan dari 20px */
+            font-weight: 800; 
+            color: #fff; 
+            text-transform: uppercase; 
+            margin-bottom: 2px; 
+        }
         .order-id { font-size: 11px; color: #666; font-family: monospace; }
         
         .header-right { text-align: right; }
-        .meta-date { font-size: 14px; color: #ccc; margin-bottom: 4px; display: block; font-weight: 500; }
-        .meta-time { font-size: 12px; color: #aaa; }
+        .meta-date { font-size: 13px; color: #ccc; margin-bottom: 2px; display: block; font-weight: 500; }
+        /* FONT JAM DIKECILKAN SEDIKIT AGAR MUAT 1 BARIS */
+        .meta-time { font-size: 11px; color: #aaa; white-space: nowrap; }
         .time-highlight { color: var(--green); font-weight: bold; }
 
         .timer-badge { font-size: 14px; font-weight: bold; background: #000; padding: 4px 8px; border-radius: 5px; color: var(--accent); font-family: monospace; display: inline-block; margin-top: 5px;}
         .time-label { font-size: 10px; color: #888; display: block; margin-bottom: 2px; }
 
         /* ITEM LIST */
-        .item-list { margin-bottom: 20px; max-height: 250px; overflow-y: auto; padding-right: 5px; border-bottom: 1px dashed #444; padding-bottom: 15px; }
+        .item-list { margin-bottom: 15px; max-height: 250px; overflow-y: auto; padding-right: 5px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
         .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; align-items: flex-start; }
         .item-name { font-weight: 600; color: #eee; }
         .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: 2px; }
@@ -65,7 +81,7 @@
         .btn-trash { background: none; border: none; color: #666; cursor: pointer; font-size: 14px; padding: 0 0 0 10px; }
         .btn-trash:hover { color: var(--red); }
 
-        /* DURASI METRICS (MIRIP FOTO) */
+        /* DURASI METRICS */
         .duration-box { margin-bottom: 15px; font-size: 12px; color: #aaa; padding: 0 5px; }
         .dur-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
         .dur-val { color: #fff; font-weight: bold; }
@@ -88,7 +104,7 @@
             margin-bottom: 20px; 
         }
 
-        /* STATUS FOOTER (SELESAI / DITOLAK) */
+        /* STATUS FOOTER */
         .status-footer { text-align: center; margin-top: 10px; }
         .status-text-done { color: var(--green); font-weight: 900; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; }
         
@@ -106,7 +122,7 @@
         }
 
         /* BUTTONS */
-        .btn-print-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn-print-group { display: flex; gap: 10px; margin-bottom: 15px; border-top: 1px solid #444; padding-top: 15px; }
         .btn-print { 
             flex: 1; 
             background: #3c3c45; 
@@ -163,7 +179,7 @@
         </div>
 
         <div class="status-tabs">
-            <div class="tab" onclick="filterTab('new')" id="tab-new">BARU <span class="badge" id="badge-new">0</span></div>
+            <div class="tab active" onclick="filterTab('new')" id="tab-new">BARU <span class="badge" id="badge-new">0</span></div>
             <div class="tab" onclick="filterTab('unpaid')" id="tab-unpaid">BAYAR <span class="badge" id="badge-unpaid">0</span></div>
             <div class="tab" onclick="filterTab('processing')" id="tab-processing">PROSES <span class="badge" id="badge-processing">0</span></div>
         </div>
@@ -227,7 +243,6 @@
         const db = firebase.database();
         
         let allOrders = [];
-        // [FIX 1] AMBIL TAB DARI MEMORI BROWSER
         let currentTab = localStorage.getItem('sbs_active_tab') || 'new';
         let editingOrderKey = null;
         let audioUnlocked = false;
@@ -236,7 +251,6 @@
         const soundNag = document.getElementById('sound-nag');
         const btnAudio = document.getElementById('btn-audio');
 
-        // [FIX 1] SET TAB AKTIF SAAT LOAD
         function initActiveTab() {
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             const activeEl = document.getElementById('tab-' + currentTab);
@@ -271,14 +285,11 @@
             const data = snapshot.val();
             allOrders = [];
             if (data) Object.keys(data).forEach(key => allOrders.push({ id: key, ...data[key] }));
-            
-            // SORTING: TERBARU DI ATAS
             allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             renderOrders();
             updateBadges();
         });
 
-        // --- FUNGSI QUEUE HARIAN ---
         function getDailyQueueNumber(orderId) {
             const targetOrder = allOrders.find(o => o.id === orderId);
             if(!targetOrder) return "00";
@@ -288,7 +299,6 @@
             return index + 1;
         }
 
-        // --- PRINT DIRECT (ESC/POS COMMAND) ---
         function printDirect(orderId, type) {
             const order = allOrders.find(o => o.id === orderId);
             if (!order) return;
@@ -325,9 +335,8 @@
                 data += BOLD_ON + "TABLE: " + tableNum + BOLD_OFF + "\n";
                 data += "Queue Order: #" + realQueue + "\n"; 
                 data += "Date : " + dateStr + " " + timeStr + "\n";
-                data += "Order ID: " + displayID + "\n";
+                data += "ID   : " + displayID + "\n";
                 data += "--------------------------------\n";
-                
                 order.items.forEach(item => {
                     let price = parseInt(item.price);
                     let sub = item.qty * price;
@@ -339,7 +348,6 @@
                     data += line + " ".repeat(spaces) + priceStr + "\n";
                     if(item.note) data += "  (Note: " + item.note + ")\n";
                 });
-
                 data += "--------------------------------\n";
                 let totalStr = parseInt(order.total).toLocaleString('id-ID');
                 let totalLabel = "TOTAL";
@@ -356,7 +364,6 @@
                 data += "TIME : " + timeStr + "\n";
                 data += "ID   : " + displayID + "\n";
                 data += "--------------------------------\n";
-                
                 order.items.forEach(item => {
                     data += BOLD_ON + item.qty + " x " + item.name + BOLD_OFF + "\n";
                     if(item.note) data += "   [ " + item.note + " ]\n";
@@ -370,7 +377,6 @@
             let binary = '';
             for (let i = 0; i < buffer.byteLength; i++) { binary += String.fromCharCode(buffer[i]); }
             const base64Data = btoa(binary);
-
             window.location.href = "rawbt:base64," + base64Data;
         }
 
@@ -427,7 +433,6 @@
         }
 
         function createCard(order) {
-            // [FIX] TAMPILAN NAMA TABLE & CUSTOMER
             let displayName = "Pelanggan";
             if (order.tableNumber) {
                 displayName = "MEJA " + order.tableNumber;
@@ -450,7 +455,6 @@
             const div = document.createElement('div');
             div.className = `order-card status-${order.status}`;
             
-            // [FIX] ITEM LIST (HARGA SATUAN)
             let itemsHtml = (order.items || []).map((item, idx) => {
                 const qty = parseInt(item.qty);
                 const price = parseInt(item.price);
@@ -471,12 +475,11 @@
                 </div>`;
             }).join('');
 
-            // [FIX] HEADER KANAN (TANGGAL & JAM)
-            const dateStr = new Date(created).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'}); // "Jum, 23 Jan"
+            // HEADER KANAN
+            const dateStr = new Date(created).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
             const timeIn = new Date(created).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             
             let headerRight = '';
-            // JIKA RIWAYAT, TAMPILKAN JAM LENGKAP
             if(order.status === 'completed' || order.status === 'rejected') {
                 let timeOut = '-';
                 if(order.completedAt) {
@@ -491,26 +494,23 @@
                 headerRight = `<span class="timer-badge live-timer" data-start="${timerStart}">--:--</span>`;
             }
 
-            // [FIX] DURASI LENGKAP (4 BARIS)
+            // DURASI & FOOTER
             let metricsHtml = '';
             let statusFooter = '';
             
             if(order.status === 'completed' || order.status === 'rejected') {
                 if(order.status === 'rejected') {
-                    // [FIX] STEMPEL DITOLAK
                     statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK</div></div>`;
                 } else {
                     statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
                 }
 
-                // Kalkulasi Waktu
                 const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
                 const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
                 const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
                 const durTotal = completed > 0 ? Math.floor((completed - created)/1000) : 0;
                 const fmt = (s) => { if (s <= 0) return "-"; const m = Math.floor(s/60); const sc = s%60; return m > 0 ? `${m}m ${sc}s` : `${sc}s`; };
 
-                // [FIX] TAMPILAN 4 BARIS DURASI
                 metricsHtml = `
                 <div class="duration-box">
                     <div class="dur-row"><span>Respon:</span> <span class="dur-val">${fmt(durRespon)}</span></div>
@@ -522,7 +522,6 @@
                 </div>`;
             }
 
-            // TOMBOL PRINT
             let printButtons = '';
             if(order.status !== 'rejected') {
                 printButtons = `
@@ -536,13 +535,11 @@
                 </div>`;
             }
 
-            // TOMBOL ACTION
             let buttonsHtml = '';
             if (order.status === 'new') buttonsHtml = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button><button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button><button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">Terima</button>`;
             else if (order.status === 'unpaid') buttonsHtml = `<button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button><button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>`;
             else if (order.status === 'processing') buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>`;
 
-            // RENDER HTML CARD
             div.innerHTML = `
                 <div class="card-header">
                     <div class="header-left">
@@ -594,7 +591,6 @@
             if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
         }
 
-        // [FIX 1] UPDATE LOCAL STORAGE SAAT PINDAH TAB
         function filterTab(status) {
             currentTab = status;
             localStorage.setItem('sbs_active_tab', status);
