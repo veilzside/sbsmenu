@@ -270,10 +270,20 @@
             updateLiveTimers();
         }
 
-        // --- FUNGSI CREATE CARD ORIGINAL (LENGKAP) ---
+        // --- FUNGSI CREATE CARD DIPERBAIKI (HANDLE UNDEFINED) ---
         function createCard(order) {
-            let displayName = order.customer;
-            if(!isNaN(order.customer) && order.customer.toString().trim() !== '') {
+            // FIX: LOGIKA NAMA CUSTOMER
+            let displayName = order.customer || "Pelanggan"; // Default legacy
+            
+            // Cek format baru (tableNumber & customerName)
+            if (order.tableNumber) {
+                displayName = `MEJA ${order.tableNumber}`;
+                if (order.customerName) {
+                    displayName += ` - ${order.customerName.toUpperCase()}`;
+                }
+            } 
+            // Cek format lama
+            else if (order.customer && !isNaN(order.customer)) {
                 displayName = "MEJA " + order.customer;
             }
 
@@ -300,7 +310,6 @@
                 const qty = parseInt(item.qty);
                 const price = parseInt(item.price);
                 const subtotal = qty * price;
-                // --- MENAMPILKAN DETAIL HARGA SATUAN (2 x 18.000) ---
                 const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
                 
                 const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') 
@@ -322,7 +331,6 @@
                 `;
             }).join('');
 
-            // --- REKAP HISTORY (Durasi Masak, Respon, Bayar) ---
             let historyHtml = '';
             if(order.status === 'completed' || order.status === 'rejected') {
                 const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
@@ -370,7 +378,6 @@
                     </div>
                 `;
             } else {
-                // --- LIVE TIMER DISINI ---
                 const dataStartAttr = timerStart > 0 ? `data-start="${timerStart}"` : '';
                 displayTimeHTML = `<span class="time-label">Masuk: ${entryTimeStr}</span><span class="timer-badge live-timer" ${dataStartAttr}>--:--</span>`;
             }
