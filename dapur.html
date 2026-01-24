@@ -6,7 +6,7 @@
     <title>SBS Kitchen - OPS</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS SAMA PERSIS DENGAN SEBELUMNYA */
+        /* CSS ASLI (TIDAK DIUBAH) */
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -61,16 +61,16 @@
         .h-time-val { font-weight: bold; color: #fff; }
         .rejected-label { color: var(--red); font-weight: 900; font-size: 20px; text-align: center; border: 2px solid var(--red); padding: 10px; transform: rotate(-5deg); margin-bottom: 10px; }
 
+        /* --- TAMBAHAN STYLE PRINT --- */
+        .btn-print-group { display: flex; gap: 5px; margin-bottom: 15px; border-top: 1px dashed #444; padding-top: 10px; }
+        .btn-print { flex: 1; background: transparent; border: 1px solid #555; color: #aaa; padding: 6px; border-radius: 8px; cursor: pointer; font-size: 12px; transition: 0.2s; font-weight: 600; }
+        .btn-print:active { background: #444; color: #fff; transform: scale(0.95); }
+
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #fff; font-size: 14px; }
         .btn-green { background: var(--green); } .btn-red { background: var(--red); }
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
         .btn-full { grid-column: span 2; }
-
-        /* PRINT BUTTON STYLE */
-        .btn-print-group { display: flex; gap: 5px; margin-bottom: 15px; border-top: 1px dashed #444; padding-top: 10px; }
-        .btn-print { flex: 1; background: transparent; border: 1px solid #555; color: #aaa; padding: 5px; border-radius: 5px; cursor: pointer; font-size: 12px; transition: 0.2s; }
-        .btn-print:hover { background: #444; color: #fff; border-color: #fff; }
 
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
@@ -88,6 +88,8 @@
             .status-tabs { position: sticky; top: 0; background: var(--bg-dark); z-index: 50; padding-top: 10px; margin-top: -10px; }
             .orders-grid { grid-template-columns: 1fr; gap: 20px; padding-bottom: 0; } 
         }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body onclick="unlockAudio()">
@@ -179,7 +181,6 @@
         const soundNag = document.getElementById('sound-nag');
         const btnAudio = document.getElementById('btn-audio');
 
-        // AUDIO HANDLERS
         function toggleAudio() {
             if (!audioUnlocked) {
                 soundNew.play().then(() => {
@@ -192,6 +193,7 @@
                 btnAudio.className = 'inactive'; btnAudio.innerHTML = "🔕";
             }
         }
+
         function unlockAudio() {
             if (!audioUnlocked) {
                 soundNew.play().then(() => {
@@ -202,113 +204,6 @@
             }
         }
 
-        // --- NEW: DIRECT PRINTING VIA RAWBT SCHEME (NO NEW TAB, NO PDF) ---
-        function printReceipt(orderId, type) {
-            const order = allOrders.find(o => o.id === orderId);
-            if (!order) return;
-
-            // 1. DATA PREPARATION
-            let queueName = "";
-            if (order.tableNumber) {
-                queueName = `Queue No: ${order.tableNumber}`;
-            } else if (order.customer && !isNaN(order.customer)) {
-                queueName = `Queue No: ${order.customer}`;
-            } else {
-                queueName = `Customer: ${order.customer || order.customerName || 'Tamu'}`;
-            }
-
-            const dateObj = new Date(order.timestamp);
-            const dateStr = dateObj.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
-            const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
-
-            // 2. CONSTRUCT HTML STRING
-            let content = '';
-            
-            // CSS Khusus untuk RawBT
-            const css = `
-                <style>
-                    body { font-family: 'monospace'; font-size: 16px; margin: 0; width: 100%; }
-                    .center { text-align: center; }
-                    .bold { font-weight: bold; }
-                    .line { border-bottom: 1px dashed #000; margin: 5px 0; }
-                    .row { display: flex; justify-content: space-between; }
-                </style>
-            `;
-
-            if (type === 'invoice') {
-                // INVOICE LAYOUT
-                let itemsHtml = order.items.map(item => `
-                    <div style="margin-bottom:5px;">
-                        <div>${item.name}</div>
-                        <div class="row">
-                            <span>${item.qty}x @${parseInt(item.price).toLocaleString('id-ID')}</span>
-                            <span>${(item.qty * item.price).toLocaleString('id-ID').replace(/,/g, '.')}</span>
-                        </div>
-                        ${item.note ? `<div style="font-size:12px;font-style:italic;">+${item.note}</div>` : ''}
-                    </div>
-                `).join('');
-
-                content = `
-                    <html><head>${css}</head><body>
-                        <div class="center bold" style="font-size:20px;">SBS Cafe</div>
-                        <div class="center">Jl. Mundu 8, Kota Malang</div>
-                        <div class="center">085159039877</div>
-                        <div class="line"></div>
-                        <div class="center bold" style="font-size:18px;">${queueName}</div>
-                        <div class="line"></div>
-                        <div class="row"><span>${dateStr}</span><span>${timeStr}</span></div>
-                        <div class="row"><span>ID:</span><span>${order.id.slice(-6).toUpperCase()}</span></div>
-                        <div class="line"></div>
-                        ${itemsHtml}
-                        <div class="line"></div>
-                        <div class="row bold" style="font-size:18px;">
-                            <span>TOTAL</span>
-                            <span>Rp ${(parseInt(order.total)||0).toLocaleString('id-ID').replace(/,/g, '.')}</span>
-                        </div>
-                        <div class="line"></div>
-                        <div class="center" style="margin-top:10px;">
-                            Wifi: SBSkopi8<br>
-                            Terima Kasih!
-                        </div>
-                        <br>
-                    </body></html>
-                `;
-            } else {
-                // CHECKER LAYOUT
-                let itemsHtml = order.items.map(item => `
-                    <div style="margin-bottom:10px; border-bottom:1px solid #ccc;">
-                        <div class="row">
-                            <span class="bold" style="font-size:22px;">${item.qty}x</span>
-                            <span class="bold" style="font-size:18px; margin-left:10px; flex:1;">${item.name}</span>
-                        </div>
-                        ${item.note ? `<div class="bold" style="font-size:16px; margin-left:35px;">NOTE: ${item.note}</div>` : ''}
-                    </div>
-                `).join('');
-
-                content = `
-                    <html><head>${css}</head><body>
-                        <div class="center bold" style="font-size:24px;">CHECKER DAPUR</div>
-                        <div class="center bold" style="font-size:20px;">${queueName}</div>
-                        <div class="line"></div>
-                        <div class="row"><span>${timeStr}</span><span>ID: ${order.id.slice(-4)}</span></div>
-                        <div class="line"></div>
-                        ${itemsHtml}
-                        <br><br>
-                    </body></html>
-                `;
-            }
-
-            // 3. SEND TO RAWBT (THE MAGIC)
-            // Encode HTML to Base64
-            const base64Content = btoa(unescape(encodeURIComponent(content)));
-            // Construct RawBT URL Scheme
-            const rawbtUrl = "rawbt:base64," + base64Content;
-            
-            // Redirect to RawBT App (No new tab, no PDF dialog)
-            window.location.href = rawbtUrl;
-        }
-
-        // --- FIREBASE LISTENERS ---
         db.ref('orders').on('value', (snapshot) => {
             const data = snapshot.val();
             const prevCount = allOrders.length;
@@ -324,22 +219,103 @@
             updateBadges();
         });
 
-        // --- UI RENDER & HELPERS ---
-        setInterval(() => { updateLiveTimers(); checkNaggingAlarm(); }, 1000);
+        // --- NEW: DIRECT PRINTING LOGIC (VIA WEBSOCKET) ---
+        function printDirect(orderId, type) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
 
-        function checkNaggingAlarm() {
-            if (!audioUnlocked) return;
-            const now = Date.now();
-            if (allOrders.some(order => order.status === 'new' && (now - new Date(order.timestamp).getTime()) / 1000 > 120)) {
-                soundNag.play().catch(e => {});
+            let queueNum = "";
+            if (order.tableNumber) queueNum = order.tableNumber;
+            else if (order.customer && !isNaN(order.customer)) queueNum = order.customer;
+            else queueNum = "N/A";
+
+            const dateObj = new Date(order.timestamp);
+            const dateStr = dateObj.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+            const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+
+            const css = `
+                <style>
+                    body { font-family: 'monospace'; font-size: 16px; width: 100%; margin: 0; color: #000; }
+                    .center { text-align: center; }
+                    .bold { font-weight: bold; }
+                    .line { border-bottom: 1px dashed #000; margin: 5px 0; }
+                    .row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+                </style>
+            `;
+
+            let html = "";
+            if (type === 'invoice') {
+                let itemsHtml = order.items.map(item => `
+                    <div style="margin-bottom:6px;">
+                        <div>${item.name}</div>
+                        <div class="row" style="font-size:14px;">
+                            <span>${item.qty}x @${parseInt(item.price).toLocaleString('id-ID')}</span>
+                            <span>${(item.qty * item.price).toLocaleString('id-ID').replace(/,/g, '.')}</span>
+                        </div>
+                        ${item.note ? `<div style="font-size:12px;font-style:italic;">+${item.note}</div>` : ''}
+                        <div class="row" style="font-size:14px;"><span>@0</span><span>0</span></div>
+                    </div>
+                `).join('');
+
+                html = `<html><head>${css}</head><body>
+                    <div class="center"><img src="img/sbslogo.jpg" style="width:60px; filter:grayscale(100%);"><br><span class="bold">SBS Cafe</span><br>Jl. Mundu 8, Kota Malang, Jawa T<br>imur, 65116<br>085159039877</div>
+                    <div class="line"></div>
+                    <div class="center">Queue No:${queueNum}</div>
+                    <div class="line"></div>
+                    <div class="row"><span>${dateStr}</span><span>${timeStr}</span></div>
+                    <div class="row"><span>Receipt Number</span><span>${order.id.slice(-6).toUpperCase()}</span></div>
+                    <div class="row"><span>Order ID</span><span>2SA${order.id.slice(-4).toUpperCase()}</span></div>
+                    <div class="row"><span>Served By</span><span>Kasir _</span></div>
+                    <div class="line"></div>
+                    ${itemsHtml}
+                    <div class="line"></div>
+                    <div class="row"><span>Subtotal</span><span>Rp ${(parseInt(order.total)||0).toLocaleString('id-ID').replace(/,/g, '.')}</span></div>
+                    <div class="line"></div>
+                    <div class="row bold"><span>Total</span><span>Rp ${(parseInt(order.total)||0).toLocaleString('id-ID').replace(/,/g, '.')}</span></div>
+                    <div class="row"><span>BCA</span><span>Rp ${(parseInt(order.total)||0).toLocaleString('id-ID').replace(/,/g, '.')}</span></div>
+                    <div class="line"></div>
+                    <div style="font-size:10px;">⚪ sbscafemlg<br><br><div class="line"></div>Notes<br>Wifi : SBSkopi8</div>
+                </body></html>`;
+            } else {
+                let itemsHtml = order.items.map(item => `
+                    <div style="margin-bottom:12px; border-bottom:1px solid #ccc; padding-bottom:5px;">
+                        <div class="row"><span class="bold" style="font-size:24px;">${item.qty}x</span><span class="bold" style="font-size:20px; flex:1; margin-left:12px;">${item.name}</span></div>
+                        ${item.note ? `<div class="bold" style="font-size:16px; margin-left:40px;">NOTE: ${item.note}</div>` : ''}
+                    </div>
+                `).join('');
+
+                html = `<html><head>${css}</head><body>
+                    <div class="center bold" style="font-size:22px;">CHECKER DAPUR</div>
+                    <div class="center bold" style="font-size:20px;">Queue No: ${queueNum}</div>
+                    <div class="line"></div>
+                    <div class="row"><span>${timeStr}</span><span>ID: ${order.id.slice(-4)}</span></div>
+                    <div class="line"></div>
+                    ${itemsHtml}
+                </body></html>`;
             }
+
+            // Send to RawBT WebSocket
+            const socket = new WebSocket("ws://localhost:40213");
+            socket.onopen = () => {
+                socket.send(JSON.stringify({ command: "print", html: html }));
+                socket.close();
+            };
+            socket.onerror = (e) => {
+                alert("Gagal konek printer! Pastikan aplikasi 'Server for RawBT' aktif.");
+            };
         }
+
+        setInterval(() => {
+            updateLiveTimers();
+            checkNaggingAlarm();
+        }, 1000);
 
         function updateLiveTimers() {
             document.querySelectorAll('.live-timer').forEach(el => {
                 const startTime = parseInt(el.getAttribute('data-start'));
-                if (!startTime || isNaN(startTime)) return;
+                if (!startTime || isNaN(startTime)) { el.innerText = "--:--"; return; }
                 const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                if (elapsed > 86400) { el.innerText = "> 24h"; return; }
                 const min = Math.floor(elapsed / 60);
                 const sec = elapsed % 60;
                 el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
@@ -349,77 +325,84 @@
         function renderOrders() {
             const grid = document.getElementById('orders-grid');
             const historyGrid = document.getElementById('history-grid');
-            grid.innerHTML = ''; historyGrid.innerHTML = '';
+            grid.innerHTML = '';
+            historyGrid.innerHTML = '';
             const today = new Date().toDateString();
 
             allOrders.forEach(order => {
                 const card = createCard(order);
                 const orderDate = new Date(order.completedAt || order.timestamp).toDateString();
-                if (['completed', 'rejected', 'done'].includes(order.status)) {
+                
+                if (order.status === 'completed' || order.status === 'rejected' || order.status === 'done') {
                     if (orderDate === today) historyGrid.appendChild(card);
                 } else {
                     if (order.status === currentTab) grid.appendChild(card);
                 }
             });
+            updateLiveTimers();
         }
 
         function createCard(order) {
             let displayName = order.customer || "Pelanggan";
-            if(order.tableNumber) {
-                displayName = "MEJA " + order.tableNumber;
-                if(order.customerName) displayName += " - " + order.customerName.toUpperCase();
+            if (order.tableNumber) {
+                displayName = `MEJA ${order.tableNumber}`;
+                if (order.customerName) displayName += ` - ${order.customerName.toUpperCase()}`;
             } else if (order.customer && !isNaN(order.customer)) {
                 displayName = "MEJA " + order.customer;
             }
 
+            const created = new Date(order.timestamp).getTime();
+            const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : 0;
+            const paid = order.paidAt ? new Date(order.paidAt).getTime() : 0;
+            const completed = order.completedAt ? new Date(order.completedAt).getTime() : 0;
+
+            let timerStart = 0;
+            if(order.status === 'new') timerStart = created;
+            else if (order.status === 'unpaid') timerStart = accepted;
+            else if (order.status === 'processing') timerStart = paid;
+
             const div = document.createElement('div');
             div.className = `order-card status-${order.status}`;
             
-            let itemsHtml = (order.items || []).map(item => `
-                <div class="item-row">
-                    <div style="flex:1;"><span>${item.qty}x ${item.name}</span>${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}</div>
-                    <span style="font-weight:bold;">${(item.qty * item.price).toLocaleString()}</span>
-                </div>
-            `).join('');
+            let itemsHtml = (order.items || []).map((item, idx) => {
+                const qty = parseInt(item.qty);
+                const price = parseInt(item.price);
+                const subtotal = qty * price;
+                const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
+                const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
+                return `<div class="item-row"><div style="flex:1;"><span>${qty}x ${item.name}</span>${unitPriceHtml}${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}</div><div style="display:flex; align-items:center;"><span style="font-weight:bold;">${subtotal.toLocaleString()}</span>${trashBtn}</div></div>`;
+            }).join('');
 
-            // PRINT BUTTONS ADDED HERE
-            const printButtons = `
-                <div class="btn-print-group">
-                    <button class="btn-print" onclick="printReceipt('${order.id}', 'checker')">🖨 Checker</button>
-                    <button class="btn-print" onclick="printReceipt('${order.id}', 'invoice')">🧾 Invoice</button>
-                </div>
-            `;
-
-            let buttonsHtml = '';
-            if (order.status === 'new') {
-                buttonsHtml = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button><button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button><button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">Terima</button>`;
-            } else if (order.status === 'unpaid') {
-                buttonsHtml = `<button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button><button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>`;
-            } else if (order.status === 'processing') {
-                buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>`;
+            let historyHtml = '';
+            if(order.status === 'completed' || order.status === 'rejected') {
+                const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
+                const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
+                const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
+                const durTotal = completed > 0 ? Math.floor((completed - created)/1000) : 0;
+                const fmtDur = (s) => { if (s <= 0) return "-"; const m = Math.floor(s/60); const sc = s%60; return m > 0 ? `${m}m ${sc}s` : `${sc}s`; };
+                const timeOut = completed > 0 ? new Date(completed).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-';
+                historyHtml = `<div class="history-details"><div class="history-row"><span>Masak:</span> <span class="h-val">${fmtDur(durMasak)}</span></div><div class="history-row"><span>OUT:</span> <span class="h-val">${timeOut}</span></div></div>`;
             }
 
-            // Timer Logic
-            let timerStart = 0;
-            if(order.status === 'new') timerStart = new Date(order.timestamp).getTime();
-            else if(order.status === 'unpaid') timerStart = new Date(order.acceptedAt).getTime();
-            else if(order.status === 'processing') timerStart = new Date(order.paidAt).getTime();
-            
-            const timeDisplay = (['completed', 'rejected'].includes(order.status)) 
-                ? `<span style="font-size:12px; color:#aaa;">Selesai: ${new Date(order.completedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>` 
-                : `<span class="timer-badge live-timer" data-start="${timerStart}">--:--</span>`;
+            // --- TOMBOL PRINT BARU ---
+            const printButtons = `<div class="btn-print-group"><button class="btn-print" onclick="printDirect('${order.id}', 'checker')">🖨 Checker</button><button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">🧾 Invoice</button></div>`;
+
+            let buttonsHtml = '';
+            if (order.status === 'new') buttonsHtml = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button><button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button><button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">Terima</button>`;
+            else if (order.status === 'unpaid') buttonsHtml = `<button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button><button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>`;
+            else if (order.status === 'processing') buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>`;
 
             div.innerHTML = `
-                <div class="card-header"><div><span class="cust-name">${displayName}</span><small>...${order.id.slice(-4)}</small></div><div>${timeDisplay}</div></div>
+                <div class="card-header"><div><span class="cust-name">${displayName}</span><small style="color:#666">...${order.id.slice(-4)}</small></div><div>${order.status.includes('completed') ? '' : `<span class="timer-badge live-timer" data-start="${timerStart}">--:--</span>`}</div></div>
                 <div class="item-list">${itemsHtml}</div>
-                ${printButtons} 
-                <div class="total-row">Total: Rp ${(parseInt(order.total)||0).toLocaleString()}</div>
+                ${historyHtml}
+                ${printButtons}
+                <div class="total-row">Total: Rp ${Number(String(order.total).replace(/[^0-9]/g, '')).toLocaleString()}</div>
                 <div class="actions">${buttonsHtml}</div>
             `;
             return div;
         }
 
-        // --- STANDARD ACTIONS ---
         function updateStatus(key, status) {
             const updates = { status: status };
             const now = new Date().toISOString(); 
@@ -428,17 +411,56 @@
             if(status === 'completed' || status === 'rejected') updates.completedAt = now; 
             db.ref('orders/' + key).update(updates);
         }
-        function confirmReject(key) { showConfirm("Yakin tolak?", () => updateStatus(key, 'rejected')); }
-        function deleteOrderItem(k, i) { /* Logic Delete item omitted for brevity, same as before */ }
-        function showPage(p) { document.querySelectorAll('.main').forEach(el => el.style.display = 'none'); document.getElementById(p + '-page').style.display = 'block'; document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active')); if(p==='orders')document.querySelectorAll('.menu-item')[0].classList.add('active'); else document.querySelectorAll('.menu-item')[1].classList.add('active'); }
-        function filterTab(status) { currentTab = status; document.querySelectorAll('.tab').forEach(el => el.classList.remove('active')); event.currentTarget.classList.add('active'); renderOrders(); }
-        function updateBadges() { ['new', 'unpaid', 'processing'].forEach(s => document.getElementById('badge-' + s).innerText = allOrders.filter(o => o.status === s).length); }
+
+        function confirmReject(key) { showConfirm("Yakin tolak pesanan ini?", () => updateStatus(key, 'rejected')); }
+
+        function deleteOrderItem(orderKey, itemIndex) {
+            showConfirm("Hapus item ini?", () => {
+                const order = allOrders.find(o => o.id === orderKey);
+                const newItems = [...order.items];
+                const removed = newItems.splice(itemIndex, 1)[0];
+                let currentTotal = parseInt(String(order.total).replace(/[^0-9]/g, '')) || 0;
+                db.ref('orders/' + orderKey).update({ items: newItems, total: currentTotal - (removed.price * removed.qty) });
+            });
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
+            document.getElementById(pageId + '-page').style.display = 'block';
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            if(pageId === 'orders') document.querySelectorAll('.menu-item')[0].classList.add('active');
+            if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
+        }
+
+        function filterTab(status) {
+            currentTab = status;
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            renderOrders();
+        }
+
+        function updateBadges() {
+            document.getElementById('badge-new').innerText = allOrders.filter(o => o.status === 'new').length;
+            document.getElementById('badge-unpaid').innerText = allOrders.filter(o => o.status === 'unpaid').length;
+            document.getElementById('badge-processing').innerText = allOrders.filter(o => o.status === 'processing').length;
+        }
+
         function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
         function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
         document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
+
         function openEditModal(k) { editingOrderKey = k; document.getElementById('edit-modal').style.display = 'flex'; }
         function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
-        function saveExtraItem() { const n = document.getElementById('extra-name').value; const p = parseInt(document.getElementById('extra-price').value); if(!n || !p) return; const o = allOrders.find(x => x.id === editingOrderKey); const items = [...(o.items||[]), { name: n, price: p, qty: 1, note: 'Manual' }]; const tot = (Number(String(o.total).replace(/[^0-9]/g, '')) || 0) + p; db.ref('orders/' + editingOrderKey).update({ items: items, total: tot }).then(() => closeModal()); }
+        
+        function saveExtraItem() {
+            const n = document.getElementById('extra-name').value;
+            const p = parseInt(document.getElementById('extra-price').value);
+            if(!n || !p) return;
+            const o = allOrders.find(x => x.id === editingOrderKey);
+            const items = [...(o.items||[]), { name: n, price: p, qty: 1, note: 'Manual' }];
+            const tot = (Number(String(o.total).replace(/[^0-9]/g, '')) || 0) + p;
+            db.ref('orders/' + editingOrderKey).update({ items: items, total: tot }).then(() => closeModal());
+        }
     </script>
 </body>
 </html>
