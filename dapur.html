@@ -4,20 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SBS Kitchen - OPS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* SIDEBAR */
         .sidebar { width: 260px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
         .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
         .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .menu-icon { font-size: 20px; }
 
-        /* MAIN CONTENT */
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
         .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .page-title { margin:0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
@@ -27,7 +25,6 @@
         #btn-audio.active { background: var(--green); border-color: var(--green); box-shadow: 0 0 10px var(--green); animation: none; color: #fff; }
         #btn-audio.inactive { background: #330000; border-color: var(--red); color: var(--red); animation: pulse 2s infinite; }
 
-        /* TABS */
         .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
         .tab { padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; flex-shrink: 0; white-space: nowrap; }
         .tab.active { opacity: 1; background: var(--card-bg); border-color: var(--accent); color: var(--accent); }
@@ -46,59 +43,78 @@
         /* HEADER LAYOUT */
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .header-left { display: flex; flex-direction: column; }
-        .cust-name { font-size: 16px; font-weight: 800; color: #fff; text-transform: uppercase; margin-bottom: 2px; }
+        
+        /* FONT DIKURANGI KETEBALANNYA (700) */
+        .cust-name { font-size: 16px; font-weight: 700; color: #fff; text-transform: uppercase; margin-bottom: 2px; }
         .order-id { font-size: 11px; color: #666; font-family: monospace; }
         
         .header-right { text-align: right; }
         .meta-date { font-size: 13px; color: #ccc; margin-bottom: 2px; display: block; font-weight: 500; }
         .meta-time-block { font-size: 11px; color: #aaa; line-height: 1.4; }
         .time-label { color: #777; margin-right: 3px; }
-        .time-val { color: #ddd; font-weight: bold; }
-        .time-highlight { color: var(--green); font-weight: bold; }
-        .timer-badge { font-size: 12px; font-weight: bold; background: #000; color: var(--accent); padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-family: monospace; }
+        .time-val { color: #ddd; font-weight: 600; }
+        .time-highlight { color: var(--green); font-weight: 700; }
+
+        .timer-badge { font-size: 12px; font-weight: 700; background: #000; color: var(--accent); padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-family: monospace; }
 
         /* ITEMS */
         .item-list { margin-bottom: 15px; max-height: 250px; overflow-y: auto; padding-right: 5px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
         .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; align-items: flex-start; }
         .item-name { font-weight: 600; color: #eee; }
         .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: 2px; }
-        .item-price { font-weight: bold; color: #fff; }
+        .item-price { font-weight: 700; color: #fff; }
         .item-unit-price { font-size: 10px; color: #888; display: block; }
         .btn-trash { background: none; border: none; color: #666; cursor: pointer; font-size: 14px; padding: 0 0 0 10px; }
         .btn-trash:hover { color: var(--red); }
 
-        /* METRICS (4 BARIS) */
+        /* METRICS */
         .duration-box { margin-bottom: 15px; font-size: 12px; color: #aaa; padding: 0 5px; }
         .dur-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-        .dur-val { color: #fff; font-weight: bold; }
+        .dur-val { color: #fff; font-weight: 700; }
         .dur-total-row { border-top: 1px dashed #666; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-size: 13px; }
-        .dur-total-val { color: var(--accent); font-weight: 900; }
+        .dur-total-val { color: var(--accent); font-weight: 700; }
 
         /* TOTAL */
-        .total-display { text-align: right; font-size: 18px; font-weight: 900; color: var(--accent); margin-bottom: 20px; }
+        .total-display { text-align: right; font-size: 18px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
 
-        /* STATUS / STAMP (SAMA DENGAN ADMIN) */
+        /* STATUS / STAMP */
         .status-footer { text-align: center; margin-top: 10px; }
-        .status-text-done { color: var(--green); font-weight: 900; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; }
-        .rejected-label { 
-            color: var(--red); 
-            font-weight: 900; 
-            font-size: 20px; 
-            text-align: center; 
-            border: 2px solid var(--red); 
-            padding: 10px; 
-            transform: rotate(-5deg); 
-            margin: 15px 0; 
+        .status-text-done { color: var(--green); font-weight: 700; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; }
+        
+        /* STYLE STAMP DITOLAK (SESUAI REQUEST) */
+        .stamp-rejected {
+            border: 2px solid var(--red);
+            color: var(--red);
+            font-size: 20px;
+            font-weight: 700; /* Dikurangi dari 900 */
             display: inline-block;
+            padding: 8px 20px;
+            transform: rotate(-5deg);
+            letter-spacing: 1px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            text-transform: uppercase;
         }
 
-        /* PRINT BUTTONS */
+        /* BUTTONS */
         .btn-print-group { display: flex; gap: 10px; margin-bottom: 15px; border-top: 1px solid #444; padding-top: 15px; }
-        .btn-print { flex: 1; background: #3c3c45; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-print { 
+            flex: 1; 
+            background: #3c3c45; 
+            border: 1px solid #555; 
+            color: #fff; 
+            padding: 12px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: 700; 
+            transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
         .btn-print:active { background: #555; transform: scale(0.98); }
 
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #fff; font-size: 14px; }
+        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; color: #fff; font-size: 14px; }
         .btn-green { background: var(--green); } .btn-red { background: var(--red); }
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
         .btn-full { grid-column: span 2; }
@@ -452,7 +468,6 @@
                         </div>
                     </div>`;
             } else {
-                // TAMPILKAN JAM MASUK + TIMER UNTUK PESANAN AKTIF
                 headerRight = `
                     <div class="header-right">
                         <span class="meta-date">${dateStr}</span>
@@ -468,7 +483,7 @@
             
             if(order.status === 'completed' || order.status === 'rejected') {
                 if(order.status === 'rejected') {
-                    statusFooter = `<div class="status-footer"><div class="rejected-label">DITOLAK</div></div>`;
+                    statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
                 } else {
                     statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
                 }
