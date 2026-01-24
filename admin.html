@@ -19,7 +19,7 @@
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; }
         .page-title { margin:0 0 20px 0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
 
-        /* KARTU RIWAYAT (SAMA DENGAN DAPUR.HTML) */
+        /* KARTU RIWAYAT */
         .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 50px; }
         .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 5px solid #555; position: relative; }
         .order-card.status-completed { border-left-color: var(--green); }
@@ -28,7 +28,6 @@
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .cust-name { font-size: 18px; font-weight: bold; color: #fff; display: block;}
         
-        /* DETAIL HARGA & NOTES */
         .item-list { margin-bottom: 15px; max-height: 300px; overflow-y: auto; }
         .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; align-items: flex-start; }
         .item-unit-price { font-size: 10px; color: #888; display: block; }
@@ -36,7 +35,6 @@
         
         .total-row { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--accent); border-top: 1px dashed #444; padding-top: 10px; }
 
-        /* REKAP DURASI (METRICS) */
         .history-details { font-size: 11px; color: #aaa; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
         .history-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
         .h-val { color: #fff; font-weight: bold; }
@@ -45,6 +43,13 @@
         .h-times { font-size: 11px; color: #ccc; }
         .h-time-val { font-weight: bold; color: #fff; }
         .rejected-label { color: var(--red); font-weight: 900; font-size: 20px; text-align: center; border: 2px solid var(--red); padding: 10px; transform: rotate(-5deg); margin-bottom: 10px; }
+
+        /* BUTTONS PRINT */
+        .action-row { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-print { flex: 1; padding: 8px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-checker { background: #555; color: #fff; }
+        .btn-invoice { background: var(--accent); color: #000; }
+        .btn-print:hover { opacity: 0.9; }
 
         /* FINANCE & OTHERS */
         .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; margin-bottom: 20px; }
@@ -71,9 +76,9 @@
 
     <div class="sidebar">
         <div class="brand">SBS OWNER</div>
-        <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">腸</span><span>Keuangan</span></div>
-        <div class="menu-item" onclick="showPage('logs')"><span class="menu-icon">早</span><span>Audit Log Stok</span></div>
-        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">糖</span><span>Riwayat Pesanan</span></div>
+        <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Keuangan</span></div>
+        <div class="menu-item" onclick="showPage('logs')"><span class="menu-icon">📋</span><span>Audit Log Stok</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat Pesanan</span></div>
     </div>
 
     <div class="main" id="finance-page">
@@ -144,71 +149,152 @@
             });
         });
 
-        // --- FUNGSI CREATE CARD DETIL (DIPERBAIKI UNTUK HANDLE UNDEFINED) ---
-        function createHistoryCard(order) {
-            // FIX: LOGIKA NAMA CUSTOMER
-            let displayName = order.customer || "Pelanggan"; // Default legacy
+        // --- FUNGSI PRINT STRUK / CHECKER ---
+        function printReceipt(orderId, type) {
+            const order = dbOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            // FIX: LOGIKA NAMA CUSTOMER (Agar tidak undefined)
+            let custName = order.customerName || order.customer || "Pelanggan";
+            let tableNum = order.tableNumber ? `Meja: ${order.tableNumber}` : "";
+            if(order.customer && !isNaN(order.customer)) tableNum = `Meja: ${order.customer}`; // Legacy support
+
+            // Format Tanggal
+            const dateObj = new Date(order.timestamp);
+            const dateStr = dateObj.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
+            const timeStr = dateObj.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+
+            let content = '';
             
+            // --- HEADER ---
+            // CSS Khusus Print 58mm
+            const style = `
+                <style>
+                    @page { margin: 0; }
+                    body { font-family: 'Courier New', monospace; font-size: 12px; width: 58mm; margin: 0; padding: 5px; color: #000; }
+                    .center { text-align: center; }
+                    .bold { font-weight: bold; }
+                    .big { font-size: 16px; }
+                    .line { border-bottom: 1px dashed #000; margin: 5px 0; }
+                    .row { display: flex; justify-content: space-between; }
+                    .item-name { margin-bottom: 2px; }
+                    .item-note { font-size: 10px; font-style: italic; }
+                    img { width: 50px; margin-bottom: 5px; filter: grayscale(100%); }
+                </style>
+            `;
+
+            if (type === 'invoice') {
+                // --- INVOICE CUSTOMER ---
+                let itemsHtml = order.items.map(item => `
+                    <div style="margin-bottom: 5px;">
+                        <div class="item-name">${item.name}</div>
+                        <div class="row">
+                            <span>${item.qty}x @${parseInt(item.price).toLocaleString()}</span>
+                            <span>${(item.qty * item.price).toLocaleString()}</span>
+                        </div>
+                        ${item.note ? `<div class="item-note">+ ${item.note}</div>` : ''}
+                    </div>
+                `).join('');
+
+                content = `
+                    <html><head>${style}</head><body>
+                        <div class="center">
+                            <img src="img/sbslogo.jpg" alt="Logo"><br>
+                            <span class="bold big">SBS Cafe</span><br>
+                            Jl. Mundu 8, Kota Malang<br>
+                            Jawa Timur, 65116<br>
+                            085159039877
+                        </div>
+                        <div class="line"></div>
+                        <div class="center bold">${tableNum ? `Queue: ${tableNum}` : 'Take Away'}</div>
+                        <div class="line"></div>
+                        <div class="row"><span>${dateStr}</span><span>${timeStr}</span></div>
+                        <div class="row"><span>Order ID:</span><span>...${order.id.slice(-4)}</span></div>
+                        <div class="row"><span>Cashier:</span><span>Admin</span></div>
+                        <div class="line"></div>
+                        ${itemsHtml}
+                        <div class="line"></div>
+                        <div class="row bold big" style="margin-top:5px;">
+                            <span>TOTAL</span>
+                            <span>Rp ${(parseInt(order.total) || 0).toLocaleString()}</span>
+                        </div>
+                        <div class="row"><span>Payment</span><span>CASH/QRIS</span></div>
+                        <div class="line"></div>
+                        <div class="center" style="margin-top:10px;">
+                            <span class="bold">Wifi: SBSkopi8</span><br>
+                            <span style="font-size:10px;">Terima Kasih!</span>
+                        </div>
+                        <br><br>
+                    </body></html>
+                `;
+            } else {
+                // --- CHECKER DAPUR (Hanya Item & Note) ---
+                let itemsHtml = order.items.map(item => `
+                    <div style="margin-bottom: 10px; border-bottom: 1px solid #eee;">
+                        <div class="row">
+                            <span class="big bold" style="font-size:18px;">${item.qty}x</span>
+                            <span class="big bold" style="flex:1; margin-left:10px;">${item.name}</span>
+                        </div>
+                        ${item.note ? `<div class="item-note bold" style="font-size:14px; margin-left:30px;">CATATAN: ${item.note}</div>` : ''}
+                    </div>
+                `).join('');
+
+                content = `
+                    <html><head>${style}</head><body>
+                        <div class="center bold big" style="font-size:20px;">CHECKER DAPUR</div>
+                        <div class="center bold">${tableNum}</div>
+                        <div class="center">${custName}</div>
+                        <div class="line"></div>
+                        <div class="row"><span>${timeStr}</span><span>ID: ...${order.id.slice(-4)}</span></div>
+                        <div class="line"></div>
+                        ${itemsHtml}
+                        <br><br>
+                    </body></html>
+                `;
+            }
+
+            // Print Trigger
+            const popup = window.open('', '_blank', 'width=300,height=600');
+            popup.document.open();
+            popup.document.write(content);
+            popup.document.close();
+            
+            // Tunggu gambar load sebentar lalu print
+            setTimeout(() => {
+                popup.focus();
+                popup.print();
+                // popup.close(); // Opsional: tutup otomatis setelah print
+            }, 500);
+        }
+
+        // --- FUNGSI CREATE CARD DETIL ---
+        function createHistoryCard(order) {
+            // FIX NAMA (Sama dengan Dapur.html)
+            let displayName = order.customer || "Pelanggan";
             if (order.tableNumber) {
                 displayName = `MEJA ${order.tableNumber}`;
-                if (order.customerName) {
-                    displayName += ` - ${order.customerName.toUpperCase()}`;
-                }
+                if (order.customerName) displayName += ` - ${order.customerName.toUpperCase()}`;
             } else if (order.customer && !isNaN(order.customer)) {
                 displayName = "MEJA " + order.customer;
             }
             
             const created = new Date(order.timestamp).getTime();
-            const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : 0;
-            const paid = order.paidAt ? new Date(order.paidAt).getTime() : 0;
             const completed = order.completedAt ? new Date(order.completedAt).getTime() : 0;
+            const timeIn = new Date(created).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const timeOut = completed > 0 ? new Date(completed).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-';
 
             const div = document.createElement('div');
             div.className = `order-card status-${order.status}`;
             
-            // Detail Items
-            let itemsHtml = (order.items || []).map(item => {
-                const qty = parseInt(item.qty);
-                const price = parseInt(item.price);
-                const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-                return `
+            // Item List
+            let itemsHtml = (order.items || []).map(item => `
                 <div class="item-row">
                     <div style="flex:1;">
-                        <span>${qty}x ${item.name}</span>
-                        ${unitPriceHtml}
-                        ${item.note ? `<span class="item-note">統 ${item.note}</span>` : ''}
+                        <span>${item.qty}x ${item.name}</span>
+                        ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
                     </div>
-                    <span style="font-weight:bold;">${(qty * price).toLocaleString()}</span>
-                </div>`;
-            }).join('');
-
-            const fmtDur = (s) => {
-                if (s <= 0) return "-";
-                const m = Math.floor(s/60);
-                const sc = s%60;
-                return m > 0 ? `${m}m ${sc}s` : `${sc}s`;
-            };
-
-            const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
-            const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
-            const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
-            const durTotal = completed > 0 ? Math.floor((completed - created)/1000) : 0;
-
-            const timeIn = new Date(created).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const timeOut = completed > 0 ? new Date(completed).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-';
-
-            let historyHtml = `
-                <div class="history-details">
-                    <div class="history-row"><span>Respon:</span> <span class="h-val">${fmtDur(durRespon)}</span></div>
-                    <div class="history-row"><span>Bayar:</span> <span class="h-val">${fmtDur(durBayar)}</span></div>
-                    <div class="history-row"><span>Masak:</span> <span class="h-val">${fmtDur(durMasak)}</span></div>
-                    <div style="border-top:1px dashed #666; margin-top:5px; padding-top:2px;" class="history-row">
-                        <span>TOTAL DURASI:</span> <span class="h-val" style="color:var(--accent);">${fmtDur(durTotal)}</span>
-                    </div>
-                </div>
-            `;
-
-            if(order.status === 'rejected') historyHtml = `<div class="rejected-label">DITOLAK 笶/div>`;
+                    <span style="font-weight:bold;">${(item.qty * item.price).toLocaleString()}</span>
+                </div>`).join('');
 
             let rawTotal = String(order.total).replace(/[^0-9]/g, '');
             const safeTotal = Number(rawTotal) || 0;
@@ -217,13 +303,21 @@
                 <div class="card-header">
                     <div><span class="cust-name">${displayName}</span><small style="color:#666">...${order.id.slice(-4)}</small></div>
                     <div class="history-compact">
-                        <span class="h-date">${new Date(completed || created).toLocaleDateString('id-ID', {day:'numeric', month:'short'})}</span>
-                        <div class="h-times">In: ${timeIn} | Out: <span class="h-time-val" style="color:var(--green)">${timeOut}</span></div>
+                        <span class="h-date">${new Date(created).toLocaleDateString('id-ID')}</span>
+                        <div class="h-times">In: ${timeIn} | Out: <span class="h-time-val">${timeOut}</span></div>
                     </div>
                 </div>
                 <div class="item-list">${itemsHtml}</div>
-                ${historyHtml}
                 <div class="total-row">TOTAL: Rp ${safeTotal.toLocaleString()}</div>
+                
+                <div class="action-row">
+                    <button class="btn-print btn-checker" onclick="printReceipt('${order.id}', 'checker')">
+                        🖨 Checker
+                    </button>
+                    <button class="btn-print btn-invoice" onclick="printReceipt('${order.id}', 'invoice')">
+                        🧾 Invoice
+                    </button>
+                </div>
             `;
             return div;
         }
