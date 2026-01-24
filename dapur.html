@@ -6,7 +6,7 @@
     <title>SBS Kitchen - OPS</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS TIDAK ADA YANG SAYA UBAH */
+        /* CSS TETAP SAMA (TAMPILAN TIDAK BERUBAH) */
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -52,15 +52,6 @@
         .btn-trash:hover { color: var(--red); }
         .total-row { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
 
-        .history-details { font-size: 11px; color: #aaa; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-        .history-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
-        .h-val { color: #fff; font-weight: bold; }
-        .history-compact { text-align: right; }
-        .h-date { display: block; font-size: 10px; color: #888; margin-bottom: 2px; }
-        .h-times { font-size: 11px; color: #ccc; }
-        .h-time-val { font-weight: bold; color: #fff; }
-        .rejected-label { color: var(--red); font-weight: 900; font-size: 20px; text-align: center; border: 2px solid var(--red); padding: 10px; transform: rotate(-5deg); margin-bottom: 10px; }
-
         /* BUTTON PRINT GROUP */
         .btn-print-group { display: flex; gap: 5px; margin-bottom: 15px; border-top: 1px dashed #444; padding-top: 10px; }
         .btn-print { flex: 1; background: transparent; border: 1px solid #555; color: #aaa; padding: 6px; border-radius: 8px; cursor: pointer; font-size: 12px; transition: 0.2s; font-weight: 600; }
@@ -71,6 +62,15 @@
         .btn-green { background: var(--green); } .btn-red { background: var(--red); }
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
         .btn-full { grid-column: span 2; }
+
+        .history-details { font-size: 11px; color: #aaa; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+        .history-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+        .h-val { color: #fff; font-weight: bold; }
+        .history-compact { text-align: right; }
+        .h-date { display: block; font-size: 10px; color: #888; margin-bottom: 2px; }
+        .h-times { font-size: 11px; color: #ccc; }
+        .h-time-val { font-weight: bold; color: #fff; }
+        .rejected-label { color: var(--red); font-weight: 900; font-size: 20px; text-align: center; border: 2px solid var(--red); padding: 10px; transform: rotate(-5deg); margin-bottom: 10px; }
 
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
@@ -107,9 +107,9 @@
         </div>
 
         <div class="status-tabs">
-            <div class="tab active" onclick="filterTab('new')">BARU <span class="badge" id="badge-new">0</span></div>
-            <div class="tab" onclick="filterTab('unpaid')">BAYAR <span class="badge" id="badge-unpaid">0</span></div>
-            <div class="tab" onclick="filterTab('processing')">PROSES <span class="badge" id="badge-processing">0</span></div>
+            <div class="tab active" onclick="filterTab('new')" id="tab-new">BARU <span class="badge" id="badge-new">0</span></div>
+            <div class="tab" onclick="filterTab('unpaid')" id="tab-unpaid">BAYAR <span class="badge" id="badge-unpaid">0</span></div>
+            <div class="tab" onclick="filterTab('processing')" id="tab-processing">PROSES <span class="badge" id="badge-processing">0</span></div>
         </div>
         <div id="orders-grid" class="orders-grid"></div>
     </div>
@@ -171,13 +171,22 @@
         const db = firebase.database();
         
         let allOrders = [];
-        let currentTab = 'new';
+        // REVISI 3: Load saved tab from LocalStorage
+        let currentTab = localStorage.getItem('sbs_kitchen_tab') || 'new';
         let editingOrderKey = null;
         let audioUnlocked = false;
         let confirmCallback = null;
         const soundNew = document.getElementById('sound-new');
         const soundNag = document.getElementById('sound-nag');
         const btnAudio = document.getElementById('btn-audio');
+
+        // REVISI 3: Apply active class to the correct tab on load
+        function initTab() {
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            const activeEl = document.getElementById('tab-' + currentTab);
+            if(activeEl) activeEl.classList.add('active');
+        }
+        initTab();
 
         function toggleAudio() {
             if (!audioUnlocked) {
@@ -217,58 +226,77 @@
             updateBadges();
         });
 
-        // --- NEW: ESC/POS GENERATOR (FUNGSI CETAK TANPA PINDAH APLIKASI) ---
-        // Metode ini mengirim kode HEX langsung ke printer, bukan HTML.
+        // --- REVISI 1: HITUNG QUEUE (URUTAN HARI INI) ---
+        function getDailyQueueNumber(orderId) {
+            // Filter pesanan hari ini
+            const targetOrder = allOrders.find(o => o.id === orderId);
+            if(!targetOrder) return "00";
+            
+            const targetDate = new Date(targetOrder.timestamp).toDateString();
+            
+            // Ambil semua order hari yang sama, urutkan berdasarkan waktu masuk
+            const dailyOrders = allOrders.filter(o => 
+                new Date(o.timestamp).toDateString() === targetDate
+            ).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+            // Cari index (urutan) dari order ID tersebut
+            const index = dailyOrders.findIndex(o => o.id === orderId);
+            return index + 1; // Karena index mulai dari 0, kita tambah 1
+        }
+
+        // --- REVISI 2: PRINT ESC/POS DENGAN TABLE & QUEUE ---
         function printDirect(orderId, type) {
             const order = allOrders.find(o => o.id === orderId);
             if (!order) return;
 
-            let queueNum = order.tableNumber ? order.tableNumber : (order.customer || '00');
+            // AMBIL TABLE NUMBER (JIKA ADA)
+            let tableNum = "Take Away";
+            if (order.tableNumber) tableNum = order.tableNumber;
+            else if (order.customer && !isNaN(order.customer)) tableNum = order.customer; // Legacy
+
+            // AMBIL REAL QUEUE NUMBER (URUTAN)
+            let realQueue = getDailyQueueNumber(order.id);
+
             const dateObj = new Date(order.timestamp);
             const dateStr = dateObj.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
             const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
 
-            // ESC/POS Commands (Hex Codes untuk Printer Thermal)
+            // ESC/POS Commands
             const ESC = "\x1B";
             const GS = "\x1D";
             const INIT = ESC + "@";
             const ALIGN_CENTER = ESC + "a" + "\x01";
             const ALIGN_LEFT = ESC + "a" + "\x00";
-            const ALIGN_RIGHT = ESC + "a" + "\x02";
             const BOLD_ON = ESC + "E" + "\x01";
             const BOLD_OFF = ESC + "E" + "\x00";
             const TEXT_DOUBLE = GS + "!" + "\x11"; 
             const TEXT_NORMAL = GS + "!" + "\x00";
-            const CUT = GS + "V" + "\x42" + "\x00";
 
             let data = INIT;
 
             if (type === 'invoice') {
-                // --- INVOICE LAYOUT (TANPA GAMBAR, TAPI RAPI) ---
+                // --- INVOICE LAYOUT ---
                 data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF;
                 data += "Jl. Mundu 8, Kota Malang\n";
                 data += "Jawa Timur, 65116\n";
                 data += "085159039877\n";
                 data += "--------------------------------\n";
                 data += ALIGN_LEFT;
-                data += "Queue No: " + queueNum + "\n";
-                data += "Date    : " + dateStr + " " + timeStr + "\n";
-                data += "Order ID: " + order.id.slice(-6).toUpperCase() + "\n";
+                // REVISI 1: TAMPILKAN TABLE & QUEUE TERPISAH
+                data += BOLD_ON + "TABLE: " + tableNum + BOLD_OFF + "\n";
+                data += "Queue Order: #" + realQueue + "\n"; 
+                data += "Date : " + dateStr + " " + timeStr + "\n";
+                data += "ID   : " + order.id.slice(-6).toUpperCase() + "\n";
                 data += "--------------------------------\n";
                 
-                // Items Loop
                 order.items.forEach(item => {
                     let price = parseInt(item.price);
                     let sub = item.qty * price;
                     data += item.name + "\n";
-                    // Format: 1x @20.000 ... 20.000
                     let line = item.qty + "x @" + price.toLocaleString('id-ID');
                     let priceStr = sub.toLocaleString('id-ID');
-                    
-                    // Simple spacing logic (Manual Align Right)
                     let spaces = 32 - line.length - priceStr.length;
                     if(spaces < 1) spaces = 1;
-                    
                     data += line + " ".repeat(spaces) + priceStr + "\n";
                     if(item.note) data += "  (Note: " + item.note + ")\n";
                 });
@@ -277,15 +305,17 @@
                 let totalStr = parseInt(order.total).toLocaleString('id-ID');
                 let totalLabel = "TOTAL";
                 let totalSpaces = 32 - totalLabel.length - totalStr.length;
-                
                 data += BOLD_ON + totalLabel + " ".repeat(totalSpaces > 0 ? totalSpaces : 1) + totalStr + "\n" + BOLD_OFF;
                 data += "--------------------------------\n";
                 data += ALIGN_CENTER + "Wifi: SBSkopi8\n";
-                data += "Terima Kasih!\n\n\n\n"; // Feed kertas
+                data += "Terima Kasih!\n\n\n\n";
             } else {
                 // --- CHECKER LAYOUT ---
                 data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER DAPUR\n" + TEXT_NORMAL + BOLD_OFF;
-                data += "\n" + ALIGN_LEFT + BOLD_ON + "QUEUE: " + queueNum + BOLD_OFF + "\n";
+                data += "\n" + ALIGN_LEFT;
+                // REVISI 1: TABLE & QUEUE TERPISAH
+                data += "TABLE: " + BOLD_ON + tableNum + BOLD_OFF + "\n";
+                data += "QUEUE: #" + realQueue + "\n";
                 data += "TIME : " + timeStr + "\n";
                 data += "ID   : " + order.id.slice(-4) + "\n";
                 data += "--------------------------------\n";
@@ -295,25 +325,17 @@
                     if(item.note) data += "   [ " + item.note + " ]\n";
                     data += "\n"; 
                 });
-                data += "\n\n\n\n"; // Feed kertas
+                data += "\n\n\n\n"; 
             }
 
-            // ENCODE KE BASE64
-            // Kita harus convert string binary ke Base64 agar RawBT bisa membacanya sebagai command
             const buffer = new Uint8Array(data.length);
-            for (let i = 0; i < data.length; i++) {
-                buffer[i] = data.charCodeAt(i);
-            }
-            
-            // Konversi manual buffer ke string base64 yang aman
+            for (let i = 0; i < data.length; i++) { buffer[i] = data.charCodeAt(i); }
             let binary = '';
-            for (let i = 0; i < buffer.byteLength; i++) {
-                binary += String.fromCharCode(buffer[i]);
-            }
+            for (let i = 0; i < buffer.byteLength; i++) { binary += String.fromCharCode(buffer[i]); }
             const base64Data = btoa(binary);
 
-            // SEND TO RAWBT (Mode: Base64 Command)
-            // Scheme "rawbt:base64" memberitahu aplikasi: "Ini kode mesin, langsung kirim ke printer!"
+            // REVISI 2: MENGHILANGKAN KONFIRMASI (USER HARUS SETTING DI APP RAWBT)
+            // Settings -> uncheck "Confirm printing"
             window.location.href = "rawbt:base64," + base64Data;
         }
 
@@ -370,15 +392,11 @@
         }
 
         function createCard(order) {
-            // FIX NAMA (MENANGANI UNDEFINED)
-            // Logika: Cek tableNumber dulu -> Cek customerName -> Cek customer (legacy) -> Default
             let displayName = "Pelanggan";
-            
             if (order.tableNumber) {
                 displayName = "MEJA " + order.tableNumber;
                 if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
             } else if (order.customer) {
-                // Cek apakah customer itu angka (Meja) atau nama
                 if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
                 else displayName = order.customer;
             }
@@ -469,8 +487,10 @@
             if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
         }
 
+        // REVISI 3: SIMPAN TAB KE LOCAL STORAGE
         function filterTab(status) {
             currentTab = status;
+            localStorage.setItem('sbs_kitchen_tab', status);
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             event.currentTarget.classList.add('active');
             renderOrders();
