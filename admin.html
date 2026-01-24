@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SBS ADMIN - POS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* SIDEBAR */
+        .sidebar { width: 240px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; }
+        .brand { font-family: 'Bebas Neue'; font-size: 36px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
+        .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
+        .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
+        .menu-icon { font-size: 20px; }
+
+        /* MAIN */
+        .main { flex: 1; padding: 20px; overflow-y: auto; }
+        .page-title { margin:0 0 20px 0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+
+        /* FILTERS */
+        .filters { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .date-input, .select-input { background: var(--card-bg); border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; font-family: 'Poppins'; }
+
+        /* CARDS & GRID */
+        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 5px solid #555; position: relative; }
+        .order-card.status-completed { border-left-color: var(--green); }
+        .order-card.status-rejected { border-left-color: var(--red); opacity: 0.7; }
+        
+        /* OMZET STATS */
+        .stat-card { background: var(--card-bg); padding: 30px; border-radius: 15px; border: 1px solid #444; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-top: 20px; }
+        .stat-title { font-size: 14px; color: #aaa; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-val { font-size: 36px; font-weight: bold; color: var(--green); }
+
+        /* STOCK TABLE */
+        .stock-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--card-bg); border-radius: 10px; overflow: hidden; }
+        .stock-table th, .stock-table td { padding: 15px; text-align: left; border-bottom: 1px solid #444; }
+        .stock-table th { background: #111; color: var(--accent); }
+        .stock-badge { padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; }
+        .in-stock { background: rgba(46, 204, 113, 0.2); color: var(--green); }
+        .low-stock { background: rgba(231, 76, 60, 0.2); color: var(--red); }
+
+        /* COMPONENTS */
+        .btn-reset { margin-top: 50px; background: #330000; color: #ff4444; border: 1px solid #ff4444; width: 100%; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .item-list { font-size: 13px; margin: 10px 0; color: #ccc; }
+        .history-date { font-size: 11px; color: var(--accent); font-weight: bold; display: block; margin-bottom: 5px; }
+
+        /* MODAL */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
+        .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); text-align: center; }
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; margin: 5px; }
+        .btn-red { background: var(--red); color: white; } .btn-grey { background: #555; color: white; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
+            .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; z-index: 999; border-top: 1px solid #333; }
+            .brand { display: none; }
+            .menu-item { background: transparent !important; flex-direction: column; font-size: 10px; gap: 2px; padding: 5px; margin: 0; flex: 1; justify-content: center; text-align: center; }
+            .menu-icon { margin-bottom: 0; }
+            .main { padding-bottom: 80px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">SBS ADMIN</div>
+        <div class="menu-item active" onclick="showPage('omzet')"><span class="menu-icon">💰</span><span>Laporan Omzet</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat Lengkap</span></div>
+        <div class="menu-item" onclick="showPage('stock')"><span class="menu-icon">📦</span><span>Manajemen Stok</span></div>
+    </div>
+
+    <div class="main" id="omzet-page">
+        <h2 class="page-title">LAPORAN KEUANGAN</h2>
+        
+        <div class="filters">
+            <select id="finance-mode" class="select-input" onchange="toggleFinanceFilter()">
+                <option value="daily">Harian</option>
+                <option value="monthly">Bulanan</option>
+                <option value="yearly">Tahunan</option>
+            </select>
+            <input type="date" id="finance-date" class="date-input" onchange="calculateFinance()">
+            <input type="month" id="finance-month" class="date-input" style="display:none;" onchange="calculateFinance()">
+            <select id="finance-year" class="select-input" style="display:none;" onchange="calculateFinance()">
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+            </select>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title" id="stat-label">PENDAPATAN</div>
+            <div class="stat-val" id="main-stat-rev">Rp 0</div>
+        </div>
+
+        <button class="btn-reset" onclick="confirmReset()">⚠ RESET SEMUA DATA DATABASE</button>
+    </div>
+
+    <div class="main" id="history-page" style="display: none;">
+        <h2 class="page-title">RIWAYAT TRANSAKSI</h2>
+        <div class="filters">
+            <input type="date" id="history-date-picker" class="date-input" onchange="renderHistory()">
+            <button onclick="setToday()" class="select-input" style="cursor:pointer; background:#444;">Hari Ini</button>
+        </div>
+        <div id="history-grid" class="orders-grid"></div>
+    </div>
+
+    <div class="main" id="stock-page" style="display: none;">
+        <h2 class="page-title">MANAJEMEN STOK</h2>
+        <div style="background: var(--card-bg); padding:15px; border-radius:10px; margin-bottom:15px; border-left:4px solid var(--accent);">
+            Fitur ini sedang dalam pengembangan. Gunakan tabel di bawah untuk cek stok manual.
+        </div>
+        <table class="stock-table">
+            <thead>
+                <tr>
+                    <th>Nama Item</th>
+                    <th>Stok</th>
+                    <th>Satuan</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Beras</td><td>20</td><td>kg</td><td><span class="stock-badge in-stock">Aman</span></td></tr>
+                <tr><td>Ayam Fillet</td><td>2</td><td>kg</td><td><span class="stock-badge low-stock">Kritis</span></td></tr>
+                <tr><td>Minyak Goreng</td><td>15</td><td>liter</td><td><span class="stock-badge in-stock">Aman</span></td></tr>
+                <tr><td>Susu UHT</td><td>4</td><td>pack</td><td><span class="stock-badge low-stock">Restock</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="custom-confirm-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="color:var(--accent); margin-top:0;">DANGER ZONE</h3>
+            <p id="confirm-msg">Yakin hapus?</p>
+            <div style="margin-top:20px;">
+                <button class="btn btn-grey" onclick="closeConfirm()">BATAL</button>
+                <button class="btn btn-red" id="btn-confirm-yes">YA, HAPUS</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
+            authDomain: "sbs-menu-d1611.firebaseapp.com",
+            databaseURL: "https://sbs-menu-d1611-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "sbs-menu-d1611",
+            storageBucket: "sbs-menu-d1611.firebasestorage.app",
+            messagingSenderId: "530098727952",
+            appId: "1:530098727952:web:1bb3072d93be9564fbee95"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        
+        let allOrders = [];
+        let confirmCallback = null;
+
+        // Init Dates
+        document.getElementById('finance-date').valueAsDate = new Date();
+        document.getElementById('history-date-picker').valueAsDate = new Date();
+
+        db.ref('orders').on('value', (snapshot) => {
+            const data = snapshot.val();
+            allOrders = [];
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    allOrders.push({ id: key, ...data[key] });
+                });
+            }
+            // Sort Descending (Newest First)
+            allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            calculateFinance();
+            renderHistory();
+        });
+
+        function showPage(pageId) {
+            document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
+            document.getElementById(pageId + '-page').style.display = 'block';
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            
+            if(pageId === 'omzet') document.querySelectorAll('.menu-item')[0].classList.add('active');
+            if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
+            if(pageId === 'stock') document.querySelectorAll('.menu-item')[2].classList.add('active');
+        }
+
+        // --- FINANCE LOGIC (ROBUST) ---
+        function toggleFinanceFilter() {
+            const mode = document.getElementById('finance-mode').value;
+            document.getElementById('finance-date').style.display = (mode === 'daily') ? 'block' : 'none';
+            document.getElementById('finance-month').style.display = (mode === 'monthly') ? 'block' : 'none';
+            document.getElementById('finance-year').style.display = (mode === 'yearly') ? 'block' : 'none';
+            calculateFinance();
+        }
+
+        function calculateFinance() {
+            const mode = document.getElementById('finance-mode').value;
+            let totalRev = 0;
+            let targetDate, targetMonth, targetYear;
+
+            if (mode === 'daily') {
+                targetDate = new Date(document.getElementById('finance-date').value);
+            } else if (mode === 'monthly') {
+                const val = document.getElementById('finance-month').value;
+                if(val) {
+                    targetYear = parseInt(val.split('-')[0]);
+                    targetMonth = parseInt(val.split('-')[1]) - 1;
+                }
+            } else if (mode === 'yearly') {
+                targetYear = parseInt(document.getElementById('finance-year').value);
+            }
+
+            allOrders.forEach(order => {
+                // Hanya hitung status completed (atau done)
+                if (order.status !== 'completed' && order.status !== 'done') return;
+                
+                const rawDate = order.completedAt || order.timestamp;
+                if(!rawDate) return;
+                const oDate = new Date(rawDate);
+                
+                // ROBUST CLEANING "Rp 20.000" -> 20000
+                let rawTotal = order.total;
+                if (typeof rawTotal === 'string') rawTotal = rawTotal.replace(/[^0-9]/g, '');
+                const total = Number(rawTotal) || 0;
+
+                let match = false;
+                if (mode === 'daily' && targetDate) {
+                    if (oDate.toDateString() === targetDate.toDateString()) match = true;
+                } else if (mode === 'monthly' && !isNaN(targetMonth)) {
+                    if (oDate.getFullYear() === targetYear && oDate.getMonth() === targetMonth) match = true;
+                } else if (mode === 'yearly') {
+                    if (oDate.getFullYear() === targetYear) match = true;
+                }
+
+                if (match) totalRev += total;
+            });
+
+            document.getElementById('main-stat-rev').innerText = "Rp " + totalRev.toLocaleString('id-ID');
+            
+            let label = "TOTAL PENDAPATAN";
+            if (mode === 'daily') label += " (HARIAN)";
+            if (mode === 'monthly') label += " (BULANAN)";
+            if (mode === 'yearly') label += " (TAHUNAN)";
+            document.getElementById('stat-label').innerText = label;
+        }
+
+        // --- HISTORY LOGIC ---
+        function setToday() {
+            document.getElementById('history-date-picker').valueAsDate = new Date();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const grid = document.getElementById('history-grid');
+            grid.innerHTML = '';
+            
+            const filterDateInput = document.getElementById('history-date-picker').value;
+            const filterDate = new Date(filterDateInput).toDateString();
+
+            allOrders.forEach(order => {
+                if (order.status !== 'completed' && order.status !== 'rejected') return;
+
+                const orderDate = new Date(order.completedAt || order.timestamp);
+                if (orderDate.toDateString() === filterDate) {
+                    
+                    let displayName = order.customer;
+                    if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
+
+                    // Robust Total
+                    let rawTotal = order.total;
+                    if (typeof rawTotal === 'string') rawTotal = rawTotal.replace(/[^0-9]/g, '');
+                    const safeTotal = Number(rawTotal) || 0;
+
+                    const itemsHtml = (order.items || []).map(i => `${i.qty}x ${i.name}`).join(', ');
+                    const statusColor = order.status === 'completed' ? 'var(--green)' : 'var(--red)';
+                    const statusText = order.status === 'completed' ? 'SELESAI' : 'DITOLAK';
+
+                    const div = document.createElement('div');
+                    div.className = `order-card status-${order.status}`;
+                    div.innerHTML = `
+                        <span class="history-date">${orderDate.toLocaleTimeString()}</span>
+                        <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:18px; color:#fff;">
+                            <span>${displayName}</span>
+                            <span style="color:${statusColor}">${statusText}</span>
+                        </div>
+                        <div class="item-list">${itemsHtml}</div>
+                        <div style="text-align:right; font-weight:bold; color:var(--accent);">
+                            Total: Rp ${safeTotal.toLocaleString()}
+                        </div>
+                    `;
+                    grid.appendChild(div);
+                }
+            });
+
+            if(grid.innerHTML === '') grid.innerHTML = '<div style="color:#666; text-align:center;">Tidak ada riwayat pada tanggal ini.</div>';
+        }
+
+        // --- RESET DATA ---
+        function confirmReset() {
+            showConfirm("RESET SEMUA DATA? Data omzet & history akan hilang permanen!", function() {
+                db.ref('orders').remove()
+                .then(() => alert("Database berhasil di-reset!"))
+                .catch(e => alert("Gagal: " + e.message));
+            });
+        }
+
+        function showConfirm(msg, callback) {
+            document.getElementById('confirm-msg').innerText = msg;
+            confirmCallback = callback;
+            document.getElementById('custom-confirm-modal').style.display = 'flex';
+        }
+
+        function closeConfirm() {
+            document.getElementById('custom-confirm-modal').style.display = 'none';
+            confirmCallback = null;
+        }
+
+        document.getElementById('btn-confirm-yes').addEventListener('click', function() {
+            if (confirmCallback) confirmCallback();
+            closeConfirm();
+        });
+    </script>
+</body>
+</html>
