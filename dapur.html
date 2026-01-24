@@ -6,7 +6,7 @@
     <title>SBS Kitchen - OPS</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS TETAP SAMA AGAR TAMPILAN TIDAK BERUBAH */
+        /* CSS TETAP SAMA (TIDAK ADA YANG DIUBAH) */
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -88,8 +88,6 @@
             .status-tabs { position: sticky; top: 0; background: var(--bg-dark); z-index: 50; padding-top: 10px; margin-top: -10px; }
             .orders-grid { grid-template-columns: 1fr; gap: 20px; padding-bottom: 0; } 
         }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body onclick="unlockAudio()">
@@ -98,7 +96,7 @@
         <div class="brand">SBS KITCHEN</div>
         <div class="menu-item active" onclick="showPage('orders')"><span class="menu-icon">📦</span><span>Pesanan</span></div>
         <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">🕒</span><span>Riwayat (Hari Ini)</span></div>
-        </div>
+    </div>
 
     <div class="main" id="orders-page">
         <div class="top-header">
@@ -219,8 +217,8 @@
             updateBadges();
         });
 
-        // --- NEW: DIRECT PRINTING (URL SCHEME RAWBT) ---
-        // Ini metode paling kuat untuk Android + HTTPS
+        // --- NEW: DIRECT PRINTING LOGIC (RAWBT HTML RENDER FIX) ---
+        // Penambahan "data:text/html;" sangat krusial agar tidak dicetak sebagai kode
         function printDirect(orderId, type) {
             const order = allOrders.find(o => o.id === orderId);
             if (!order) return;
@@ -296,12 +294,12 @@
                 </body></html>`;
             }
 
-            // Encode ke Base64 agar aman dikirim lewat URL
+            // Encode HTML ke Base64 dengan header yang BENAR
             var s = unescape(encodeURIComponent(html));
             var base64 = btoa(s);
-            var url = "rawbt:base64," + base64;
+            // PENTING: Tambahkan 'data:text/html;' agar RawBT tahu ini HTML bukan raw text
+            var url = "rawbt:data:text/html;base64," + base64;
             
-            // Trigger Aplikasi RawBT
             window.location.href = url;
         }
 
@@ -340,8 +338,6 @@
             const historyGrid = document.getElementById('history-grid');
             grid.innerHTML = '';
             historyGrid.innerHTML = '';
-            
-            // Default Kitchen View: History Hari Ini
             const today = new Date().toDateString();
 
             allOrders.forEach(order => {
@@ -363,11 +359,8 @@
             let displayName = order.customer || "Pelanggan";
             if (order.tableNumber) {
                 displayName = `MEJA ${order.tableNumber}`;
-                if (order.customerName) {
-                    displayName += ` - ${order.customerName.toUpperCase()}`;
-                }
-            } 
-            else if (order.customer && !isNaN(order.customer)) {
+                if (order.customerName) displayName += ` - ${order.customerName.toUpperCase()}`;
+            } else if (order.customer && !isNaN(order.customer)) {
                 displayName = "MEJA " + order.customer;
             }
 
@@ -382,32 +375,15 @@
             else if (order.status === 'processing') timerStart = paid;
 
             const div = document.createElement('div');
-            let statusClass = order.status;
-            div.className = `order-card status-${statusClass}`;
+            div.className = `order-card status-${order.status}`;
             
             let itemsHtml = (order.items || []).map((item, idx) => {
                 const qty = parseInt(item.qty);
                 const price = parseInt(item.price);
                 const subtotal = qty * price;
                 const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-                
-                const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') 
-                    ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` 
-                    : '';
-
-                return `
-                <div class="item-row">
-                    <div style="flex:1;">
-                        <span>${qty}x ${item.name}</span>
-                        ${unitPriceHtml}
-                        ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
-                    </div>
-                    <div style="display:flex; align-items:center;">
-                        <span style="font-weight:bold;">${subtotal.toLocaleString()}</span>
-                        ${trashBtn}
-                    </div>
-                </div>
-                `;
+                const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
+                return `<div class="item-row"><div style="flex:1;"><span>${qty}x ${item.name}</span>${unitPriceHtml}${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}</div><div style="display:flex; align-items:center;"><span style="font-weight:bold;">${subtotal.toLocaleString()}</span>${trashBtn}</div></div>`;
             }).join('');
 
             let historyHtml = '';
@@ -417,55 +393,29 @@
                 const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
                 const durTotal = completed > 0 ? Math.floor((completed - created)/1000) : 0;
                 const fmtDur = (s) => { if (s <= 0) return "-"; const m = Math.floor(s/60); const sc = s%60; return m > 0 ? `${m}m ${sc}s` : `${sc}s`; };
-                const dateOut = new Date(completed || Date.now());
-                const dateOutStr = dateOut.toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
-                const timeIn = new Date(created).getHours() + ":" + (new Date(created).getMinutes()<10?'0':'') + new Date(created).getMinutes();
-                const timeOut = dateOut.getHours() + ":" + (dateOut.getMinutes()<10?'0':'') + dateOut.getMinutes();
-
+                const timeOut = completed > 0 ? new Date(completed).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-';
                 historyHtml = `<div class="history-details"><div class="history-row"><span>Masak:</span> <span class="h-val">${fmtDur(durMasak)}</span></div><div style="border-top:1px dashed #666; margin-top:5px; padding-top:2px;" class="history-row"><span>TOTAL DURASI:</span> <span class="h-val" style="color:var(--accent); font-size:14px;">${fmtDur(durTotal)}</span></div></div>`;
             }
 
-            // --- TOMBOL PRINT BARU ---
-            const printButtons = `
-                <div class="btn-print-group">
-                    <button class="btn-print" onclick="printDirect('${order.id}', 'checker')">🖨 Checker</button>
-                    <button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">🧾 Invoice</button>
-                </div>
-            `;
+            const printButtons = `<div class="btn-print-group"><button class="btn-print" onclick="printDirect('${order.id}', 'checker')">🖨 Checker</button><button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">🧾 Invoice</button></div>`;
 
             let buttonsHtml = '';
-            if (order.status === 'new') {
-                buttonsHtml = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button><button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button><button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">Terima</button>`;
-            } else if (order.status === 'unpaid') {
-                buttonsHtml = `<button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button><button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>`;
-            } else if (order.status === 'processing') {
-                buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>`;
-            } else {
-                if(order.status !== 'rejected') buttonsHtml = `<div style="text-align:center; color:var(--green); font-weight:bold;">SELESAI</div>`;
-            }
-
-            let rawTotal = order.total;
-            if (typeof rawTotal === 'string') rawTotal = rawTotal.replace(/[^0-9]/g, '');
-            const safeTotal = Number(rawTotal) || 0;
+            if (order.status === 'new') buttonsHtml = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button><button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button><button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">Terima</button>`;
+            else if (order.status === 'unpaid') buttonsHtml = `<button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button><button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>`;
+            else if (order.status === 'processing') buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>`;
+            else if(order.status !== 'rejected') buttonsHtml = `<div style="text-align:center; color:var(--green); font-weight:bold;">SELESAI</div>`;
 
             div.innerHTML = `
-                <div class="card-header">
-                    <div>
-                        <span class="cust-name">${displayName}</span>
-                        <span style="font-size:10px; color:#666;">ID: ...${order.id.slice(-4)}</span>
-                    </div>
-                    <div>${order.status.includes('completed') ? '' : `<span class="timer-badge live-timer" data-start="${timerStart}">--:--</span>`}</div>
-                </div>
+                <div class="card-header"><div><span class="cust-name">${displayName}</span><small style="color:#666">...${order.id.slice(-4)}</small></div><div>${order.status.includes('completed') ? '' : `<span class="timer-badge live-timer" data-start="${timerStart}">--:--</span>`}</div></div>
                 <div class="item-list">${itemsHtml}</div>
                 ${historyHtml}
                 ${printButtons}
-                <div class="total-row">Total: Rp ${safeTotal.toLocaleString()}</div>
+                <div class="total-row">Total: Rp ${Number(String(order.total).replace(/[^0-9]/g, '')).toLocaleString()}</div>
                 <div class="actions">${buttonsHtml}</div>
             `;
             return div;
         }
 
-        // --- ACTIONS ---
         function updateStatus(key, status) {
             const updates = { status: status };
             const now = new Date().toISOString(); 
@@ -487,7 +437,6 @@
             });
         }
 
-        // UI HELPERS
         function showPage(pageId) {
             document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
             document.getElementById(pageId + '-page').style.display = 'block';
