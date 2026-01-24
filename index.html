@@ -441,10 +441,93 @@
         <button class="btn-close-final" onclick="closeHistory()">TUTUP</button>
     </div>
 </div>
+    
+    <div class="input-group">
+    <label>Metode Pembayaran*</label>
+    <select id="payment-method" class="item-note-input" style="font-size: 14px; height: 45px;">
+        <option value="tunai">Bayar Tunai di Kasir</option>
+        <option value="qris">QRIS / E-Wallet (Bayar Sekarang)</option>
+    </select>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
+    <script>
+    // Fungsi untuk mendapatkan parameter dari URL (misal: ?table=05)
+    function getTableFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('table');
+    }
+
+    // Cek saat halaman dimuat
+    window.onload = function() {
+        const tableFromURL = getTableFromURL();
+        if (tableFromURL) {
+            document.getElementById('table-number').value = tableFromURL;
+            document.getElementById('table-number').readOnly = true; // Kunci agar tidak diubah iseng
+        } else {
+            // Opsional: Beri peringatan jika akses tanpa scan QR
+            // alert("Silakan Scan QR Code yang ada di meja untuk memesan.");
+        }
+    };
+
+    function submitOrder() {
+        const tableNum = document.getElementById('table-number').value;
+        const custName = document.getElementById('customer-real-name').value;
+        const paymentMethod = document.getElementById('payment-method').value;
+        
+        if (!tableNum) { alert("Nomor meja tidak terdeteksi! Mohon scan ulang QR Meja."); return; }
+        if (!custName) { alert("Mohon isi Nama Kakak!"); return; }
+        if (cart.length === 0) return;
+
+        // ANTI-SPAM: Cek apakah ada pesanan yang masih 'new' di session ini
+        if (localStorage.getItem('pending_order_active') === 'true') {
+            alert("Selesaikan pembayaran pesanan sebelumnya dulu ya Kak, atau hubungi kasir.");
+            return;
+        }
+
+        let totalPrice = 0;
+        cart.forEach(item => totalPrice += (item.price * item.qty));
+
+        const orderData = {
+            tableNumber: tableNum,
+            customerName: custName,
+            paymentMethod: paymentMethod,
+            items: cart,
+            total: totalPrice,
+            timestamp: new Date().toISOString(),
+            // Logika Status: Jika tunai masuk ke 'new', jika digital masuk ke 'pending_payment'
+            status: (paymentMethod === 'tunai') ? 'new' : 'pending_payment' 
+        };
+
+        const newOrderRef = db.ref().child('orders').push();
+        newOrderRef.set(orderData)
+        .then(() => {
+            saveOrderToHistory(newOrderRef.key);
+            
+            // Tandai bahwa ada pesanan aktif agar tidak spam
+            localStorage.setItem('pending_order_active', 'true');
+
+            // Reset UI & Form
+            cart = []; 
+            updateCartUI();
+            closeCart();
+            document.getElementById('success-modal').style.display = 'flex';
+        })
+        .catch((error) => {
+            alert("Gagal mengirim: " + error.message);
+        });
+    }
+
+    // Fungsi tambahan untuk mereset anti-spam (dipanggil saat kasir menyelesaikan order)
+    function trackOrders() {
+        // ... (kode trackOrders lama Anda) ...
+        // Tambahkan logika: jika semua order di history sudah 'completed', reset localStorage
+        // localStorage.setItem('pending_order_active', 'false');
+    }
+</script>
+    
 <script>
     // --- KONFIGURASI FIREBASE ---
     const firebaseConfig = {
