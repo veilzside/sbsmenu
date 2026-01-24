@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SBS Kitchen - OPS</title>
+    <title>SBS Admin & Finance</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS TIDAK BERUBAH (SAMA SEPERTI SEBELUMNYA) */
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -17,52 +16,27 @@
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .menu-icon { font-size: 20px; }
 
-        .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
-        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .page-title { margin:0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
-        .header-actions { display: flex; gap: 15px; align-items: center; }
-        
-        #btn-audio { background: transparent; border: 2px solid #555; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: 0.3s; color: #555; }
-        #btn-audio.active { background: var(--green); border-color: var(--green); box-shadow: 0 0 10px var(--green); animation: none; color: #fff; }
-        #btn-audio.inactive { background: #330000; border-color: var(--red); color: var(--red); animation: pulse 2s infinite; }
+        .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; }
+        .page-title { margin:0 0 20px 0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
 
-        .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
-        .tab { padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; flex-shrink: 0; white-space: nowrap; }
-        .tab.active { opacity: 1; background: var(--card-bg); border-color: var(--accent); color: var(--accent); }
-        .badge { background: var(--red); color: white; padding: 2px 6px; border-radius: 50%; font-size: 10px; margin-left: 5px; vertical-align: top; }
-
-        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 80px; }
-        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 5px solid #555; animation: slideIn 0.3s ease; position: relative; }
-        .order-card.status-new { border-left-color: var(--red); }
-        .order-card.status-unpaid { border-left-color: var(--accent); }
-        .order-card.status-processing { border-left-color: var(--blue); }
-        .order-card.status-completed { border-left-color: var(--green); opacity: 0.8; }
-        .order-card.status-rejected { border-left-color: #555; opacity: 0.6; }
+        /* KARTU RIWAYAT (SAMA DENGAN DAPUR.HTML) */
+        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 50px; }
+        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 5px solid #555; position: relative; }
+        .order-card.status-completed { border-left-color: var(--green); }
+        .order-card.status-rejected { border-left-color: #555; opacity: 0.7; }
 
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .cust-name { font-size: 18px; font-weight: bold; color: #fff; display: block;}
-        .timer-badge { font-size: 14px; font-weight: bold; background: #000; padding: 4px 8px; border-radius: 5px; color: var(--accent); font-family: monospace; display: inline-block; margin-top: 5px;}
-        .time-label { font-size: 10px; color: #888; display: block; margin-bottom: 2px; }
-
-        .item-list { margin-bottom: 15px; max-height: 200px; overflow-y: auto; }
-        .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; align-items: center; }
-        .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: -2px; }
+        
+        /* DETAIL HARGA & NOTES */
+        .item-list { margin-bottom: 15px; max-height: 300px; overflow-y: auto; }
+        .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; align-items: flex-start; }
         .item-unit-price { font-size: 10px; color: #888; display: block; }
-        .btn-trash { background: none; border: none; color: #666; cursor: pointer; font-size: 14px; padding: 5px; }
-        .btn-trash:hover { color: var(--red); }
-        .total-row { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
+        .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: 2px; }
+        
+        .total-row { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--accent); border-top: 1px dashed #444; padding-top: 10px; }
 
-        /* BUTTON PRINT GROUP */
-        .btn-print-group { display: flex; gap: 5px; margin-bottom: 15px; border-top: 1px dashed #444; padding-top: 10px; }
-        .btn-print { flex: 1; background: transparent; border: 1px solid #555; color: #aaa; padding: 6px; border-radius: 8px; cursor: pointer; font-size: 12px; transition: 0.2s; font-weight: 600; }
-        .btn-print:active { background: #444; color: #fff; transform: scale(0.95); }
-
-        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #fff; font-size: 14px; }
-        .btn-green { background: var(--green); } .btn-red { background: var(--red); }
-        .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
-        .btn-full { grid-column: span 2; }
-
+        /* REKAP DURASI (METRICS) */
         .history-details { font-size: 11px; color: #aaa; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
         .history-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
         .h-val { color: #fff; font-weight: bold; }
@@ -72,86 +46,67 @@
         .h-time-val { font-weight: bold; color: #fff; }
         .rejected-label { color: var(--red); font-weight: 900; font-size: 20px; text-align: center; border: 2px solid var(--red); padding: 10px; transform: rotate(-5deg); margin-bottom: 10px; }
 
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
-        .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
-        .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
-        #custom-confirm-modal .modal-content, #alert-modal .modal-content { text-align: center; }
+        /* FINANCE & OTHERS */
+        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; margin-bottom: 20px; }
+        .stat-val { font-size: 32px; font-weight: bold; color: var(--green); }
+        .filters { margin-bottom: 20px; display: flex; gap: 10px; }
+        .form-input, .form-select { background: #15151a; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; font-family: 'Poppins'; }
+
+        /* LOG TABLE */
+        .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .log-table th { text-align: left; padding: 10px; background: #111; color: #888; }
+        .log-table td { padding: 10px; border-bottom: 1px solid #333; }
+        .log-time { color: var(--accent); font-weight: bold; font-size: 11px; }
 
         @media (max-width: 768px) {
-            body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
-            .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; background: #1a1a1a; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 9999; }
-            .brand { display: none; } 
-            .menu-item { flex-direction: column; gap: 3px; font-size: 10px; padding: 5px; margin: 0; background: transparent !important; border-radius: 0; justify-content: center; flex: 1; text-align: center; color: #666; }
-            .menu-item.active { color: var(--accent); }
-            .menu-icon { font-size: 20px; margin-bottom: 2px; display: block; }
-            .main { height: auto; overflow: visible; padding: 15px; padding-bottom: 80px; width: 100%; }
-            .status-tabs { position: sticky; top: 0; background: var(--bg-dark); z-index: 50; padding-top: 10px; margin-top: -10px; }
-            .orders-grid { grid-template-columns: 1fr; gap: 20px; padding-bottom: 0; } 
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 5px; border-right: none; border-top: 1px solid #333; }
+            .brand { display: none; }
+            .menu-item { flex-direction: column; font-size: 10px; gap: 2px; padding: 5px; background: transparent !important; flex: 1; justify-content: center; }
+            .main { padding-bottom: 80px; }
         }
     </style>
 </head>
-<body onclick="unlockAudio()">
+<body>
 
     <div class="sidebar">
-        <div class="brand">SBS KITCHEN</div>
-        <div class="menu-item active" onclick="showPage('orders')"><span class="menu-icon">📦</span><span>Pesanan</span></div>
-        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">🕒</span><span>Riwayat (Hari Ini)</span></div>
+        <div class="brand">SBS OWNER</div>
+        <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Keuangan</span></div>
+        <div class="menu-item" onclick="showPage('logs')"><span class="menu-icon">👁</span><span>Audit Log Stok</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat Pesanan</span></div>
     </div>
 
-    <div class="main" id="orders-page">
-        <div class="top-header">
-            <h2 class="page-title">PESANAN AKTIF</h2>
-            <div class="header-actions">
-                <button id="btn-audio" class="inactive" onclick="toggleAudio()">🔕</button>
-            </div>
+    <div class="main" id="finance-page">
+        <h2 class="page-title">LAPORAN OMZET</h2>
+        <div class="filters">
+            <select id="finance-mode" class="form-select" onchange="toggleFinanceFilter()">
+                <option value="daily">Harian</option>
+                <option value="monthly">Bulanan</option>
+            </select>
+            <input type="date" id="finance-date" class="form-input" onchange="calculateFinance()">
+            <input type="month" id="finance-month" class="form-input" style="display:none;" onchange="calculateFinance()">
         </div>
+        <div class="stat-card">
+            <div style="font-size:12px; color:#aaa; margin-bottom:5px;">TOTAL PENDAPATAN</div>
+            <div class="stat-val" id="main-stat-rev">Rp 0</div>
+        </div>
+    </div>
 
-        <div class="status-tabs">
-            <div class="tab active" onclick="filterTab('new')">BARU <span class="badge" id="badge-new">0</span></div>
-            <div class="tab" onclick="filterTab('unpaid')">BAYAR <span class="badge" id="badge-unpaid">0</span></div>
-            <div class="tab" onclick="filterTab('processing')">PROSES <span class="badge" id="badge-processing">0</span></div>
-        </div>
-        <div id="orders-grid" class="orders-grid"></div>
+    <div class="main" id="logs-page" style="display: none;">
+        <h2 class="page-title">LOG AKTIVITAS STOK</h2>
+        <table class="log-table">
+            <thead><tr><th width="120">Waktu</th><th>Aktivitas</th></tr></thead>
+            <tbody id="logs-tbody"></tbody>
+        </table>
     </div>
 
     <div class="main" id="history-page" style="display: none;">
-        <h2 class="page-title">RIWAYAT HARI INI</h2>
+        <h2 class="page-title">RIWAYAT PESANAN</h2>
+        <div class="filters">
+            <input type="date" id="history-date-picker" class="form-input" onchange="renderHistory()">
+        </div>
         <div id="history-grid" class="orders-grid"></div>
     </div>
-
-    <div id="edit-modal" class="modal">
-        <div class="modal-content">
-            <h3 style="margin-top:0;">Tambah Item Manual</h3>
-            <input type="text" id="extra-name" placeholder="Nama Item">
-            <input type="number" id="extra-price" placeholder="Harga (Rp)">
-            <div class="actions">
-                <button class="btn btn-grey" onclick="closeModal()">Batal</button>
-                <button class="btn btn-green" onclick="saveExtraItem()">Simpan</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="custom-confirm-modal" class="modal">
-        <div class="modal-content">
-            <h3 style="color:var(--accent); margin-top:0;">KONFIRMASI</h3>
-            <p id="confirm-msg">Apakah Anda yakin?</p>
-            <div class="actions" style="margin-top:20px;">
-                <button class="btn btn-grey" onclick="closeConfirm()">BATAL</button>
-                <button class="btn btn-red" id="btn-confirm-yes">YA, LANJUTKAN</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="alert-modal" class="modal">
-        <div class="modal-content">
-            <h3 style="color:var(--accent); margin-top:0;">INFO</h3>
-            <p id="alert-text">Pesan</p>
-            <button class="btn btn-green" onclick="document.getElementById('alert-modal').style.display='none'" style="width:100%;">OK</button>
-        </div>
-    </div>
-
-    <audio id="sound-new" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
-    <audio id="sound-nag" src="https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3" preload="auto"></audio>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -166,315 +121,152 @@
             messagingSenderId: "530098727952",
             appId: "1:530098727952:web:1bb3072d93be9564fbee95"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        
-        let allOrders = [];
-        let currentTab = 'new';
-        let editingOrderKey = null;
-        let audioUnlocked = false;
-        let confirmCallback = null;
-        const soundNew = document.getElementById('sound-new');
-        const soundNag = document.getElementById('sound-nag');
-        const btnAudio = document.getElementById('btn-audio');
+        let dbOrders = [];
 
-        function toggleAudio() {
-            if (!audioUnlocked) {
-                soundNew.play().then(() => {
-                    soundNew.pause(); soundNew.currentTime = 0;
-                    audioUnlocked = true;
-                    btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
-                }).catch(e => console.log(e));
-            } else {
-                audioUnlocked = false;
-                btnAudio.className = 'inactive'; btnAudio.innerHTML = "🔕";
-            }
-        }
+        document.getElementById('finance-date').valueAsDate = new Date();
+        document.getElementById('history-date-picker').valueAsDate = new Date();
 
-        function unlockAudio() {
-            if (!audioUnlocked) {
-                soundNew.play().then(() => {
-                    soundNew.pause(); soundNew.currentTime = 0;
-                    audioUnlocked = true;
-                    btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
-                }).catch(e => {});
-            }
-        }
-
-        db.ref('orders').on('value', (snapshot) => {
-            const data = snapshot.val();
-            const prevCount = allOrders.length;
-            allOrders = [];
-            if (data) Object.keys(data).forEach(key => allOrders.push({ id: key, ...data[key] }));
-            
-            if (allOrders.length > prevCount && audioUnlocked) {
-                if(allOrders.some(o => o.status === 'new')) soundNew.play().catch(e => {});
-            }
-            
-            allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            renderOrders();
-            updateBadges();
+        db.ref('orders').on('value', s => {
+            dbOrders = []; if(s.val()) Object.keys(s.val()).forEach(k=>dbOrders.push({id:k,...s.val()[k]}));
+            calculateFinance(); renderHistory();
         });
 
-        // --- NEW: ESC/POS GENERATOR (FUNGSI CETAK TANPA PINDAH APLIKASI) ---
-        function printDirect(orderId, type) {
-            const order = allOrders.find(o => o.id === orderId);
-            if (!order) return;
-
-            let queueNum = order.tableNumber ? order.tableNumber : (order.customer || '00');
-            const dateObj = new Date(order.timestamp);
-            const dateStr = dateObj.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
-            const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
-
-            // ESC/POS Commands (Hex Codes)
-            const ESC = "\x1B";
-            const GS = "\x1D";
-            const INIT = ESC + "@";
-            const ALIGN_CENTER = ESC + "a" + "\x01";
-            const ALIGN_LEFT = ESC + "a" + "\x00";
-            const BOLD_ON = ESC + "E" + "\x01";
-            const BOLD_OFF = ESC + "E" + "\x00";
-            const TEXT_DOUBLE = GS + "!" + "\x11"; // Double Height & Width
-            const TEXT_NORMAL = GS + "!" + "\x00";
-            const CUT = GS + "V" + "\x42" + "\x00";
-
-            let data = INIT;
-
-            if (type === 'invoice') {
-                // --- INVOICE LAYOUT ---
-                data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF;
-                data += "Jl. Mundu 8, Kota Malang\n";
-                data += "Jawa Timur, 65116\n";
-                data += "--------------------------------\n";
-                data += ALIGN_LEFT + "Queue: " + queueNum + "\n";
-                data += "Date : " + dateStr + " " + timeStr + "\n";
-                data += "ID   : " + order.id.slice(-6).toUpperCase() + "\n";
-                data += "--------------------------------\n";
-                
-                // Items
-                order.items.forEach(item => {
-                    let price = parseInt(item.price);
-                    let sub = item.qty * price;
-                    data += item.name + "\n";
-                    data += item.qty + " x " + price.toLocaleString('id-ID') + getSpaces(12) + sub.toLocaleString('id-ID') + "\n";
-                    if(item.note) data += "  (Note: " + item.note + ")\n";
-                });
-
-                data += "--------------------------------\n";
-                data += BOLD_ON + "TOTAL" + getSpaces(18) + parseInt(order.total).toLocaleString('id-ID') + "\n" + BOLD_OFF;
-                data += "--------------------------------\n";
-                data += ALIGN_CENTER + "Wifi: SBSkopi8\n";
-                data += "Terima Kasih!\n\n\n";
-            } else {
-                // --- CHECKER LAYOUT ---
-                data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER DAPUR\n" + TEXT_NORMAL + BOLD_OFF;
-                data += "\n" + ALIGN_LEFT + "QUEUE: " + queueNum + "\n";
-                data += "TIME : " + timeStr + "\n";
-                data += "--------------------------------\n";
-                
-                order.items.forEach(item => {
-                    data += BOLD_ON + item.qty + " x " + item.name + BOLD_OFF + "\n";
-                    if(item.note) data += "   [ " + item.note + " ]\n";
-                    data += "\n"; // Spasi antar item
-                });
-                data += "\n\n\n";
-            }
-
-            // Encode to Base64
-            const buffer = new TextEncoder().encode(data);
-            let binary = '';
-            const len = buffer.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(buffer[i]);
-            }
-            const base64Data = btoa(binary);
-
-            // SEND TO RAWBT (Mode: Base64 Command)
-            // Ini kuncinya: scheme "rawbt:base64" akan mengirim data mentah ke printer tanpa render UI
-            window.location.href = "rawbt:base64," + base64Data;
-        }
-
-        // Helper untuk spasi struk (Align Right manual)
-        function getSpaces(n) {
-            return " ".repeat(n > 0 ? n : 1); 
-        }
-
-        setInterval(() => {
-            updateLiveTimers();
-            checkNaggingAlarm();
-        }, 1000);
-
-        function checkNaggingAlarm() {
-            if (!audioUnlocked) return;
-            const now = Date.now();
-            if (allOrders.some(order => {
-                if (order.status !== 'new') return false;
-                const diff = (now - new Date(order.timestamp).getTime()) / 1000;
-                return diff > 120 && (diff % 120) < 1.5;
-            })) {
-                soundNag.currentTime = 0;
-                soundNag.play().catch(e => {});
-            }
-        }
-
-        function updateLiveTimers() {
-            document.querySelectorAll('.live-timer').forEach(el => {
-                const startTime = parseInt(el.getAttribute('data-start'));
-                if (!startTime || isNaN(startTime)) { el.innerText = "--:--"; return; }
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                if (elapsed > 86400) { el.innerText = "> 24h"; return; }
-                const min = Math.floor(elapsed / 60);
-                const sec = elapsed % 60;
-                el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
+        db.ref('activity_logs').limitToLast(50).on('value', snap => {
+            const tbody = document.getElementById('logs-tbody');
+            tbody.innerHTML = '';
+            const logs = [];
+            if(snap.val()) Object.keys(snap.val()).forEach(k => logs.push(snap.val()[k]));
+            logs.sort((a,b) => b.timestamp - a.timestamp);
+            logs.forEach(log => {
+                tbody.innerHTML += `<tr><td><div class="log-time">${log.timeString || '-'}</div></td><td><b>${log.action}</b><br><small>${log.details}</small></td></tr>`;
             });
-        }
+        });
 
-        function renderOrders() {
-            const grid = document.getElementById('orders-grid');
-            const historyGrid = document.getElementById('history-grid');
-            grid.innerHTML = '';
-            historyGrid.innerHTML = '';
-            const today = new Date().toDateString();
-
-            allOrders.forEach(order => {
-                const card = createCard(order);
-                const orderDate = new Date(order.completedAt || order.timestamp).toDateString();
-                
-                if (order.status === 'completed' || order.status === 'rejected' || order.status === 'done') {
-                    if (orderDate === today) {
-                        historyGrid.appendChild(card);
-                    }
-                } else {
-                    if (order.status === currentTab) grid.appendChild(card);
-                }
-            });
-            updateLiveTimers();
-        }
-
-        function createCard(order) {
-            let displayName = order.customer || "Pelanggan";
-            if (order.tableNumber) {
-                displayName = `MEJA ${order.tableNumber}`;
-                if (order.customerName) displayName += ` - ${order.customerName.toUpperCase()}`;
-            } else if (order.customer && !isNaN(order.customer)) {
-                displayName = "MEJA " + order.customer;
-            }
-
+        // --- FUNGSI CREATE CARD DETIL (IDENTIK DENGAN DAPUR.HTML) ---
+        function createHistoryCard(order) {
+            let displayName = isNaN(order.customer) ? order.customer : "MEJA " + order.customer;
+            
             const created = new Date(order.timestamp).getTime();
             const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : 0;
             const paid = order.paidAt ? new Date(order.paidAt).getTime() : 0;
             const completed = order.completedAt ? new Date(order.completedAt).getTime() : 0;
 
-            let timerStart = 0;
-            if(order.status === 'new') timerStart = created;
-            else if (order.status === 'unpaid') timerStart = accepted;
-            else if (order.status === 'processing') timerStart = paid;
-
             const div = document.createElement('div');
             div.className = `order-card status-${order.status}`;
             
-            let itemsHtml = (order.items || []).map((item, idx) => {
+            // Detail Items (Termasuk Harga Satuan & Notes)
+            let itemsHtml = (order.items || []).map(item => {
                 const qty = parseInt(item.qty);
                 const price = parseInt(item.price);
-                const subtotal = qty * price;
                 const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-                const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
-                return `<div class="item-row"><div style="flex:1;"><span>${qty}x ${item.name}</span>${unitPriceHtml}${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}</div><div style="display:flex; align-items:center;"><span style="font-weight:bold;">${subtotal.toLocaleString()}</span>${trashBtn}</div></div>`;
+                return `
+                <div class="item-row">
+                    <div style="flex:1;">
+                        <span>${qty}x ${item.name}</span>
+                        ${unitPriceHtml}
+                        ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
+                    </div>
+                    <span style="font-weight:bold;">${(qty * price).toLocaleString()}</span>
+                </div>`;
             }).join('');
 
-            let historyHtml = '';
-            if(order.status === 'completed' || order.status === 'rejected') {
-                const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
-                const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
-                const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
-                const durTotal = completed > 0 ? Math.floor((completed - created)/1000) : 0;
-                const fmtDur = (s) => { if (s <= 0) return "-"; const m = Math.floor(s/60); const sc = s%60; return m > 0 ? `${m}m ${sc}s` : `${sc}s`; };
-                const timeOut = completed > 0 ? new Date(completed).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-';
-                historyHtml = `<div class="history-details"><div class="history-row"><span>Masak:</span> <span class="h-val">${fmtDur(durMasak)}</span></div><div style="border-top:1px dashed #666; margin-top:5px; padding-top:2px;" class="history-row"><span>TOTAL DURASI:</span> <span class="h-val" style="color:var(--accent); font-size:14px;">${fmtDur(durTotal)}</span></div></div>`;
-            }
+            // Perhitungan Durasi
+            const fmtDur = (s) => {
+                if (s <= 0) return "-";
+                const m = Math.floor(s/60);
+                const sc = s%60;
+                return m > 0 ? `${m}m ${sc}s` : `${sc}s`;
+            };
 
-            const printButtons = `
-                <div class="btn-print-group">
-                    <button class="btn-print" onclick="printDirect('${order.id}', 'checker')">🖨 Checker</button>
-                    <button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">🧾 Invoice</button>
+            const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
+            const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
+            const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
+            const durTotal = completed > 0 ? Math.floor((completed - created)/1000) : 0;
+
+            const timeIn = new Date(created).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const timeOut = completed > 0 ? new Date(completed).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-';
+
+            let historyHtml = `
+                <div class="history-details">
+                    <div class="history-row"><span>Respon:</span> <span class="h-val">${fmtDur(durRespon)}</span></div>
+                    <div class="history-row"><span>Bayar:</span> <span class="h-val">${fmtDur(durBayar)}</span></div>
+                    <div class="history-row"><span>Masak:</span> <span class="h-val">${fmtDur(durMasak)}</span></div>
+                    <div style="border-top:1px dashed #666; margin-top:5px; padding-top:2px;" class="history-row">
+                        <span>TOTAL DURASI:</span> <span class="h-val" style="color:var(--accent);">${fmtDur(durTotal)}</span>
+                    </div>
                 </div>
             `;
 
-            let buttonsHtml = '';
-            if (order.status === 'new') buttonsHtml = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button><button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button><button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">Terima</button>`;
-            else if (order.status === 'unpaid') buttonsHtml = `<button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button><button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>`;
-            else if (order.status === 'processing') buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>`;
-            else if(order.status !== 'rejected') buttonsHtml = `<div style="text-align:center; color:var(--green); font-weight:bold;">SELESAI</div>`;
+            if(order.status === 'rejected') historyHtml = `<div class="rejected-label">DITOLAK ❌</div>`;
+
+            let rawTotal = String(order.total).replace(/[^0-9]/g, '');
+            const safeTotal = Number(rawTotal) || 0;
 
             div.innerHTML = `
-                <div class="card-header"><div><span class="cust-name">${displayName}</span><small style="color:#666">...${order.id.slice(-4)}</small></div><div>${order.status.includes('completed') ? '' : `<span class="timer-badge live-timer" data-start="${timerStart}">--:--</span>`}</div></div>
+                <div class="card-header">
+                    <div><span class="cust-name">${displayName}</span><small style="color:#666">...${order.id.slice(-4)}</small></div>
+                    <div class="history-compact">
+                        <span class="h-date">${new Date(completed || created).toLocaleDateString('id-ID', {day:'numeric', month:'short'})}</span>
+                        <div class="h-times">In: ${timeIn} | Out: <span class="h-time-val" style="color:var(--green)">${timeOut}</span></div>
+                    </div>
+                </div>
                 <div class="item-list">${itemsHtml}</div>
                 ${historyHtml}
-                ${printButtons}
-                <div class="total-row">Total: Rp ${Number(String(order.total).replace(/[^0-9]/g, '')).toLocaleString()}</div>
-                <div class="actions">${buttonsHtml}</div>
+                <div class="total-row">TOTAL: Rp ${safeTotal.toLocaleString()}</div>
             `;
             return div;
         }
 
-        function updateStatus(key, status) {
-            const updates = { status: status };
-            const now = new Date().toISOString(); 
-            if(status === 'unpaid') updates.acceptedAt = now; 
-            if(status === 'processing') updates.paidAt = now; 
-            if(status === 'completed' || status === 'rejected') updates.completedAt = now; 
-            db.ref('orders/' + key).update(updates);
+        function showPage(p) {
+            document.querySelectorAll('.main').forEach(e=>e.style.display='none');
+            document.getElementById(p+'-page').style.display='block';
+            document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active'));
+            const idx = p === 'finance' ? 0 : (p === 'logs' ? 1 : 2);
+            document.querySelectorAll('.menu-item')[idx].classList.add('active');
+            if(p==='finance') calculateFinance();
         }
 
-        function confirmReject(key) { showConfirm("Yakin tolak pesanan ini?", () => updateStatus(key, 'rejected')); }
+        function calculateFinance() {
+            const mode = document.getElementById('finance-mode').value;
+            let totalRev = 0;
+            let targetDate, targetMonth;
+            if (mode === 'daily') targetDate = new Date(document.getElementById('finance-date').value);
+            else { const val = document.getElementById('finance-month').value; if(val) targetMonth = val; }
 
-        function deleteOrderItem(orderKey, itemIndex) {
-            showConfirm("Hapus item ini?", () => {
-                const order = allOrders.find(o => o.id === orderKey);
-                const newItems = [...order.items];
-                const removed = newItems.splice(itemIndex, 1)[0];
-                let currentTotal = parseInt(String(order.total).replace(/[^0-9]/g, '')) || 0;
-                db.ref('orders/' + orderKey).update({ items: newItems, total: currentTotal - (removed.price * removed.qty) });
+            dbOrders.forEach(o => {
+                if (o.status !== 'completed' && o.status !== 'done') return;
+                const oDate = new Date(o.completedAt || o.timestamp);
+                let raw = String(o.total).replace(/[^0-9]/g, '');
+                let total = Number(raw) || 0;
+                let match = false;
+                if (mode === 'daily' && targetDate && oDate.toDateString() === targetDate.toDateString()) match = true;
+                if (mode === 'monthly' && targetMonth && oDate.toISOString().slice(0,7) === targetMonth) match = true;
+                if(match) totalRev += total;
             });
+            document.getElementById('main-stat-rev').innerText = "Rp " + totalRev.toLocaleString('id-ID');
         }
 
-        function showPage(pageId) {
-            document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
-            document.getElementById(pageId + '-page').style.display = 'block';
-            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-            if(pageId === 'orders') document.querySelectorAll('.menu-item')[0].classList.add('active');
-            if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
+        function toggleFinanceFilter() {
+            const m = document.getElementById('finance-mode').value;
+            document.getElementById('finance-date').style.display = m === 'daily' ? 'block' : 'none';
+            document.getElementById('finance-month').style.display = m === 'monthly' ? 'block' : 'none';
+            calculateFinance();
         }
 
-        function filterTab(status) {
-            currentTab = status;
-            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            renderOrders();
-        }
-
-        function updateBadges() {
-            document.getElementById('badge-new').innerText = allOrders.filter(o => o.status === 'new').length;
-            document.getElementById('badge-unpaid').innerText = allOrders.filter(o => o.status === 'unpaid').length;
-            document.getElementById('badge-processing').innerText = allOrders.filter(o => o.status === 'processing').length;
-        }
-
-        function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
-        function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
-        document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
-
-        function openEditModal(k) { editingOrderKey = k; document.getElementById('edit-modal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
-        
-        function saveExtraItem() {
-            const n = document.getElementById('extra-name').value;
-            const p = parseInt(document.getElementById('extra-price').value);
-            if(!n || !p) return;
-            const o = allOrders.find(x => x.id === editingOrderKey);
-            const items = [...(o.items||[]), { name: n, price: p, qty: 1, note: 'Manual' }];
-            const tot = (Number(String(o.total).replace(/[^0-9]/g, '')) || 0) + p;
-            db.ref('orders/' + editingOrderKey).update({ items: items, total: tot }).then(() => closeModal());
+        function renderHistory() {
+            const grid = document.getElementById('history-grid');
+            grid.innerHTML = '';
+            const filterDate = new Date(document.getElementById('history-date-picker').value).toDateString();
+            const sorted = [...dbOrders].sort((a,b) => (b.completedAt ? new Date(b.completedAt) : 0) - (a.completedAt ? new Date(a.completedAt) : 0));
+            sorted.forEach(order => {
+                if (['completed', 'rejected', 'done'].includes(order.status)) {
+                    if (new Date(order.completedAt || order.timestamp).toDateString() === filterDate) {
+                        grid.appendChild(createHistoryCard(order));
+                    }
+                }
+            });
         }
     </script>
 </body>
