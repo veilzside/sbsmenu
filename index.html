@@ -464,26 +464,36 @@
         appId: "1:530098727952:web:1bb3072d93be9564fbee95"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.database();
 
     // --- LOGIC CART ---
     let cart = [];
 
-    // UPDATE: DETEKSI URL PARAMETER (?table=5)
+    // FUNGSI CEK URL (?table=5)
     function getTableFromURL() {
         const params = new URLSearchParams(window.location.search);
         return params.get('table');
     }
 
-    // UPDATE: KUNCI KOLOM MEJA SAAT LOAD
+    // SAAT PAGE LOAD
     window.onload = function() {
         const tableFromURL = getTableFromURL();
+        const tableInput = document.getElementById('table-number');
+        
         if (tableFromURL) {
-            const tableInput = document.getElementById('table-number');
+            // Jika ada scan QR (?table=5), isi otomatis dan kunci
             tableInput.value = tableFromURL;
             tableInput.readOnly = true;
-            tableInput.style.backgroundColor = "#eee"; // Visual feedback terkunci
+            tableInput.style.backgroundColor = "#eee"; 
+            tableInput.placeholder = "Meja " + tableFromURL;
+        } else {
+            // Jika buka link biasa, biarkan bisa diketik manual
+            tableInput.readOnly = false;
+            tableInput.style.backgroundColor = "#fff";
+            tableInput.placeholder = "Ketik Nomor Meja...";
         }
     };
 
@@ -495,6 +505,7 @@
             cart.push({ name: name, price: price, qty: 1, note: '' });
         }
         updateCartUI();
+        // Efek getar HP saat klik (opsional)
         if (navigator.vibrate) navigator.vibrate(50);
     }
 
@@ -538,7 +549,7 @@
                         <button onclick="changeQty(${index}, 1)">+</button>
                     </div>
                     <input type="text" class="item-note-input" 
-                           placeholder="Catatan (Misal: Less ice, pedas...)" 
+                           placeholder="Catatan..." 
                            value="${item.note}" 
                            onchange="updateNote(${index}, this.value)">
                 </div>
@@ -566,36 +577,30 @@
         document.getElementById('cart-modal').style.display = 'none';
     }
 
-    // --- SUBMIT ORDER WITH ANTI-SPAM & PAYMENT METHOD ---
+    // --- FUNGSI KIRIM PESANAN ---
     function submitOrder() {
         const tableNum = document.getElementById('table-number').value;
         const custName = document.getElementById('customer-real-name').value;
         const custPhone = document.getElementById('customer-phone').value;
         const paymentMethod = document.getElementById('payment-method').value;
 
-        if (!tableNum) { alert("Nomor meja belum diisi! Scan QR Meja atau isi manual."); return; }
+        // Validasi
+        if (!tableNum) { alert("Mohon isi Nomor Meja!"); return; }
         if (!custName) { alert("Mohon isi Nama Kakak!"); return; }
         if (cart.length === 0) return;
-
-        // ANTI-SPAM CHECK
-        if (localStorage.getItem('pending_order_active') === 'true') {
-            alert("Harap selesaikan pembayaran pesanan sebelumnya sebelum memesan lagi, atau hubungi kasir.");
-            return;
-        }
 
         let totalPrice = 0;
         cart.forEach(item => totalPrice += (item.price * item.qty));
 
-        // Tentukan Status Awal
-        // Jika Tunai -> 'new' (Masuk tab BARU di Dapur)
-        // Jika QRIS -> 'pending_payment' (Bisa masuk tab lain atau tetap 'new' dgn tanda khusus)
+        // Jika metode Tunai -> status 'new' (muncul di tab BARU)
+        // Jika QRIS -> status 'pending_payment' (muncul di tab BAYAR/Pending)
         let initialStatus = (paymentMethod === 'tunai') ? 'new' : 'pending_payment';
 
         const orderData = {
             tableNumber: tableNum,
             customerName: custName,
             customerPhone: custPhone,
-            paymentMethod: paymentMethod, // Simpan metode bayar
+            paymentMethod: paymentMethod,
             items: cart,
             total: totalPrice,
             timestamp: new Date().toISOString(),
@@ -607,61 +612,100 @@
         .then(() => {
             saveOrderToHistory(newOrderRef.key);
             
-            // AKTIFKAN ANTI-SPAM FLAG
-            localStorage.setItem('pending_order_active', 'true');
-
-            // Reset UI
+            // Bersihkan Keranjang
             cart = []; 
             updateCartUI();
             closeCart();
-            // Kosongkan form input kecuali meja jika terkunci
+            
+            // Reset Form (kecuali meja jika scan QR)
             if(!document.getElementById('table-number').readOnly) {
                 document.getElementById('table-number').value = '';
             }
             document.getElementById('customer-real-name').value = '';
-            document.getElementById('customer-phone').value = '';
             
-            document.getElementById('success-modal').style.display = 'flex';
+            // TAMPILKAN MODAL SESUAI METODE BAYAR
+            if(paymentMethod === 'qris') {
+                showQRISModal(totalPrice);
+            } else {
+                showSuccessModal();
+            }
         })
         .catch((error) => {
             alert("Gagal mengirim: " + error.message);
         });
     }
 
+    // --- MODAL SUKSES (TUNAI) ---
+    function showSuccessModal() {
+        const modal = document.getElementById('success-modal');
+        // Ganti isi modal untuk Tunai
+        modal.querySelector('.modal-content').innerHTML = `
+            <div class="success-icon">✔</div>
+            <div class="modal-header" style="border:none; margin-bottom:5px; text-align:center;">PESANAN DITERIMA!</div>
+            <div class="success-msg">
+                Mohon lakukan pembayaran di <b>KASIR</b><br>
+                agar pesanan segera diproses.
+            </div>
+            <button class="btn-close-final" onclick="closeSuccess()">OK, MENGERTI</button>
+        `;
+        modal.style.display = 'flex';
+    }
+
+    // --- MODAL QRIS (BARU) ---
+    function showQRISModal(amount) {
+        const modal = document.getElementById('success-modal');
+        // Ganti isi modal untuk QRIS (Tampilkan Gambar)
+        // GANTI 'img/qris_dummy.jpg' dengan URL gambar QRIS asli tokomu nanti
+        modal.querySelector('.modal-content').innerHTML = `
+            <div class="modal-header" style="border:none; text-align:center; font-size:24px;">SCAN QRIS</div>
+            <div style="text-align:center; margin-bottom:15px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" 
+                     alt="QRIS Code" style="width:200px; height:200px; border:2px solid #000; padding:5px;">
+                <br>
+                <div style="font-weight:bold; font-size:18px; margin-top:10px;">Rp ${amount.toLocaleString('id-ID')}</div>
+            </div>
+            <div class="success-msg" style="font-size:12px;">
+                1. Scan QR di atas.<br>
+                2. Tunjukkan bukti transfer ke Kasir untuk verifikasi.<br>
+                3. Pesanan akan otomatis diproses.
+            </div>
+            <button class="btn-close-final" onclick="closeSuccess()">SAYA SUDAH BAYAR</button>
+        `;
+        modal.style.display = 'flex';
+    }
+
     function closeSuccess() {
         document.getElementById('success-modal').style.display = 'none';
     }
 
-    // --- SESSION & TRACKING LOGIC ---
-    
+    // --- RIWAYAT & TRACKING ---
     function saveOrderToHistory(orderId) {
         let history = JSON.parse(localStorage.getItem('sbs_order_history')) || [];
         history.push(orderId);
         localStorage.setItem('sbs_order_history', JSON.stringify(history));
-        trackOrders(); 
+        trackOrders();
     }
 
     function trackOrders() {
         let history = JSON.parse(localStorage.getItem('sbs_order_history')) || [];
+        
+        // Cek Legacy
         const legacyOrder = localStorage.getItem('myActiveOrder');
-        if(legacyOrder && !history.includes(legacyOrder)) {
-            history.push(legacyOrder);
-        }
-
-        if (history.length === 0) {
-            localStorage.setItem('pending_order_active', 'false'); // Reset flag jika history kosong
-            return;
-        }
+        if(legacyOrder && !history.includes(legacyOrder)) history.push(legacyOrder);
 
         const trackerUI = document.getElementById('status-tracker');
         const trackerSummary = document.getElementById('tracker-summary');
         const historyContainer = document.getElementById('history-container');
         
+        if (history.length === 0) {
+            trackerUI.style.display = 'none';
+            return;
+        }
+
         trackerUI.style.display = 'block';
         historyContainer.innerHTML = ''; 
-        
+
         let activeCount = 0;
-        let anyPending = false;
 
         history.forEach(orderId => {
             db.ref('orders/' + orderId).on('value', (snapshot) => {
@@ -670,16 +714,15 @@
                     let statusText = 'MENUNGGU';
                     let color = '#888';
 
-                    if(data.status === 'new') { statusText = 'MENUNGGU KONFIRMASI'; color = '#888'; activeCount++; anyPending = true; }
-                    else if(data.status === 'pending_payment') { statusText = 'MENUNGGU PEMBAYARAN'; color = '#e67e22'; activeCount++; anyPending = true; }
-                    else if(data.status === 'unpaid') { statusText = 'DITERIMA / BELUM LUNAS'; color = '#FF6600'; activeCount++; anyPending = true; }
+                    // Logika Status & Warna
+                    if(data.status === 'new') { statusText = 'MENUNGGU KONFIRMASI'; color = '#888'; activeCount++; }
+                    else if(data.status === 'pending_payment') { statusText = 'MENUNGGU PEMBAYARAN'; color = '#e67e22'; activeCount++; }
+                    else if(data.status === 'unpaid') { statusText = 'DITERIMA / BELUM LUNAS'; color = '#FF6600'; activeCount++; }
                     else if(data.status === 'processing') { statusText = 'SEDANG DISIAPKAN'; color = '#3498db'; activeCount++; }
                     else if(data.status === 'completed') { statusText = 'SELESAI / DIANTAR'; color = '#2ecc71'; }
                     else if(data.status === 'rejected') { statusText = 'DITOLAK / KOSONG'; color = 'red'; }
 
-                    // Render Kartu History
-                    const itemNames = data.items.map(i => i.name).join(', ');
-                    
+                    // Cegah duplikasi kartu di list
                     let card = document.getElementById('card-' + orderId);
                     if(!card) {
                         card = document.createElement('div');
@@ -688,45 +731,38 @@
                         historyContainer.appendChild(card);
                     }
 
+                    // Render Isi Kartu
+                    const itemNames = (data.items || []).map(i => i.name).join(', ');
                     card.innerHTML = `
                         <div class="history-header">
                             <span>Meja: ${data.tableNumber || '-'}</span>
-                            <span>${data.customerName || 'Pelanggan'}</span>
+                            <span>${data.paymentMethod === 'qris' ? 'QRIS' : 'TUNAI'}</span>
                         </div>
                         <div class="history-status" style="color:${color}">${statusText}</div>
                         <div class="history-items">${itemNames}</div>
                         <div style="font-size:10px; color:#aaa; margin-top:5px;">ID: ...${orderId.slice(-4)}</div>
                     `;
+                    
+                    // Update Text Bar Atas
+                    if (activeCount > 0) {
+                        trackerSummary.innerText = activeCount + " PESANAN AKTIF";
+                        trackerUI.style.background = "#1A1A1A"; 
+                    } else {
+                        trackerSummary.innerText = "RIWAYAT PESANAN";
+                        trackerUI.style.background = "#2ecc71"; 
+                    }
                 }
             });
         });
-
-        // UPDATE ANTI-SPAM FLAG BERDASARKAN STATUS REAL-TIME
-        // Jika tidak ada lagi pesanan yang 'pending' atau 'new', buka kunci spam
-        setTimeout(() => {
-             // Reset logic sederhana: Jika semua pesanan completed/rejected, allow order again
-             // Namun flag 'anyPending' di atas dihitung asinkronus (dalam callback DB).
-             // Untuk amannya, kita biarkan logic submitOrder mengecek localStorage, 
-             // dan pengguna bisa menghapus history manual jika stuck (clear cache).
-             // Idealnya di sini kita update localStorage jika activeCount == 0.
-        }, 1000);
-        
-        // Update Teks Bar Atas
-        // (Kode ini perlu penyesuaian karena berjalan di dalam loop asinkronus di atas)
-        // Sederhananya biarkan user melihat status terakhir.
     }
 
-    function openHistory() {
-        document.getElementById('history-modal').style.display = 'flex';
-    }
+    function openHistory() { document.getElementById('history-modal').style.display = 'flex'; }
+    function closeHistory() { document.getElementById('history-modal').style.display = 'none'; }
 
-    function closeHistory() {
-        document.getElementById('history-modal').style.display = 'none';
-    }
-
+    // Start tracking
     trackOrders();
 
-    // --- TAB & SWIPE LOGIC ---
+    // --- TAB & SWIPE & SEARCH LOGIC (TIDAK BERUBAH) ---
     function openT(e, n) {
         const searchInput = document.getElementById('menuSearch');
         if(searchInput && searchInput.value !== '') { clearSearchInput(); }
