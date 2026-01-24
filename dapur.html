@@ -295,7 +295,7 @@
             }
 
             // Send to RawBT WebSocket
-            const socket = new WebSocket("ws://localhost:40213");
+            const socket = new WebSocket("ws://localhost:9100");
             socket.onopen = () => {
                 socket.send(JSON.stringify({ command: "print", html: html }));
                 socket.close();
