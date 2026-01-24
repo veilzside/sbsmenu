@@ -3,36 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SBS KITCHEN - OPS</title>
+    <title>SBS Kitchen - OPS</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        /* CSS SAMA PERSIS DENGAN FILE ASLI */
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* SIDEBAR & NAV */
-        .sidebar { width: 240px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
-        .brand { font-family: 'Bebas Neue'; font-size: 36px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
+        .sidebar { width: 260px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
+        .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
         .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .menu-icon { font-size: 20px; }
 
-        /* MAIN CONTENT */
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
         .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .page-title { margin:0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
+        .header-actions { display: flex; gap: 15px; align-items: center; }
         
         #btn-audio { background: transparent; border: 2px solid #555; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: 0.3s; color: #555; }
-        #btn-audio.active { background: var(--green); border-color: var(--green); box-shadow: 0 0 10px var(--green); color: #fff; }
+        #btn-audio.active { background: var(--green); border-color: var(--green); box-shadow: 0 0 10px var(--green); animation: none; color: #fff; }
         #btn-audio.inactive { background: #330000; border-color: var(--red); color: var(--red); animation: pulse 2s infinite; }
 
-        /* TABS */
         .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
         .tab { padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; flex-shrink: 0; white-space: nowrap; }
         .tab.active { opacity: 1; background: var(--card-bg); border-color: var(--accent); color: var(--accent); }
         .badge { background: var(--red); color: white; padding: 2px 6px; border-radius: 50%; font-size: 10px; margin-left: 5px; vertical-align: top; }
 
-        /* CARDS */
         .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 80px; }
         .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 5px solid #555; animation: slideIn 0.3s ease; position: relative; }
         .order-card.status-new { border-left-color: var(--red); }
@@ -46,27 +44,35 @@
         .timer-badge { font-size: 14px; font-weight: bold; background: #000; padding: 4px 8px; border-radius: 5px; color: var(--accent); font-family: monospace; display: inline-block; margin-top: 5px;}
         .time-label { font-size: 10px; color: #888; display: block; margin-bottom: 2px; }
 
-        /* LIST ITEM */
         .item-list { margin-bottom: 15px; max-height: 200px; overflow-y: auto; }
         .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; align-items: center; }
         .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: -2px; }
+        .item-unit-price { font-size: 10px; color: #888; display: block; }
         .btn-trash { background: none; border: none; color: #666; cursor: pointer; font-size: 14px; padding: 5px; }
         .btn-trash:hover { color: var(--red); }
         .total-row { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
 
-        /* BUTTONS */
+        /* HISTORY DETAIL CSS (WAJIB ADA) */
+        .history-details { font-size: 11px; color: #aaa; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+        .history-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+        .h-val { color: #fff; font-weight: bold; }
+        .history-compact { text-align: right; }
+        .h-date { display: block; font-size: 10px; color: #888; margin-bottom: 2px; }
+        .h-times { font-size: 11px; color: #ccc; }
+        .h-time-val { font-weight: bold; color: #fff; }
+        .rejected-label { color: var(--red); font-weight: 900; font-size: 20px; text-align: center; border: 2px solid var(--red); padding: 10px; transform: rotate(-5deg); margin-bottom: 10px; }
+
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #fff; font-size: 14px; }
         .btn-green { background: var(--green); } .btn-red { background: var(--red); }
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
         .btn-full { grid-column: span 2; }
 
-        /* MODAL */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
         .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
+        #custom-confirm-modal .modal-content, #alert-modal .modal-content { text-align: center; }
 
-        /* MOBILE */
         @media (max-width: 768px) {
             body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
             .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; background: #1a1a1a; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 9999; }
@@ -86,15 +92,9 @@
 
     <div class="sidebar">
         <div class="brand">SBS KITCHEN</div>
-        <div class="menu-item active" onclick="showPage('orders')">
-            <span class="menu-icon">📦</span>
-            <span>Pesanan</span>
+        <div class="menu-item active" onclick="showPage('orders')"><span class="menu-icon">📦</span><span>Pesanan</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">🕒</span><span>Riwayat (Hari Ini)</span></div>
         </div>
-        <div class="menu-item" onclick="showPage('history')">
-            <span class="menu-icon">🕒</span>
-            <span>Riwayat</span>
-        </div>
-    </div>
 
     <div class="main" id="orders-page">
         <div class="top-header">
@@ -155,7 +155,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
-        // Gunakan firebaseConfig yang sama dengan sebelumnya
         const firebaseConfig = {
             apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
             authDomain: "sbs-menu-d1611.firebaseapp.com",
@@ -206,126 +205,271 @@
             const prevCount = allOrders.length;
             allOrders = [];
             if (data) Object.keys(data).forEach(key => allOrders.push({ id: key, ...data[key] }));
+            
             if (allOrders.length > prevCount && audioUnlocked) {
                 if(allOrders.some(o => o.status === 'new')) soundNew.play().catch(e => {});
             }
+            
             allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             renderOrders();
             updateBadges();
         });
 
+        // LIVE TIMER UPDATE
         setInterval(() => {
-            document.querySelectorAll('.live-timer').forEach(el => {
-                const start = parseInt(el.getAttribute('data-start'));
-                if (!start) return;
-                const elapsed = Math.floor((Date.now() - start) / 1000);
-                const m = Math.floor(elapsed / 60);
-                const s = elapsed % 60;
-                el.innerText = `⏱ ${m}:${s < 10 ? '0'+s : s}`;
-            });
+            updateLiveTimers();
+            checkNaggingAlarm();
         }, 1000);
+
+        function checkNaggingAlarm() {
+            if (!audioUnlocked) return;
+            const now = Date.now();
+            if (allOrders.some(order => {
+                if (order.status !== 'new') return false;
+                const diff = (now - new Date(order.timestamp).getTime()) / 1000;
+                return diff > 120 && (diff % 120) < 1.5;
+            })) {
+                soundNag.currentTime = 0;
+                soundNag.play().catch(e => {});
+            }
+        }
+
+        function updateLiveTimers() {
+            document.querySelectorAll('.live-timer').forEach(el => {
+                const startTime = parseInt(el.getAttribute('data-start'));
+                if (!startTime || isNaN(startTime)) { el.innerText = "--:--"; return; }
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                if (elapsed > 86400) { el.innerText = "> 24h"; return; }
+                const min = Math.floor(elapsed / 60);
+                const sec = elapsed % 60;
+                el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
+            });
+        }
 
         function renderOrders() {
             const grid = document.getElementById('orders-grid');
             const historyGrid = document.getElementById('history-grid');
             grid.innerHTML = '';
             historyGrid.innerHTML = '';
+            
+            // Default Kitchen View: History Hari Ini
             const today = new Date().toDateString();
 
             allOrders.forEach(order => {
                 const card = createCard(order);
                 const orderDate = new Date(order.completedAt || order.timestamp).toDateString();
-                if (['completed', 'rejected'].includes(order.status)) {
-                    if (orderDate === today) historyGrid.appendChild(card);
+                
+                if (order.status === 'completed' || order.status === 'rejected' || order.status === 'done') {
+                    if (orderDate === today) {
+                        historyGrid.appendChild(card);
+                    }
                 } else {
                     if (order.status === currentTab) grid.appendChild(card);
                 }
             });
+            updateLiveTimers();
         }
 
+        // --- FUNGSI CREATE CARD ORIGINAL (LENGKAP) ---
         function createCard(order) {
-            let name = !isNaN(order.customer) ? "MEJA " + order.customer : order.customer;
+            let displayName = order.customer;
+            if(!isNaN(order.customer) && order.customer.toString().trim() !== '') {
+                displayName = "MEJA " + order.customer;
+            }
+
             const created = new Date(order.timestamp).getTime();
+            const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : 0;
             const paid = order.paidAt ? new Date(order.paidAt).getTime() : 0;
-            let timerStart = (order.status === 'processing') ? paid : created;
+            const completed = order.completedAt ? new Date(order.completedAt).getTime() : 0;
+
+            let displayTimeHTML = "";
+            let timerStart = 0;
+
+            if(order.status === 'new') timerStart = created;
+            else if (order.status === 'unpaid') timerStart = accepted;
+            else if (order.status === 'processing') timerStart = paid;
+
+            const entryDate = new Date(timerStart || created);
+            const entryTimeStr = entryDate.getHours() + ":" + (entryDate.getMinutes()<10?'0':'') + entryDate.getMinutes();
 
             const div = document.createElement('div');
-            div.className = `order-card status-${order.status}`;
+            let statusClass = order.status;
+            div.className = `order-card status-${statusClass}`;
             
-            const items = (order.items || []).map((item, idx) => `
-                <div class="item-row">
-                    <span>${item.qty}x ${item.name} ${item.note ? `<br><span class="item-note">📝 ${item.note}</span>` : ''}</span>
-                    <div style="display:flex; align-items:center;">
-                        <b>${(item.qty * item.price).toLocaleString()}</b>
-                        ${['completed','rejected'].includes(order.status) ? '' : `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>`}
-                    </div>
-                </div>`).join('');
+            let itemsHtml = (order.items || []).map((item, idx) => {
+                const qty = parseInt(item.qty);
+                const price = parseInt(item.price);
+                const subtotal = qty * price;
+                // --- MENAMPILKAN DETAIL HARGA SATUAN (2 x 18.000) ---
+                const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
+                
+                const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') 
+                    ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` 
+                    : '';
 
-            const timeOut = order.completedAt ? new Date(order.completedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                return `
+                <div class="item-row">
+                    <div style="flex:1;">
+                        <span>${qty}x ${item.name}</span>
+                        ${unitPriceHtml}
+                        ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
+                    </div>
+                    <div style="display:flex; align-items:center;">
+                        <span style="font-weight:bold;">${subtotal.toLocaleString()}</span>
+                        ${trashBtn}
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            // --- REKAP HISTORY (Durasi Masak, Respon, Bayar) ---
+            let historyHtml = '';
+            if(order.status === 'completed' || order.status === 'rejected') {
+                const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
+                const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
+                const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
+                const durTotal = completed > 0 ? Math.floor((completed - created)/1000) : 0;
+                
+                const fmtDur = (s) => {
+                    if (s <= 0) return "-";
+                    const m = Math.floor(s/60);
+                    const sc = s%60;
+                    return m > 0 ? `${m}m ${sc}s` : `${sc}s`;
+                };
+
+                const dateOut = new Date(completed || Date.now());
+                const dateOutStr = dateOut.toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
+                const timeIn = new Date(created).getHours() + ":" + (new Date(created).getMinutes()<10?'0':'') + new Date(created).getMinutes();
+                const timeOut = dateOut.getHours() + ":" + (dateOut.getMinutes()<10?'0':'') + dateOut.getMinutes();
+
+                displayTimeHTML = `
+                    <div class="history-compact">
+                        <span class="h-date">${dateOutStr}</span>
+                        <div class="h-times">
+                            Masuk: <span class="h-time-val">${timeIn}</span> | 
+                            Selesai: <span class="h-time-val" style="color:var(--green)">${timeOut}</span>
+                        </div>
+                    </div>
+                `;
+
+                let rejectedLabel = '';
+                if(order.status === 'rejected') {
+                    rejectedLabel = `<div class="rejected-label">DITOLAK ❌</div>`;
+                    displayTimeHTML = ''; 
+                }
+
+                historyHtml = `
+                    ${rejectedLabel}
+                    <div class="history-details">
+                        <div class="history-row"><span>Respon:</span> <span class="h-val">${fmtDur(durRespon)}</span></div>
+                        <div class="history-row"><span>Bayar:</span> <span class="h-val">${fmtDur(durBayar)}</span></div>
+                        <div class="history-row"><span>Masak:</span> <span class="h-val">${fmtDur(durMasak)}</span></div>
+                        <div style="border-top:1px dashed #666; margin-top:5px; padding-top:2px;" class="history-row">
+                            <span>TOTAL DURASI:</span> <span class="h-val" style="color:var(--accent); font-size:14px;">${fmtDur(durTotal)}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // --- LIVE TIMER DISINI ---
+                const dataStartAttr = timerStart > 0 ? `data-start="${timerStart}"` : '';
+                displayTimeHTML = `<span class="time-label">Masuk: ${entryTimeStr}</span><span class="timer-badge live-timer" ${dataStartAttr}>--:--</span>`;
+            }
+
+            let buttonsHtml = '';
+            if (order.status === 'new') {
+                buttonsHtml = `
+                    <button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>
+                    <button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button>
+                    <button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">Terima</button>
+                `;
+            } else if (order.status === 'unpaid') {
+                buttonsHtml = `
+                    <div style="grid-column: span 2; text-align:center; color:#888; font-size:11px; margin-bottom:5px;">Customer belum bayar</div>
+                    <button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button>
+                    <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>
+                `;
+            } else if (order.status === 'processing') {
+                buttonsHtml = `
+                     <div style="grid-column: span 2; text-align:center; color:#FFD200; font-size:11px; margin-bottom:5px; font-weight:bold;">SEDANG DISIAPKAN</div>
+                    <button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>
+                `;
+            } else {
+                if(order.status !== 'rejected') {
+                    buttonsHtml = `<div style="text-align:center; color:var(--green); font-weight:bold;">SELESAI</div>`;
+                }
+            }
+
+            let rawTotal = order.total;
+            if (typeof rawTotal === 'string') rawTotal = rawTotal.replace(/[^0-9]/g, '');
+            const safeTotal = Number(rawTotal) || 0;
 
             div.innerHTML = `
                 <div class="card-header">
-                    <b>${name}</b>
-                    ${['completed','rejected'].includes(order.status) ? `<span>${timeOut}</span>` : `<span class="timer-badge live-timer" data-start="${timerStart}">--:--</span>`}
+                    <div>
+                        <span class="cust-name">${displayName}</span>
+                        <span style="font-size:10px; color:#666;">ID: ...${order.id.slice(-4)}</span>
+                    </div>
+                    <div>${displayTimeHTML}</div>
                 </div>
-                <div class="item-list">${items}</div>
-                <div class="total-row">Total: Rp ${(Number(String(order.total).replace(/[^0-9]/g, '')) || 0).toLocaleString()}</div>
-                <div class="actions">${getButtons(order)}</div>`;
+                <div class="item-list">${itemsHtml}</div>
+                ${historyHtml}
+                <div class="total-row">Total: Rp ${safeTotal.toLocaleString()}</div>
+                <div class="actions">${buttonsHtml}</div>
+            `;
             return div;
         }
 
-        function getButtons(order) {
-            if (order.status === 'new') return `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button><button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button><button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">Terima</button>`;
-            if (order.status === 'unpaid') return `<button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button><button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>`;
-            if (order.status === 'processing') return `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai</button>`;
-            return `<div style="text-align:center; width:100%; font-weight:bold; color:${order.status==='completed'?'var(--green)':'var(--red)'}">${order.status==='completed'?'SELESAI ✔':'DITOLAK ❌'}</div>`;
-        }
-
+        // --- ACTIONS ---
         function updateStatus(key, status) {
-            const up = { status: status };
-            const now = new Date().toISOString();
-            if(status === 'unpaid') up.acceptedAt = now;
-            if(status === 'processing') up.paidAt = now;
-            if(['completed','rejected'].includes(status)) up.completedAt = now;
-            db.ref('orders/' + key).update(up);
+            const updates = { status: status };
+            const now = new Date().toISOString(); 
+            if(status === 'unpaid') updates.acceptedAt = now; 
+            if(status === 'processing') updates.paidAt = now; 
+            if(status === 'completed' || status === 'rejected') updates.completedAt = now; 
+            db.ref('orders/' + key).update(updates);
         }
 
-        function deleteOrderItem(key, idx) {
-            showConfirm("Hapus item?", () => {
-                const o = allOrders.find(x => x.id === key);
-                const items = [...o.items];
-                const rem = items.splice(idx, 1)[0];
-                const newTot = (Number(String(o.total).replace(/[^0-9]/g, '')) || 0) - (rem.price * rem.qty);
-                db.ref('orders/' + key).update({ items: items, total: newTot });
+        function confirmReject(key) { showConfirm("Yakin tolak pesanan ini?", () => updateStatus(key, 'rejected')); }
+
+        function deleteOrderItem(orderKey, itemIndex) {
+            showConfirm("Hapus item ini?", () => {
+                const order = allOrders.find(o => o.id === orderKey);
+                const newItems = [...order.items];
+                const removed = newItems.splice(itemIndex, 1)[0];
+                let currentTotal = parseInt(String(order.total).replace(/[^0-9]/g, '')) || 0;
+                db.ref('orders/' + orderKey).update({ items: newItems, total: currentTotal - (removed.price * removed.qty) });
             });
         }
 
-        function showPage(p) {
+        // UI HELPERS
+        function showPage(pageId) {
             document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
-            document.getElementById(p + '-page').style.display = 'block';
+            document.getElementById(pageId + '-page').style.display = 'block';
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            if(pageId === 'orders') document.querySelectorAll('.menu-item')[0].classList.add('active');
+            if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
         }
 
-        function filterTab(s) {
-            currentTab = s;
+        function filterTab(status) {
+            currentTab = status;
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             event.currentTarget.classList.add('active');
             renderOrders();
         }
 
         function updateBadges() {
-            ['new', 'unpaid', 'processing'].forEach(s => {
-                document.getElementById('badge-' + s).innerText = allOrders.filter(o => o.status === s).length;
-            });
+            document.getElementById('badge-new').innerText = allOrders.filter(o => o.status === 'new').length;
+            document.getElementById('badge-unpaid').innerText = allOrders.filter(o => o.status === 'unpaid').length;
+            document.getElementById('badge-processing').innerText = allOrders.filter(o => o.status === 'processing').length;
         }
 
-        function confirmReject(k) { showConfirm("Tolak pesanan?", () => updateStatus(k, 'rejected')); }
         function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
         function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
         document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
+
         function openEditModal(k) { editingOrderKey = k; document.getElementById('edit-modal').style.display = 'flex'; }
         function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
+        
         function saveExtraItem() {
             const n = document.getElementById('extra-name').value;
             const p = parseInt(document.getElementById('extra-price').value);
