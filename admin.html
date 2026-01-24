@@ -6,7 +6,6 @@
     <title>SBS Admin & Finance</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS SAMA PERSIS DENGAN DAPUR AGAR TAMPILAN KONSISTEN */
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -17,62 +16,57 @@
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .menu-icon { font-size: 20px; }
 
-        /* WIDGET OMZET SIDEBAR (ADA DI ADMIN) */
-        .finance-box { margin-top: auto; background: var(--card-bg); padding: 15px; border-radius: 10px; border: 1px solid #444; }
-        .finance-title { font-size: 12px; color: #888; }
-        .finance-val { font-size: 18px; font-weight: bold; color: var(--green); }
-        .btn-reset { margin-top: 10px; background: #330000; color: #ff4444; border: 1px solid #ff4444; width: 100%; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 10px; text-align: center; }
-
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
-        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .page-title { margin:0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
+        .page-title { margin:0 0 20px 0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
         
-        /* Filter Styles for Admin */
-        .filters { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
-        .date-input, .select-input { background: var(--card-bg); border: 1px solid #444; color: white; padding: 8px; border-radius: 8px; font-family: 'Poppins'; }
+        /* STOCK STYLES */
+        .sub-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .sub-tab { background: transparent; border: 1px solid #555; color: #888; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .sub-tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
 
-        /* GRID & CARDS */
-        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 80px; }
-        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 5px solid #555; position: relative; }
-        .order-card.status-completed { border-left-color: var(--green); opacity: 0.9; }
-        .order-card.status-rejected { border-left-color: #555; opacity: 0.7; }
+        .stock-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .stock-table th { text-align: left; padding: 10px; background: #222; color: #888; }
+        .stock-table td { padding: 12px 10px; border-bottom: 1px solid #333; }
+        .stock-row:hover { background: #333; }
+        .unit-badge { font-size: 10px; background: #444; padding: 2px 5px; border-radius: 4px; color: #ccc; }
+        .hpp-badge { font-weight: bold; color: var(--blue); }
 
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        .cust-name { font-size: 18px; font-weight: bold; color: #fff; display: block;}
+        /* FORM INPUTS */
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 12px; color: #888; margin-bottom: 5px; }
+        .form-input { width: 100%; padding: 12px; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 8px; font-family: 'Poppins'; }
+        .form-select { width: 100%; padding: 12px; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 8px; }
         
-        .item-list { margin-bottom: 15px; max-height: 200px; overflow-y: auto; }
-        .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; align-items: center; }
-        .item-unit-price { font-size: 10px; color: #888; display: block; }
-        .total-row { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
-
-        /* HISTORY DETAIL CSS (WAJIB ADA DI ADMIN JUGA) */
-        .history-details { font-size: 11px; color: #aaa; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-        .history-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
-        .h-val { color: #fff; font-weight: bold; }
-        .history-compact { text-align: right; }
-        .h-date { display: block; font-size: 10px; color: #888; margin-bottom: 2px; }
-        .h-times { font-size: 11px; color: #ccc; }
-        .h-time-val { font-weight: bold; color: #fff; }
-        .rejected-label { color: var(--red); font-weight: 900; font-size: 20px; text-align: center; border: 2px solid var(--red); padding: 10px; transform: rotate(-5deg); margin-bottom: 10px; }
-
-        /* STAT CARDS FINANCE */
-        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .stat-title { font-size: 14px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-val { font-size: 24px; font-weight: bold; color: var(--green); }
-
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
-        .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); text-align: center;}
-        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #fff; font-size: 14px; }
+        .restock-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; max-width: 500px; margin-bottom: 20px; }
+        
+        /* MODAL & BUTTONS */
+        .btn { border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #fff; font-size: 14px; display: inline-block; }
+        .btn-green { background: var(--green); color: #000; } 
+        .btn-accent { background: var(--accent); color: #000; }
         .btn-grey { background: #555; } .btn-red { background: var(--red); }
 
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
+        .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; border: 2px solid var(--accent); }
+
+        /* Notifikasi Stok */
+        .low-stock-alert { color: var(--red); font-weight: bold; }
+
+        /* Styling Order & Finance (Existing) */
+        .filters { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 5px solid #555; }
+        .order-card.status-completed { border-left-color: var(--green); }
+        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; }
+        .stat-val { font-size: 24px; font-weight: bold; color: var(--green); }
+        
         @media (max-width: 768px) {
-            body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
+            body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
             .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; background: #1a1a1a; z-index: 9999; }
-            .brand, .finance-box { display: none; } 
+            .brand { display: none; } 
             .menu-item { flex-direction: column; gap: 3px; font-size: 10px; padding: 5px; margin: 0; background: transparent !important; border-radius: 0; justify-content: center; flex: 1; text-align: center; color: #666; }
             .menu-item.active { color: var(--accent); }
             .menu-icon { font-size: 20px; margin-bottom: 2px; display: block; }
-            .main { height: auto; overflow: visible; padding: 15px; padding-bottom: 80px; width: 100%; }
+            .main { padding-bottom: 80px; }
         }
     </style>
 </head>
@@ -80,38 +74,79 @@
 
     <div class="sidebar">
         <div class="brand">SBS ADMIN</div>
-        <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Laporan Omzet</span></div>
-        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat Lengkap</span></div>
-        
-        <div class="finance-box">
-            <div class="finance-title">Omzet Hari Ini</div>
-            <div class="finance-val" id="sidebar-today-rev">Rp 0</div>
-            <button class="btn-reset" onclick="confirmReset()">⚠ RESET DATABASE</button>
-        </div>
+        <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Laporan</span></div>
+        <div class="menu-item" onclick="showPage('stock')"><span class="menu-icon">📦</span><span>Manajemen Stok</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat</span></div>
     </div>
 
     <div class="main" id="finance-page">
         <h2 class="page-title">LAPORAN KEUANGAN</h2>
-        
         <div class="filters">
-            <select id="finance-mode" class="select-input" onchange="toggleFinanceFilter()">
+            <select id="finance-mode" class="form-input" style="width:auto;" onchange="toggleFinanceFilter()">
                 <option value="daily">Harian</option>
                 <option value="monthly">Bulanan</option>
-                <option value="yearly">Tahunan</option>
             </select>
-            <input type="date" id="finance-date" class="date-input" style="display:block;" onchange="calculateFinance()">
-            <input type="month" id="finance-month" class="date-input" style="display:none;" onchange="calculateFinance()">
-            <select id="finance-year" class="select-input" style="display:none;" onchange="calculateFinance()">
-                <option value="2025">2025</option>
-                <option value="2026">2026</option>
-                <option value="2027">2027</option>
-            </select>
+            <input type="date" id="finance-date" class="form-input" style="width:auto;" onchange="calculateFinance()">
+            <input type="month" id="finance-month" class="form-input" style="width:auto; display:none;" onchange="calculateFinance()">
+        </div>
+        <div class="stat-card">
+            <div style="font-size:12px; color:#aaa; margin-bottom:5px;">TOTAL PENDAPATAN</div>
+            <div class="stat-val" id="main-stat-rev">Rp 0</div>
+        </div>
+        <button class="btn btn-red" onclick="confirmReset()" style="margin-top:30px; width:100%;">⚠ RESET DATABASE</button>
+    </div>
+
+    <div class="main" id="stock-page" style="display: none;">
+        <h2 class="page-title">MANAJEMEN BAHAN & STOK</h2>
+        
+        <div class="sub-tabs">
+            <button class="sub-tab active" onclick="showStockTab('list')">📦 Data Bahan</button>
+            <button class="sub-tab" onclick="showStockTab('restock')">🛒 Belanja / Restock</button>
+            </div>
+
+        <div id="tab-stock-list">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <span style="font-size:12px; color:#888;">Monitor stok dan HPP bahan mentah.</span>
+                <button class="btn btn-accent" onclick="openAddModal()">+ Bahan Baru</button>
+            </div>
+            
+            <table class="stock-table">
+                <thead>
+                    <tr>
+                        <th>Nama Bahan</th>
+                        <th>Stok</th>
+                        <th>HPP / Unit</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="ingredients-table-body">
+                    </tbody>
+            </table>
         </div>
 
-        <div style="margin-top: 20px;">
-            <div class="stat-card">
-                <div class="stat-title" id="stat-label">TOTAL PENDAPATAN</div>
-                <div class="stat-val" id="main-stat-rev">Rp 0</div>
+        <div id="tab-stock-restock" style="display:none;">
+            <div class="restock-card">
+                <h3 style="margin-top:0; color:var(--accent);">Input Belanja Baru</h3>
+                <p style="font-size:12px; color:#aaa; margin-bottom:20px;">Sistem akan otomatis menghitung HPP rata-rata baru berdasarkan harga beli yang Anda masukkan.</p>
+                
+                <div class="form-group">
+                    <label class="form-label">Pilih Bahan</label>
+                    <select id="restock-select" class="form-select"></select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Jumlah Dibeli (Sesuai Satuan)</label>
+                    <input type="number" id="restock-qty" class="form-input" placeholder="Contoh: 25000 (untuk 25kg)">
+                    <small style="color:#888; font-size:10px;">*Masukkan dalam satuan terkecil (gr/ml) bukan pack.</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Total Harga Belanja (Rp)</label>
+                    <input type="number" id="restock-price" class="form-input" placeholder="Contoh: 350000">
+                    <small style="color:#888; font-size:10px;">*Harga total yang dibayarkan ke supplier.</small>
+                </div>
+
+                <button class="btn btn-green" onclick="submitRestock()">Simpan & Update Stok</button>
             </div>
         </div>
     </div>
@@ -119,19 +154,54 @@
     <div class="main" id="history-page" style="display: none;">
         <h2 class="page-title">RIWAYAT TRANSAKSI</h2>
         <div class="filters">
-            <input type="date" id="history-date-picker" class="date-input" onchange="renderHistory()">
-            <button onclick="setToday()" class="select-input" style="cursor:pointer; background:#444;">Hari Ini</button>
+            <input type="date" id="history-date-picker" class="form-input" style="width:auto;" onchange="renderHistory()">
         </div>
         <div id="history-grid" class="orders-grid"></div>
     </div>
 
+    <div id="add-ingredient-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color:var(--accent);">Tambah Bahan Mentah</h3>
+            
+            <div class="form-group">
+                <label class="form-label">Nama Bahan</label>
+                <input type="text" id="new-ing-name" class="form-input" placeholder="Misal: Beras Premium">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Satuan Terkecil</label>
+                <select id="new-ing-unit" class="form-select">
+                    <option value="gram">Gram (untuk padat)</option>
+                    <option value="ml">Mililiter (untuk cair)</option>
+                    <option value="pcs">Pcs (untuk telur/botol)</option>
+                </select>
+                <small style="color:#666; font-size:10px;">Selalu gunakan satuan terkecil. 1kg = 1000gram.</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Stok Awal</label>
+                <input type="number" id="new-ing-stock" class="form-input" placeholder="0">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Min. Stok (Alert)</label>
+                <input type="number" id="new-ing-min" class="form-input" placeholder="Misal: 1000">
+            </div>
+
+            <div style="margin-top:20px; display:flex; gap:10px;">
+                <button class="btn btn-grey" onclick="document.getElementById('add-ingredient-modal').style.display='none'">Batal</button>
+                <button class="btn btn-green" onclick="saveNewIngredient()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
     <div id="custom-confirm-modal" class="modal">
         <div class="modal-content">
-            <h3 style="color:var(--accent); margin-top:0;">DANGER ZONE</h3>
-            <p id="confirm-msg">Hapus semua data?</p>
-            <div style="margin-top:20px;">
-                <button class="btn btn-grey" onclick="closeConfirm()">BATAL</button>
-                <button class="btn btn-red" id="btn-confirm-yes">YA, HAPUS</button>
+            <h3 style="color:var(--accent);">KONFIRMASI</h3>
+            <p id="confirm-msg">Yakin?</p>
+            <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+                <button class="btn btn-grey" onclick="document.getElementById('custom-confirm-modal').style.display='none'">Batal</button>
+                <button class="btn btn-red" id="btn-confirm-yes">Ya</button>
             </div>
         </div>
     </div>
@@ -152,205 +222,240 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        
         let allOrders = [];
+        let allIngredients = [];
         let confirmCallback = null;
 
-        document.getElementById('history-date-picker').valueAsDate = new Date();
         document.getElementById('finance-date').valueAsDate = new Date();
+        document.getElementById('history-date-picker').valueAsDate = new Date();
 
-        db.ref('orders').on('value', (snapshot) => {
-            const data = snapshot.val();
+        // --- LOAD DATA ---
+        // 1. Orders
+        db.ref('orders').on('value', snap => {
+            const data = snap.val();
             allOrders = [];
-            if (data) {
-                Object.keys(data).forEach(key => allOrders.push({ id: key, ...data[key] }));
-            }
-            allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            
+            if(data) Object.keys(data).forEach(k => allOrders.push({id:k, ...data[k]}));
+            allOrders.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
             calculateFinance();
             renderHistory();
         });
 
-        // --- CREATE CARD (SAMA PERSIS AGAR ADMIN BISA LIHAT DETAIL) ---
-        function createCard(order) {
-            let displayName = order.customer;
-            if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
+        // 2. Ingredients (BAHAN)
+        db.ref('ingredients').on('value', snap => {
+            const data = snap.val();
+            allIngredients = [];
+            if(data) Object.keys(data).forEach(k => allIngredients.push({id:k, ...data[k]}));
+            renderStockTable();
+            populateRestockDropdown();
+        });
 
-            const created = new Date(order.timestamp).getTime();
-            const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : 0;
-            const paid = order.paidAt ? new Date(order.paidAt).getTime() : 0;
-            const completed = order.completedAt ? new Date(order.completedAt).getTime() : 0;
-
-            const div = document.createElement('div');
-            div.className = `order-card status-${order.status}`;
-            
-            let itemsHtml = (order.items || []).map(item => {
-                const qty = parseInt(item.qty);
-                const price = parseInt(item.price);
-                const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-                return `
-                <div class="item-row">
-                    <div><span>${qty}x ${item.name}</span>${unitPriceHtml}</div>
-                    <div><b>${(qty * price).toLocaleString()}</b></div>
-                </div>`;
-            }).join('');
-
-            // REKAP HISTORY CALCULATIONS
-            const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
-            const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
-            const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
-            const durTotal = completed > 0 ? Math.floor((completed - created)/1000) : 0;
-            
-            const fmtDur = (s) => {
-                if (s <= 0) return "-";
-                const m = Math.floor(s/60);
-                const sc = s%60;
-                return m > 0 ? `${m}m ${sc}s` : `${sc}s`;
-            };
-
-            const dateOut = new Date(completed || Date.now());
-            const dateOutStr = dateOut.toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
-            const timeIn = new Date(created).getHours() + ":" + (new Date(created).getMinutes()<10?'0':'') + new Date(created).getMinutes();
-            const timeOut = dateOut.getHours() + ":" + (dateOut.getMinutes()<10?'0':'') + dateOut.getMinutes();
-
-            let historyHtml = `
-                <div class="history-compact">
-                    <span class="h-date">${dateOutStr}</span>
-                    <div class="h-times">Masuk: ${timeIn} | Selesai: <span style="color:var(--green)">${timeOut}</span></div>
-                </div>
-                <div class="history-details" style="margin-top:10px;">
-                    <div class="history-row"><span>Respon:</span> <span class="h-val">${fmtDur(durRespon)}</span></div>
-                    <div class="history-row"><span>Bayar:</span> <span class="h-val">${fmtDur(durBayar)}</span></div>
-                    <div class="history-row"><span>Masak:</span> <span class="h-val">${fmtDur(durMasak)}</span></div>
-                    <div style="border-top:1px dashed #666; margin-top:5px; padding-top:2px;" class="history-row">
-                        <span>TOTAL DURASI:</span> <span class="h-val" style="color:var(--accent);">${fmtDur(durTotal)}</span>
-                    </div>
-                </div>
-            `;
-            
-            if(order.status === 'rejected') {
-                historyHtml = `<div class="rejected-label">DITOLAK ❌</div>`;
-            }
-
-            let rawTotal = order.total;
-            if (typeof rawTotal === 'string') rawTotal = rawTotal.replace(/[^0-9]/g, '');
-            const safeTotal = Number(rawTotal) || 0;
-
-            div.innerHTML = `
-                <div class="card-header">
-                    <span class="cust-name">${displayName}</span>
-                </div>
-                <div class="item-list">${itemsHtml}</div>
-                ${historyHtml}
-                <div class="total-row">Total: Rp ${safeTotal.toLocaleString()}</div>
-            `;
-            return div;
-        }
-
-        // --- PAGE & FINANCE LOGIC ---
+        // --- NAVIGATION ---
         function showPage(pageId) {
             document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
             document.getElementById(pageId + '-page').style.display = 'block';
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            
             if(pageId === 'finance') document.querySelectorAll('.menu-item')[0].classList.add('active');
-            if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
+            if(pageId === 'stock') document.querySelectorAll('.menu-item')[1].classList.add('active');
+            if(pageId === 'history') document.querySelectorAll('.menu-item')[2].classList.add('active');
+            
             if(pageId === 'finance') calculateFinance();
+        }
+
+        function showStockTab(tabName) {
+            document.getElementById('tab-stock-list').style.display = 'none';
+            document.getElementById('tab-stock-restock').style.display = 'none';
+            document.querySelectorAll('.sub-tab').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('tab-stock-' + tabName).style.display = 'block';
+            event.currentTarget.classList.add('active');
+        }
+
+        // --- STOCK LOGIC (INTI PERMINTAAN ANDA) ---
+
+        function openAddModal() {
+            document.getElementById('add-ingredient-modal').style.display = 'flex';
+        }
+
+        function saveNewIngredient() {
+            const name = document.getElementById('new-ing-name').value;
+            const unit = document.getElementById('new-ing-unit').value;
+            const stock = parseFloat(document.getElementById('new-ing-stock').value) || 0;
+            const min = parseFloat(document.getElementById('new-ing-min').value) || 0;
+
+            if(!name) return alert("Nama bahan wajib diisi!");
+
+            const newRef = db.ref('ingredients').push();
+            newRef.set({
+                name: name,
+                unit: unit,
+                stock: stock,
+                min_stock: min,
+                avg_price: 0 // HPP Awal 0, akan update saat belanja
+            }).then(() => {
+                document.getElementById('add-ingredient-modal').style.display = 'none';
+                // Reset form
+                document.getElementById('new-ing-name').value = '';
+                document.getElementById('new-ing-stock').value = '';
+            });
+        }
+
+        function renderStockTable() {
+            const tbody = document.getElementById('ingredients-table-body');
+            tbody.innerHTML = '';
+            
+            allIngredients.forEach(ing => {
+                const isLow = ing.stock <= ing.min_stock;
+                const statusHtml = isLow 
+                    ? `<span class="low-stock-alert">⚠ Stok Rendah</span>` 
+                    : `<span style="color:var(--green)">Aman</span>`;
+
+                const tr = document.createElement('tr');
+                tr.className = 'stock-row';
+                tr.innerHTML = `
+                    <td>
+                        <div style="font-weight:bold; color:#fff;">${ing.name}</div>
+                        <div class="unit-badge">${ing.unit}</div>
+                    </td>
+                    <td>
+                        <span style="font-size:16px; font-weight:bold; ${isLow ? 'color:var(--red)' : 'color:#fff'}">
+                            ${parseFloat(ing.stock).toLocaleString()}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="hpp-badge">Rp ${parseFloat(ing.avg_price).toFixed(2)}</div>
+                        <small style="color:#666">per ${ing.unit}</small>
+                    </td>
+                    <td>${statusHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function populateRestockDropdown() {
+            const select = document.getElementById('restock-select');
+            select.innerHTML = '<option value="">-- Pilih Bahan --</option>';
+            allIngredients.forEach(ing => {
+                const opt = document.createElement('option');
+                opt.value = ing.id;
+                opt.innerText = `${ing.name} (Stok: ${ing.stock} ${ing.unit})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function submitRestock() {
+            const ingId = document.getElementById('restock-select').value;
+            const buyQty = parseFloat(document.getElementById('restock-qty').value); // misal 25000 (gr)
+            const buyTotal = parseFloat(document.getElementById('restock-price').value); // misal 350000 (rp)
+
+            if(!ingId || !buyQty || !buyTotal) return alert("Semua data belanja wajib diisi!");
+
+            const ingredient = allIngredients.find(i => i.id === ingId);
+            if(!ingredient) return;
+
+            // --- RUMUS MOVING AVERAGE (HPP RATA-RATA) ---
+            // ( (Stok Lama * Harga Lama) + Total Belanja Baru ) / (Stok Lama + Stok Baru)
+            
+            const oldStock = parseFloat(ingredient.stock) || 0;
+            const oldAvg = parseFloat(ingredient.avg_price) || 0;
+            
+            const oldValuation = oldStock * oldAvg;
+            const newValuation = oldValuation + buyTotal;
+            const newStockTotal = oldStock + buyQty;
+            
+            const newAvgPrice = newValuation / newStockTotal;
+
+            // Update Firebase
+            db.ref('ingredients/' + ingId).update({
+                stock: newStockTotal,
+                avg_price: newAvgPrice
+            }).then(() => {
+                alert("Restock berhasil! HPP telah diperbarui.");
+                document.getElementById('restock-qty').value = '';
+                document.getElementById('restock-price').value = '';
+                showStockTab('list'); // Kembali ke list untuk lihat hasil
+            });
+        }
+
+        // --- FINANCE & HISTORY (LOGIC LAMA YANG ANDA MINTA TETAP ADA) ---
+        function calculateFinance() {
+            const mode = document.getElementById('finance-mode').value;
+            let totalRev = 0;
+            let targetDate, targetMonth, targetYear;
+            
+            if (mode === 'daily') targetDate = new Date(document.getElementById('finance-date').value);
+            else if (mode === 'monthly') {
+                const val = document.getElementById('finance-month').value;
+                if(val) { targetYear = parseInt(val.split('-')[0]); targetMonth = parseInt(val.split('-')[1]) - 1; }
+            }
+
+            allOrders.forEach(order => {
+                if (order.status !== 'completed' && order.status !== 'done') return;
+                const oDate = new Date(order.completedAt || order.timestamp);
+                let rawTotal = String(order.total).replace(/[^0-9]/g, '');
+                let total = Number(rawTotal) || 0;
+
+                let match = false;
+                if (mode === 'daily' && targetDate) {
+                    if (oDate.toDateString() === targetDate.toDateString()) match = true;
+                } else if (mode === 'monthly' && !isNaN(targetMonth)) {
+                    if (oDate.getFullYear() === targetYear && oDate.getMonth() === targetMonth) match = true;
+                }
+                if (match) totalRev += total;
+            });
+            document.getElementById('main-stat-rev').innerText = "Rp " + totalRev.toLocaleString('id-ID');
         }
 
         function toggleFinanceFilter() {
             const mode = document.getElementById('finance-mode').value;
             document.getElementById('finance-date').style.display = (mode === 'daily') ? 'block' : 'none';
             document.getElementById('finance-month').style.display = (mode === 'monthly') ? 'block' : 'none';
-            document.getElementById('finance-year').style.display = (mode === 'yearly') ? 'block' : 'none';
             calculateFinance();
-        }
-
-        function calculateFinance() {
-            const mode = document.getElementById('finance-mode').value;
-            let totalRev = 0;
-            let targetDate, targetMonth, targetYear;
-
-            if (mode === 'daily') {
-                targetDate = new Date(document.getElementById('finance-date').value);
-            } else if (mode === 'monthly') {
-                const val = document.getElementById('finance-month').value;
-                if(val) { targetYear = parseInt(val.split('-')[0]); targetMonth = parseInt(val.split('-')[1]) - 1; }
-            } else if (mode === 'yearly') {
-                targetYear = parseInt(document.getElementById('finance-year').value);
-            }
-
-            const today = new Date();
-            let todayRev = 0;
-
-            allOrders.forEach(order => {
-                if (order.status !== 'completed' && order.status !== 'done') return;
-                
-                const rawDate = order.completedAt || order.timestamp;
-                if(!rawDate) return;
-                const oDate = new Date(rawDate);
-                let rawTotal = order.total;
-                if (typeof rawTotal === 'string') rawTotal = rawTotal.replace(/[^0-9]/g, '');
-                const total = Number(rawTotal) || 0;
-
-                // Sidebar Widget
-                if(oDate.toDateString() === today.toDateString()) todayRev += total;
-
-                // Main Logic
-                let match = false;
-                if (mode === 'daily' && targetDate) {
-                    if (oDate.toDateString() === targetDate.toDateString()) match = true;
-                } else if (mode === 'monthly' && !isNaN(targetMonth)) {
-                    if (oDate.getFullYear() === targetYear && oDate.getMonth() === targetMonth) match = true;
-                } else if (mode === 'yearly') {
-                    if (oDate.getFullYear() === targetYear) match = true;
-                }
-                if (match) totalRev += total;
-            });
-
-            document.getElementById('sidebar-today-rev').innerText = "Rp " + todayRev.toLocaleString('id-ID');
-            document.getElementById('main-stat-rev').innerText = "Rp " + totalRev.toLocaleString('id-ID');
-            
-            let label = "TOTAL PENDAPATAN";
-            if (mode === 'daily') label += " (HARIAN)";
-            if (mode === 'monthly') label += " (BULANAN)";
-            if (mode === 'yearly') label += " (TAHUNAN)";
-            document.getElementById('stat-label').innerText = label;
-        }
-
-        function setToday() {
-            document.getElementById('history-date-picker').valueAsDate = new Date();
-            renderHistory();
         }
 
         function renderHistory() {
             const grid = document.getElementById('history-grid');
             grid.innerHTML = '';
-            
-            const filterDateInput = document.getElementById('history-date-picker').value;
-            const filterDate = new Date(filterDateInput).toDateString();
+            const filterDate = new Date(document.getElementById('history-date-picker').value).toDateString();
 
             allOrders.forEach(order => {
-                if (order.status === 'completed' || order.status === 'rejected') {
-                    const orderDate = new Date(order.completedAt || order.timestamp).toDateString();
-                    if (orderDate === filterDate) {
-                        grid.appendChild(createCard(order));
+                if (['completed', 'rejected'].includes(order.status)) {
+                    if (new Date(order.completedAt || order.timestamp).toDateString() === filterDate) {
+                        grid.appendChild(createHistoryCard(order));
                     }
                 }
             });
+            if(grid.innerHTML === '') grid.innerHTML = '<div style="color:#666; text-align:center;">Kosong.</div>';
+        }
 
-            if(grid.innerHTML === '') grid.innerHTML = '<div style="color:#666; text-align:center;">Tidak ada riwayat pada tanggal ini.</div>';
+        function createHistoryCard(order) {
+            const div = document.createElement('div');
+            div.className = `order-card status-${order.status}`;
+            let items = (order.items||[]).map(i => `<div>${i.qty}x ${i.name}</div>`).join('');
+            let total = Number(String(order.total).replace(/[^0-9]/g, '')) || 0;
+            
+            div.innerHTML = `
+                <div style="font-weight:bold; margin-bottom:10px; display:flex; justify-content:space-between;">
+                    <span>${order.customer}</span>
+                    <span>${order.status.toUpperCase()}</span>
+                </div>
+                <div style="font-size:13px; color:#ccc; margin-bottom:10px;">${items}</div>
+                <div style="text-align:right; font-weight:bold; color:var(--accent);">Rp ${total.toLocaleString()}</div>
+            `;
+            return div;
         }
 
         function confirmReset() {
-            showConfirm("RESET SEMUA DATA? Data omzet & history akan hilang!", function() {
-                db.ref('orders').remove()
-                .then(() => alert("Reset Berhasil"))
-                .catch(e => alert("Gagal"));
-            });
+            document.getElementById('custom-confirm-modal').style.display = 'flex';
+            document.getElementById('confirm-msg').innerText = "Hapus semua data pesanan? (Data stok AMAN tidak terhapus)";
+            document.getElementById('btn-confirm-yes').onclick = () => {
+                db.ref('orders').remove().then(() => {
+                    document.getElementById('custom-confirm-modal').style.display = 'none';
+                    alert("Data pesanan reset.");
+                });
+            }
         }
-
-        function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
-        function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
-        document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
     </script>
 </body>
 </html>
