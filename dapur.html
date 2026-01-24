@@ -6,7 +6,7 @@
     <title>SBS Kitchen - OPS</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS TETAP SAMA (TAMPILAN TIDAK BERUBAH) */
+        /* CSS TETAP SAMA */
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -52,7 +52,6 @@
         .btn-trash:hover { color: var(--red); }
         .total-row { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
 
-        /* BUTTON PRINT GROUP */
         .btn-print-group { display: flex; gap: 5px; margin-bottom: 15px; border-top: 1px dashed #444; padding-top: 10px; }
         .btn-print { flex: 1; background: transparent; border: 1px solid #555; color: #aaa; padding: 6px; border-radius: 8px; cursor: pointer; font-size: 12px; transition: 0.2s; font-weight: 600; }
         .btn-print:active { background: #444; color: #fff; transform: scale(0.95); }
@@ -171,7 +170,6 @@
         const db = firebase.database();
         
         let allOrders = [];
-        // REVISI 3: Load saved tab from LocalStorage
         let currentTab = localStorage.getItem('sbs_kitchen_tab') || 'new';
         let editingOrderKey = null;
         let audioUnlocked = false;
@@ -180,7 +178,6 @@
         const soundNag = document.getElementById('sound-nag');
         const btnAudio = document.getElementById('btn-audio');
 
-        // REVISI 3: Apply active class to the correct tab on load
         function initTab() {
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             const activeEl = document.getElementById('tab-' + currentTab);
@@ -226,42 +223,33 @@
             updateBadges();
         });
 
-        // --- REVISI 1: HITUNG QUEUE (URUTAN HARI INI) ---
+        // --- FUNGSI QUEUE HARIAN ---
         function getDailyQueueNumber(orderId) {
-            // Filter pesanan hari ini
             const targetOrder = allOrders.find(o => o.id === orderId);
             if(!targetOrder) return "00";
-            
             const targetDate = new Date(targetOrder.timestamp).toDateString();
-            
-            // Ambil semua order hari yang sama, urutkan berdasarkan waktu masuk
-            const dailyOrders = allOrders.filter(o => 
-                new Date(o.timestamp).toDateString() === targetDate
-            ).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-            // Cari index (urutan) dari order ID tersebut
+            const dailyOrders = allOrders.filter(o => new Date(o.timestamp).toDateString() === targetDate).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
             const index = dailyOrders.findIndex(o => o.id === orderId);
-            return index + 1; // Karena index mulai dari 0, kita tambah 1
+            return index + 1;
         }
 
-        // --- REVISI 2: PRINT ESC/POS DENGAN TABLE & QUEUE ---
+        // --- PRINT FUNCTION (REVISI ID SAMA & JUDUL CHECKER) ---
         function printDirect(orderId, type) {
             const order = allOrders.find(o => o.id === orderId);
             if (!order) return;
 
-            // AMBIL TABLE NUMBER (JIKA ADA)
             let tableNum = "Take Away";
             if (order.tableNumber) tableNum = order.tableNumber;
-            else if (order.customer && !isNaN(order.customer)) tableNum = order.customer; // Legacy
+            else if (order.customer && !isNaN(order.customer)) tableNum = order.customer; 
 
-            // AMBIL REAL QUEUE NUMBER (URUTAN)
             let realQueue = getDailyQueueNumber(order.id);
-
             const dateObj = new Date(order.timestamp);
             const dateStr = dateObj.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
             const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+            
+            // SAMAKAN ID ANTARA INVOICE DAN CHECKER
+            const displayID = "2SA" + order.id.slice(-4).toUpperCase();
 
-            // ESC/POS Commands
             const ESC = "\x1B";
             const GS = "\x1D";
             const INIT = ESC + "@";
@@ -275,18 +263,16 @@
             let data = INIT;
 
             if (type === 'invoice') {
-                // --- INVOICE LAYOUT ---
                 data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF;
                 data += "Jl. Mundu 8, Kota Malang\n";
                 data += "Jawa Timur, 65116\n";
                 data += "085159039877\n";
                 data += "--------------------------------\n";
                 data += ALIGN_LEFT;
-                // REVISI 1: TAMPILKAN TABLE & QUEUE TERPISAH
                 data += BOLD_ON + "TABLE: " + tableNum + BOLD_OFF + "\n";
                 data += "Queue Order: #" + realQueue + "\n"; 
                 data += "Date : " + dateStr + " " + timeStr + "\n";
-                data += "ID   : " + order.id.slice(-6).toUpperCase() + "\n";
+                data += "Order ID: " + displayID + "\n"; // ID SINKRON
                 data += "--------------------------------\n";
                 
                 order.items.forEach(item => {
@@ -310,14 +296,13 @@
                 data += ALIGN_CENTER + "Wifi: SBSkopi8\n";
                 data += "Terima Kasih!\n\n\n\n";
             } else {
-                // --- CHECKER LAYOUT ---
-                data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER DAPUR\n" + TEXT_NORMAL + BOLD_OFF;
+                // --- JUDUL DIGANTI JADI "CHECKER" ---
+                data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF;
                 data += "\n" + ALIGN_LEFT;
-                // REVISI 1: TABLE & QUEUE TERPISAH
                 data += "TABLE: " + BOLD_ON + tableNum + BOLD_OFF + "\n";
                 data += "QUEUE: #" + realQueue + "\n";
                 data += "TIME : " + timeStr + "\n";
-                data += "ID   : " + order.id.slice(-4) + "\n";
+                data += "ID   : " + displayID + "\n"; // ID SINKRON
                 data += "--------------------------------\n";
                 
                 order.items.forEach(item => {
@@ -334,8 +319,6 @@
             for (let i = 0; i < buffer.byteLength; i++) { binary += String.fromCharCode(buffer[i]); }
             const base64Data = btoa(binary);
 
-            // REVISI 2: MENGHILANGKAN KONFIRMASI (USER HARUS SETTING DI APP RAWBT)
-            // Settings -> uncheck "Confirm printing"
             window.location.href = "rawbt:base64," + base64Data;
         }
 
@@ -487,7 +470,6 @@
             if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
         }
 
-        // REVISI 3: SIMPAN TAB KE LOCAL STORAGE
         function filterTab(status) {
             currentTab = status;
             localStorage.setItem('sbs_kitchen_tab', status);
