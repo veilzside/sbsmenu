@@ -71,9 +71,9 @@
 
     <div class="sidebar">
         <div class="brand">SBS OWNER</div>
-        <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Keuangan</span></div>
-        <div class="menu-item" onclick="showPage('logs')"><span class="menu-icon">👁</span><span>Audit Log Stok</span></div>
-        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat Pesanan</span></div>
+        <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">腸</span><span>Keuangan</span></div>
+        <div class="menu-item" onclick="showPage('logs')"><span class="menu-icon">早</span><span>Audit Log Stok</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">糖</span><span>Riwayat Pesanan</span></div>
     </div>
 
     <div class="main" id="finance-page">
@@ -144,9 +144,19 @@
             });
         });
 
-        // --- FUNGSI CREATE CARD DETIL (IDENTIK DENGAN DAPUR.HTML) ---
+        // --- FUNGSI CREATE CARD DETIL (DIPERBAIKI UNTUK HANDLE UNDEFINED) ---
         function createHistoryCard(order) {
-            let displayName = isNaN(order.customer) ? order.customer : "MEJA " + order.customer;
+            // FIX: LOGIKA NAMA CUSTOMER
+            let displayName = order.customer || "Pelanggan"; // Default legacy
+            
+            if (order.tableNumber) {
+                displayName = `MEJA ${order.tableNumber}`;
+                if (order.customerName) {
+                    displayName += ` - ${order.customerName.toUpperCase()}`;
+                }
+            } else if (order.customer && !isNaN(order.customer)) {
+                displayName = "MEJA " + order.customer;
+            }
             
             const created = new Date(order.timestamp).getTime();
             const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : 0;
@@ -156,7 +166,7 @@
             const div = document.createElement('div');
             div.className = `order-card status-${order.status}`;
             
-            // Detail Items (Termasuk Harga Satuan & Notes)
+            // Detail Items
             let itemsHtml = (order.items || []).map(item => {
                 const qty = parseInt(item.qty);
                 const price = parseInt(item.price);
@@ -166,13 +176,12 @@
                     <div style="flex:1;">
                         <span>${qty}x ${item.name}</span>
                         ${unitPriceHtml}
-                        ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
+                        ${item.note ? `<span class="item-note">統 ${item.note}</span>` : ''}
                     </div>
                     <span style="font-weight:bold;">${(qty * price).toLocaleString()}</span>
                 </div>`;
             }).join('');
 
-            // Perhitungan Durasi
             const fmtDur = (s) => {
                 if (s <= 0) return "-";
                 const m = Math.floor(s/60);
@@ -199,7 +208,7 @@
                 </div>
             `;
 
-            if(order.status === 'rejected') historyHtml = `<div class="rejected-label">DITOLAK ❌</div>`;
+            if(order.status === 'rejected') historyHtml = `<div class="rejected-label">DITOLAK 笶/div>`;
 
             let rawTotal = String(order.total).replace(/[^0-9]/g, '');
             const safeTotal = Number(rawTotal) || 0;
