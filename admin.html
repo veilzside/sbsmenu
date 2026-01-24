@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SBS Admin - Stock & Finance</title>
+    <title>SBS Admin & Finance</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
@@ -16,89 +16,54 @@
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .menu-icon { font-size: 20px; }
 
-        .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
+        .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; }
         .page-title { margin:0 0 20px 0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
 
-        /* STOCK TABS */
-        .sub-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; overflow-x: auto; }
-        .sub-tab { background: transparent; border: 1px solid #555; color: #888; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: bold; white-space: nowrap; }
-        .sub-tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
-
-        /* TABLE */
-        .stock-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom:30px; }
-        .stock-table th { text-align: left; padding: 12px; background: #222; color: #888; text-transform: uppercase; font-size: 11px; }
-        .stock-table td { padding: 12px; border-bottom: 1px solid #333; }
-        .stock-row:hover { background: #333; }
+        /* FINANCE CARDS */
+        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; margin-bottom: 20px; }
+        .stat-val { font-size: 32px; font-weight: bold; color: var(--green); }
         
-        .badge { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-        .badge-unit { background: #444; color: #ccc; }
-        .badge-safe { background: rgba(46, 204, 113, 0.1); color: var(--green); }
-        .badge-low { background: rgba(231, 76, 60, 0.2); color: var(--red); animation: pulse 2s infinite; }
+        /* LOG TABLE */
+        .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .log-table th { text-align: left; padding: 10px; background: #111; color: #888; }
+        .log-table td { padding: 10px; border-bottom: 1px solid #333; vertical-align: top; }
+        .log-time { color: var(--accent); font-weight: bold; font-size: 11px; white-space: nowrap; }
+        .log-action { font-weight: bold; color: #fff; margin-bottom: 2px; }
+        .log-detail { color: #aaa; font-size: 12px; }
 
-        /* RECIPE BUILDER */
-        .recipe-builder { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; }
-        .recipe-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-        .profit-box { background: #111; padding: 15px; border-radius: 10px; margin-top: 20px; border: 1px dashed var(--accent); }
-        .profit-val { font-size: 24px; font-weight: bold; color: var(--green); }
-        .profit-label { font-size: 12px; color: #888; }
-
-        /* FORMS */
-        .form-group { margin-bottom: 15px; }
-        .form-label { display: block; font-size: 12px; color: #888; margin-bottom: 5px; }
-        .form-input, .form-select { width: 100%; padding: 12px; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 8px; font-family: 'Poppins'; }
-        
-        /* ALERTS */
-        .recommendation-text { font-size: 11px; color: var(--blue); margin-top: 4px; display: block; font-style: italic; }
-
-        /* MODAL */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
-        .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 450px; border: 2px solid var(--accent); max-height: 90vh; overflow-y: auto; }
-
-        /* BUTTONS */
-        .btn { border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; color: #fff; font-size: 14px; }
-        .btn-green { background: var(--green); color: #000; } 
-        .btn-accent { background: var(--accent); color: #000; }
-        .btn-red { background: var(--red); }
-        .btn-grey { background: #555; }
-
-        /* FINANCE & ORDER STYLES (EXISTING) */
+        /* ORDER HISTORY */
         .filters { margin-bottom: 20px; display: flex; gap: 10px; }
-        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; }
+        .form-input, .form-select { background: #15151a; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 8px; }
         .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 5px solid #555; }
         .order-card.status-completed { border-left-color: var(--green); }
-        .order-card.status-rejected { border-left-color: #555; opacity: 0.7; }
 
         @media (max-width: 768px) {
-            body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
-            .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; background: #1a1a1a; z-index: 9999; }
-            .brand { display: none; } 
-            .menu-item { flex-direction: column; font-size: 10px; padding: 5px; background: transparent !important; flex: 1; justify-content: center; text-align: center; color: #666; gap: 2px; }
-            .menu-item.active { color: var(--accent); }
-            .menu-icon { margin-bottom: 0; font-size: 18px; }
-            .main { padding-bottom: 80px; }
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 5px; }
+            .brand { display: none; }
+            .menu-item { flex-direction: column; font-size: 10px; padding: 5px; background: transparent !important; }
         }
-        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="brand">SBS ADMIN</div>
-        <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Laporan</span></div>
-        <div class="menu-item" onclick="showPage('stock')"><span class="menu-icon">📦</span><span>Stok & Resep</span></div>
-        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat</span></div>
+        <div class="brand">SBS OWNER</div>
+        <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Keuangan</span></div>
+        <div class="menu-item" onclick="showPage('logs')"><span class="menu-icon">👁</span><span>Audit Log Stok</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat Pesanan</span></div>
     </div>
 
     <div class="main" id="finance-page">
-        <h2 class="page-title">LAPORAN KEUANGAN</h2>
+        <h2 class="page-title">LAPORAN OMZET</h2>
         <div class="filters">
-            <select id="finance-mode" class="form-select" style="width:auto;" onchange="toggleFinanceFilter()">
+            <select id="finance-mode" class="form-select" onchange="toggleFinanceFilter()">
                 <option value="daily">Harian</option>
                 <option value="monthly">Bulanan</option>
             </select>
-            <input type="date" id="finance-date" class="form-input" style="width:auto;" onchange="calculateFinance()">
-            <input type="month" id="finance-month" class="form-input" style="width:auto; display:none;" onchange="calculateFinance()">
+            <input type="date" id="finance-date" class="form-input" onchange="calculateFinance()">
+            <input type="month" id="finance-month" class="form-input" style="display:none;" onchange="calculateFinance()">
         </div>
         <div class="stat-card">
             <div style="font-size:12px; color:#aaa; margin-bottom:5px;">TOTAL PENDAPATAN</div>
@@ -106,157 +71,29 @@
         </div>
     </div>
 
-    <div class="main" id="stock-page" style="display: none;">
-        <h2 class="page-title">MANAJEMEN STOK & HPP</h2>
-        
-        <div class="sub-tabs">
-            <button class="sub-tab active" onclick="openStockTab('raw')">📦 Bahan Mentah</button>
-            <button class="sub-tab" onclick="openStockTab('finished')">🍾 Barang Jadi</button>
-            <button class="sub-tab" onclick="openStockTab('restock')">🛒 Restock (Belanja)</button>
-            <button class="sub-tab" onclick="openStockTab('recipe')">🍲 Mapping Resep</button>
+    <div class="main" id="logs-page" style="display: none;">
+        <h2 class="page-title">LOG AKTIVITAS STOK</h2>
+        <div style="background:var(--card-bg); padding:10px; border-radius:10px; margin-bottom:20px; font-size:12px; border-left:4px solid var(--blue);">
+            Halaman ini mencatat semua perubahan yang dilakukan karyawan di stok.html
         </div>
-
-        <div id="view-raw" class="stock-view">
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <small style="color:#888">Beras, Telur, Gula, dll (Satuan: Gram/ML)</small>
-                <button class="btn btn-accent" onclick="openAddModal('raw')">+ Bahan Mentah</button>
-            </div>
-            <table class="stock-table">
-                <thead><tr><th>Nama</th><th>Stok</th><th>HPP Avg</th><th>Status</th></tr></thead>
-                <tbody id="tbody-raw"></tbody>
-            </table>
-        </div>
-
-        <div id="view-finished" class="stock-view" style="display:none;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <small style="color:#888">Minuman Botol, Rokok, dll (Satuan: Pcs)</small>
-                <button class="btn btn-accent" onclick="openAddModal('finished')">+ Barang Jadi</button>
-            </div>
-            <table class="stock-table">
-                <thead><tr><th>Nama</th><th>Stok</th><th>Modal Beli</th><th>Status</th></tr></thead>
-                <tbody id="tbody-finished"></tbody>
-            </table>
-        </div>
-
-        <div id="view-restock" class="stock-view" style="display:none;">
-            <div class="recipe-builder" style="max-width:500px;">
-                <h3 style="margin-top:0; color:var(--accent)">Input Belanja</h3>
-                <div class="form-group">
-                    <label class="form-label">Kategori Barang</label>
-                    <select id="restock-type" class="form-select" onchange="loadRestockItems()">
-                        <option value="raw">Bahan Mentah (Gram/ML)</option>
-                        <option value="finished">Barang Jadi (Pcs)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Nama Barang</label>
-                    <select id="restock-item-select" class="form-select"></select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Jumlah Dibeli (Sesuai Satuan)</label>
-                    <input type="number" id="restock-qty" class="form-input" placeholder="Contoh: 25000 (untuk 25kg)">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Total Rupiah Belanja</label>
-                    <input type="number" id="restock-total" class="form-input" placeholder="Contoh: 350000">
-                </div>
-                <button class="btn btn-green" onclick="submitRestock()">Simpan Stok & Update HPP</button>
-            </div>
-        </div>
-
-        <div id="view-recipe" class="stock-view" style="display:none;">
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                
-                <div class="recipe-builder">
-                    <h3 style="margin-top:0; color:var(--accent)">Mapping HPP Menu</h3>
-                    <div class="form-group">
-                        <label class="form-label">Pilih Menu (Sesuai Menu Pelanggan)</label>
-                        <select id="recipe-menu-select" class="form-select" onchange="loadRecipeDetails()"></select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Harga Jual Menu (Rp)</label>
-                        <input type="number" id="recipe-sell-price" class="form-input" placeholder="Contoh: 25000">
-                    </div>
-
-                    <label class="form-label" style="margin-top:20px; border-top:1px dashed #444; padding-top:10px;">Komposisi Bahan:</label>
-                    <div id="recipe-ingredients-list"></div>
-
-                    <div class="form-group" style="margin-top:10px; display:flex; gap:5px;">
-                        <select id="add-ing-source" class="form-select" style="width:120px;" onchange="loadIngOptions()">
-                            <option value="raw">Bahan Mentah</option>
-                            <option value="finished">Barang Jadi</option>
-                        </select>
-                        <select id="add-ing-select" class="form-select"></select>
-                        <input type="number" id="add-ing-qty" class="form-input" style="width:80px;" placeholder="Qty">
-                        <button class="btn btn-grey" onclick="addIngredientToRecipe()">+</button>
-                    </div>
-
-                    <button class="btn btn-green" onclick="saveRecipeMap()" style="width:100%; margin-top:20px;">Simpan Resep</button>
-                </div>
-
-                <div class="profit-box">
-                    <h3 style="margin-top:0; color:#fff;">Kalkulasi Profit</h3>
-                    
-                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                        <span class="profit-label">Harga Jual</span>
-                        <span id="calc-sell" style="color:#fff; font-weight:bold;">Rp 0</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:10px;">
-                        <span class="profit-label">Total HPP (Modal)</span>
-                        <span id="calc-hpp" style="color:var(--red); font-weight:bold;">Rp 0</span>
-                    </div>
-                    
-                    <div style="text-align:center;">
-                        <span class="profit-label">ESTIMASI PROFIT BERSIH</span>
-                        <div class="profit-val" id="calc-profit">Rp 0</div>
-                        <span id="calc-margin" style="font-size:12px; color:var(--blue)">(0%)</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th width="120">Waktu</th>
+                    <th>Aktivitas</th>
+                </tr>
+            </thead>
+            <tbody id="logs-tbody">
+                </tbody>
+        </table>
     </div>
 
     <div class="main" id="history-page" style="display: none;">
-        <h2 class="page-title">RIWAYAT TRANSAKSI</h2>
+        <h2 class="page-title">RIWAYAT PESANAN</h2>
         <div class="filters">
-            <input type="date" id="history-date-picker" class="form-input" style="width:auto;" onchange="renderHistory()">
+            <input type="date" id="history-date-picker" class="form-input" onchange="renderHistory()">
         </div>
         <div id="history-grid" class="orders-grid"></div>
-    </div>
-
-    <div id="modal-add-item" class="modal">
-        <div class="modal-content">
-            <h3 id="modal-title" style="margin-top:0; color:var(--accent)">Tambah Barang</h3>
-            <input type="hidden" id="new-item-type">
-            
-            <div class="form-group">
-                <label class="form-label">Nama Barang</label>
-                <input type="text" id="new-item-name" class="form-input">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Satuan</label>
-                <select id="new-item-unit" class="form-select">
-                    </select>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Stok Awal</label>
-                <input type="number" id="new-item-stock" class="form-input" onkeyup="autoSuggestAlert()">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Min. Stok (Alert)</label>
-                <input type="number" id="new-item-min" class="form-input">
-                <span id="alert-recommendation" class="recommendation-text"></span>
-            </div>
-
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button class="btn btn-grey" onclick="document.getElementById('modal-add-item').style.display='none'">Batal</button>
-                <button class="btn btn-green" onclick="saveNewItem()">Simpan</button>
-            </div>
-        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -272,301 +109,56 @@
             messagingSenderId: "530098727952",
             appId: "1:530098727952:web:1bb3072d93be9564fbee95"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        
-        let dbRaw = [], dbFinished = [], dbOrders = [], dbRecipes = {};
-        
-        // DAFTAR MENU SBS (HARDCODED UNTUK MAPPING)
-        const menuList = [
-            "Kalter", "Obama", "Mangku Koe", "Mangku Ayang", "Barudak", 
-            "Sekena Gomes", "Sekena Goput", "Sekena Keren",
-            "Paket Sambat", "Cricket", "Potato Freak", "Uhat Lawik", 
-            "Gyozable", "Tahu Julit",
-            "Fressa", "Americano", "Dark Freshly", "Darkberry", 
-            "Tubruk Syari", "Hanoi Tears", "Penkopi", "Macch Favorito", 
-            "Specta", "Comica", "Rhumpee", "Crush", "Mammy", "Deep Choc",
-            "Schopea", "Creamberry", "Jandu", "Threepi", "Teh Gelies",
-            "Red Bloom", "Yagustea", "Chenteal", "Trustey", "Rindu", "Literally Water",
-            "Bintang Small", "Bintang Radler", "Bintang Large", "Anker Lychee",
-            "Anker Pineapple", "Smirnoff Raspberry", "Smirnoff Green Apple",
-            "Smirnoff Lemon Lyc", "Smirnoff Pink Lem", "Mix Max Anggur",
-            "Mix Max Blue", "Iceland Lychee", "Iceland L. Island", "Api Anggur Hijau"
-        ];
-        
-        let currentRecipeIngredients = [];
+        let dbOrders = [];
 
-        // --- INIT ---
         document.getElementById('finance-date').valueAsDate = new Date();
         document.getElementById('history-date-picker').valueAsDate = new Date();
 
-        // LOAD DATA
-        db.ref('stock_raw').on('value', s => { dbRaw = []; if(s.val()) Object.keys(s.val()).forEach(k => dbRaw.push({id:k, ...s.val()[k]})); renderStocks(); });
-        db.ref('stock_finished').on('value', s => { dbFinished = []; if(s.val()) Object.keys(s.val()).forEach(k => dbFinished.push({id:k, ...s.val()[k]})); renderStocks(); });
-        db.ref('recipes').on('value', s => { dbRecipes = s.val() || {}; });
+        // LOAD ORDERS
         db.ref('orders').on('value', s => {
-            dbOrders = []; if(s.val()) Object.keys(s.val()).forEach(k => dbOrders.push({id:k, ...s.val()[k]}));
+            dbOrders = []; if(s.val()) Object.keys(s.val()).forEach(k=>dbOrders.push({id:k,...s.val()[k]}));
             calculateFinance(); renderHistory();
         });
 
-        // --- PAGE NAVIGATION ---
-        function showPage(p) {
-            document.querySelectorAll('.main').forEach(e => e.style.display='none');
-            document.getElementById(p+'-page').style.display='block';
-            document.querySelectorAll('.menu-item').forEach(e => e.classList.remove('active'));
-            if(p=='finance') document.querySelectorAll('.menu-item')[0].classList.add('active');
-            if(p=='stock') document.querySelectorAll('.menu-item')[1].classList.add('active');
-            if(p=='history') document.querySelectorAll('.menu-item')[2].classList.add('active');
-        }
-
-        function openStockTab(t) {
-            document.querySelectorAll('.stock-view').forEach(e => e.style.display='none');
-            document.querySelectorAll('.sub-tab').forEach(e => e.classList.remove('active'));
-            document.getElementById('view-'+t).style.display='block';
-            event.currentTarget.classList.add('active');
+        // LOAD LOGS (Realtime)
+        db.ref('activity_logs').limitToLast(50).on('value', snap => {
+            const tbody = document.getElementById('logs-tbody');
+            tbody.innerHTML = '';
+            const logs = [];
+            if(snap.val()) Object.keys(snap.val()).forEach(k => logs.push(snap.val()[k]));
             
-            if(t==='restock') loadRestockItems();
-            if(t==='recipe') { populateMenuDropdown(); loadIngOptions(); }
-        }
+            // Urutkan dari yang terbaru
+            logs.sort((a,b) => b.timestamp - a.timestamp);
 
-        // --- STOCK LOGIC ---
-        function openAddModal(type) {
-            document.getElementById('modal-add-item').style.display = 'flex';
-            document.getElementById('new-item-type').value = type;
-            document.getElementById('modal-title').innerText = type === 'raw' ? "Tambah Bahan Mentah" : "Tambah Barang Jadi";
-            
-            const sel = document.getElementById('new-item-unit');
-            sel.innerHTML = '';
-            if(type === 'raw') {
-                sel.innerHTML = '<option value="gram">Gram (Padat)</option><option value="ml">Mililiter (Cair)</option>';
-            } else {
-                sel.innerHTML = '<option value="pcs">Pcs / Botol</option>';
-            }
-            // Reset fields
-            document.getElementById('new-item-name').value = '';
-            document.getElementById('new-item-stock').value = '';
-            document.getElementById('new-item-min').value = '';
-            document.getElementById('alert-recommendation').innerText = '';
-        }
-
-        function autoSuggestAlert() {
-            const stock = parseFloat(document.getElementById('new-item-stock').value) || 0;
-            const rec = Math.ceil(stock * 0.2); // 20% rule
-            document.getElementById('new-item-min').value = rec;
-            document.getElementById('alert-recommendation').innerText = `*Rekomendasi sistem: ${rec} (20% dari stok awal)`;
-        }
-
-        function saveNewItem() {
-            const type = document.getElementById('new-item-type').value;
-            const name = document.getElementById('new-item-name').value;
-            const unit = document.getElementById('new-item-unit').value;
-            const stock = parseFloat(document.getElementById('new-item-stock').value) || 0;
-            const min = parseFloat(document.getElementById('new-item-min').value) || 0;
-
-            if(!name) return alert("Nama wajib diisi");
-
-            const path = type === 'raw' ? 'stock_raw' : 'stock_finished';
-            db.ref(path).push({
-                name: name, unit: unit, stock: stock, min_stock: min,
-                avg_price: 0 // Inisialisasi HPP 0
-            }).then(() => {
-                document.getElementById('modal-add-item').style.display = 'none';
-            });
-        }
-
-        function renderStocks() {
-            const trRaw = document.getElementById('tbody-raw');
-            const trFin = document.getElementById('tbody-finished');
-            trRaw.innerHTML = ''; trFin.innerHTML = '';
-
-            const createRow = (item) => {
-                const isLow = item.stock <= item.min_stock;
-                const status = isLow ? `<span class="badge badge-low">LOW: ${item.min_stock}</span>` : `<span class="badge badge-safe">OK</span>`;
-                const price = parseFloat(item.avg_price || 0).toFixed(2);
-                return `<tr>
-                    <td><b>${item.name}</b> <span class="badge badge-unit">${item.unit}</span></td>
-                    <td>${parseFloat(item.stock).toLocaleString()}</td>
-                    <td>Rp ${parseFloat(price).toLocaleString()}</td>
-                    <td>${status}</td>
-                </tr>`;
-            };
-
-            dbRaw.forEach(i => trRaw.innerHTML += createRow(i));
-            dbFinished.forEach(i => trFin.innerHTML += createRow(i));
-        }
-
-        // --- RESTOCK LOGIC ---
-        function loadRestockItems() {
-            const type = document.getElementById('restock-type').value;
-            const sel = document.getElementById('restock-item-select');
-            sel.innerHTML = '<option value="">-- Pilih Barang --</option>';
-            const source = type === 'raw' ? dbRaw : dbFinished;
-            source.forEach(i => {
-                const opt = document.createElement('option');
-                opt.value = i.id;
-                opt.innerText = i.name;
-                sel.appendChild(opt);
-            });
-        }
-
-        function submitRestock() {
-            const type = document.getElementById('restock-type').value;
-            const id = document.getElementById('restock-item-select').value;
-            const qty = parseFloat(document.getElementById('restock-qty').value);
-            const total = parseFloat(document.getElementById('restock-total').value);
-
-            if(!id || !qty || !total) return alert("Lengkapi data belanja");
-
-            const source = type === 'raw' ? dbRaw : dbFinished;
-            const item = source.find(i => i.id === id);
-            
-            // Moving Average Logic
-            const oldStock = parseFloat(item.stock) || 0;
-            const oldAvg = parseFloat(item.avg_price) || 0;
-            const oldVal = oldStock * oldAvg;
-            
-            const newStock = oldStock + qty;
-            const newVal = oldVal + total;
-            const newAvg = newVal / newStock;
-
-            const path = type === 'raw' ? 'stock_raw' : 'stock_finished';
-            db.ref(path + '/' + id).update({
-                stock: newStock,
-                avg_price: newAvg
-            }).then(() => {
-                alert("Restock Berhasil! HPP Updated.");
-                document.getElementById('restock-qty').value = '';
-                document.getElementById('restock-total').value = '';
-            });
-        }
-
-        // --- RECIPE MAPPING LOGIC ---
-        function populateMenuDropdown() {
-            const sel = document.getElementById('recipe-menu-select');
-            if(sel.options.length > 1) return; // Don't reload if exists
-            sel.innerHTML = '<option value="">-- Pilih Menu SBS --</option>';
-            menuList.forEach(m => {
-                const opt = document.createElement('option');
-                opt.value = m; opt.innerText = m;
-                sel.appendChild(opt);
-            });
-        }
-
-        function loadIngOptions() {
-            const type = document.getElementById('add-ing-source').value;
-            const sel = document.getElementById('add-ing-select');
-            sel.innerHTML = '';
-            const source = type === 'raw' ? dbRaw : dbFinished;
-            source.forEach(i => {
-                const opt = document.createElement('option');
-                opt.value = i.id;
-                opt.innerText = `${i.name} (${i.unit})`;
-                sel.appendChild(opt);
-            });
-        }
-
-        function loadRecipeDetails() {
-            const menuName = document.getElementById('recipe-menu-select').value;
-            currentRecipeIngredients = [];
-            document.getElementById('recipe-sell-price').value = '';
-
-            if(dbRecipes[menuName]) {
-                const r = dbRecipes[menuName];
-                currentRecipeIngredients = r.ingredients || [];
-                document.getElementById('recipe-sell-price').value = r.sell_price || '';
-            }
-            renderRecipeBuilder();
-        }
-
-        function addIngredientToRecipe() {
-            const type = document.getElementById('add-ing-source').value;
-            const id = document.getElementById('add-ing-select').value;
-            const qty = parseFloat(document.getElementById('add-ing-qty').value);
-            
-            if(!id || !qty) return;
-
-            const source = type === 'raw' ? dbRaw : dbFinished;
-            const item = source.find(i => i.id === id);
-
-            // Add to temp array
-            currentRecipeIngredients.push({
-                type: type,
-                id: id,
-                name: item.name,
-                unit: item.unit,
-                qty: qty,
-                cost_per_unit: item.avg_price || 0
-            });
-            
-            renderRecipeBuilder();
-        }
-
-        function renderRecipeBuilder() {
-            const div = document.getElementById('recipe-ingredients-list');
-            div.innerHTML = '';
-            let totalHPP = 0;
-
-            currentRecipeIngredients.forEach((ing, idx) => {
-                // Get latest cost from DB just in case
-                let liveItem = null;
-                if(ing.type === 'raw') liveItem = dbRaw.find(x => x.id === ing.id);
-                else liveItem = dbFinished.find(x => x.id === ing.id);
-                
-                const costUnit = liveItem ? (liveItem.avg_price || 0) : 0;
-                const subtotal = costUnit * ing.qty;
-                totalHPP += subtotal;
-
-                div.innerHTML += `
-                    <div class="recipe-row" style="background:#222; padding:8px; border-radius:5px; font-size:12px;">
-                        <span style="flex:1;">${ing.name}</span>
-                        <span>${ing.qty} ${ing.unit}</span>
-                        <span style="color:#888;">Rp ${subtotal.toFixed(0)}</span>
-                        <button onclick="removeIng(${idx})" style="background:none; border:none; color:red; cursor:pointer;">x</button>
-                    </div>
+            logs.forEach(log => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><div class="log-time">${log.timeString || '-'}</div></td>
+                        <td>
+                            <div class="log-action">${log.action}</div>
+                            <div class="log-detail">${log.details}</div>
+                        </td>
+                    </tr>
                 `;
             });
+        });
 
-            // Update Calc
-            const sellPrice = parseFloat(document.getElementById('recipe-sell-price').value) || 0;
-            const profit = sellPrice - totalHPP;
-            const margin = sellPrice > 0 ? (profit / sellPrice) * 100 : 0;
-
-            document.getElementById('calc-sell').innerText = "Rp " + sellPrice.toLocaleString();
-            document.getElementById('calc-hpp').innerText = "Rp " + totalHPP.toLocaleString(undefined, {maximumFractionDigits:0});
-            document.getElementById('calc-profit').innerText = "Rp " + profit.toLocaleString(undefined, {maximumFractionDigits:0});
-            document.getElementById('calc-margin').innerText = `(${margin.toFixed(1)}%)`;
-            
-            if(profit < 0) document.getElementById('calc-profit').style.color = 'var(--red)';
-            else document.getElementById('calc-profit').style.color = 'var(--green)';
+        function showPage(p) {
+            document.querySelectorAll('.main').forEach(e=>e.style.display='none');
+            document.getElementById(p+'-page').style.display='block';
+            document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active'));
+            if(p=='finance') document.querySelectorAll('.menu-item')[0].classList.add('active');
+            if(p=='logs') document.querySelectorAll('.menu-item')[1].classList.add('active');
+            if(p=='history') document.querySelectorAll('.menu-item')[2].classList.add('active');
+            if(p=='finance') calculateFinance();
         }
 
-        function removeIng(idx) {
-            currentRecipeIngredients.splice(idx, 1);
-            renderRecipeBuilder();
-        }
-
-        function saveRecipeMap() {
-            const menuName = document.getElementById('recipe-menu-select').value;
-            const sellPrice = parseFloat(document.getElementById('recipe-sell-price').value) || 0;
-            
-            if(!menuName) return alert("Pilih menu dulu!");
-
-            db.ref('recipes/' + menuName).set({
-                sell_price: sellPrice,
-                ingredients: currentRecipeIngredients
-            }).then(() => {
-                alert("Resep & HPP Tersimpan!");
-            });
-        }
-
-        // --- FINANCE & HISTORY (Existing Logic) ---
         function calculateFinance() {
-            // (Kode sama dengan sebelumnya, tidak diubah)
             const mode = document.getElementById('finance-mode').value;
             let totalRev = 0;
             let targetDate, targetMonth;
-            
             if (mode === 'daily') targetDate = new Date(document.getElementById('finance-date').value);
             else { const val = document.getElementById('finance-month').value; if(val) targetMonth = val; }
 
@@ -577,10 +169,7 @@
                 let total = Number(raw) || 0;
                 let match = false;
                 if (mode === 'daily' && targetDate && oDate.toDateString() === targetDate.toDateString()) match = true;
-                if (mode === 'monthly' && targetMonth) {
-                   const mStr = oDate.toISOString().slice(0,7);
-                   if(mStr === targetMonth) match = true;
-                }
+                if (mode === 'monthly' && targetMonth && oDate.toISOString().slice(0,7) === targetMonth) match = true;
                 if(match) totalRev += total;
             });
             document.getElementById('main-stat-rev').innerText = "Rp " + totalRev.toLocaleString('id-ID');
@@ -597,9 +186,7 @@
             const grid = document.getElementById('history-grid');
             grid.innerHTML = '';
             const filterDate = new Date(document.getElementById('history-date-picker').value).toDateString();
-            
             const sorted = [...dbOrders].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-
             sorted.forEach(order => {
                 if (['completed', 'rejected'].includes(order.status)) {
                     if (new Date(order.completedAt || order.timestamp).toDateString() === filterDate) {
