@@ -6,7 +6,7 @@
     <title>SBS Kitchen - OPS</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS TETAP SAMA (TIDAK ADA YANG DIUBAH) */
+        /* CSS TIDAK ADA YANG SAYA UBAH */
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -217,90 +217,104 @@
             updateBadges();
         });
 
-        // --- NEW: DIRECT PRINTING LOGIC (RAWBT HTML RENDER FIX) ---
-        // Penambahan "data:text/html;" sangat krusial agar tidak dicetak sebagai kode
+        // --- NEW: ESC/POS GENERATOR (FUNGSI CETAK TANPA PINDAH APLIKASI) ---
+        // Metode ini mengirim kode HEX langsung ke printer, bukan HTML.
         function printDirect(orderId, type) {
             const order = allOrders.find(o => o.id === orderId);
             if (!order) return;
 
-            let queueNum = "";
-            if (order.tableNumber) queueNum = order.tableNumber;
-            else if (order.customer && !isNaN(order.customer)) queueNum = order.customer;
-            else queueNum = "N/A";
-
+            let queueNum = order.tableNumber ? order.tableNumber : (order.customer || '00');
             const dateObj = new Date(order.timestamp);
-            const dateStr = dateObj.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+            const dateStr = dateObj.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
             const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
 
-            // CSS Khusus untuk Printer Thermal
-            const css = `
-                <style>
-                    body { font-family: 'monospace'; font-size: 16px; width: 100%; margin: 0; color: #000; }
-                    .center { text-align: center; }
-                    .bold { font-weight: bold; }
-                    .line { border-bottom: 1px dashed #000; margin: 5px 0; }
-                    .row { display: flex; justify-content: space-between; margin-bottom: 2px; }
-                </style>
-            `;
+            // ESC/POS Commands (Hex Codes untuk Printer Thermal)
+            const ESC = "\x1B";
+            const GS = "\x1D";
+            const INIT = ESC + "@";
+            const ALIGN_CENTER = ESC + "a" + "\x01";
+            const ALIGN_LEFT = ESC + "a" + "\x00";
+            const ALIGN_RIGHT = ESC + "a" + "\x02";
+            const BOLD_ON = ESC + "E" + "\x01";
+            const BOLD_OFF = ESC + "E" + "\x00";
+            const TEXT_DOUBLE = GS + "!" + "\x11"; 
+            const TEXT_NORMAL = GS + "!" + "\x00";
+            const CUT = GS + "V" + "\x42" + "\x00";
 
-            let html = "";
+            let data = INIT;
+
             if (type === 'invoice') {
-                let itemsHtml = order.items.map(item => `
-                    <div style="margin-bottom:6px;">
-                        <div>${item.name}</div>
-                        <div class="row" style="font-size:14px;">
-                            <span>${item.qty}x @${parseInt(item.price).toLocaleString('id-ID')}</span>
-                            <span>${(item.qty * item.price).toLocaleString('id-ID').replace(/,/g, '.')}</span>
-                        </div>
-                        ${item.note ? `<div style="font-size:12px;font-style:italic;">+${item.note}</div>` : ''}
-                        <div class="row" style="font-size:14px;"><span>@0</span><span>0</span></div>
-                    </div>
-                `).join('');
+                // --- INVOICE LAYOUT (TANPA GAMBAR, TAPI RAPI) ---
+                data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF;
+                data += "Jl. Mundu 8, Kota Malang\n";
+                data += "Jawa Timur, 65116\n";
+                data += "085159039877\n";
+                data += "--------------------------------\n";
+                data += ALIGN_LEFT;
+                data += "Queue No: " + queueNum + "\n";
+                data += "Date    : " + dateStr + " " + timeStr + "\n";
+                data += "Order ID: " + order.id.slice(-6).toUpperCase() + "\n";
+                data += "--------------------------------\n";
+                
+                // Items Loop
+                order.items.forEach(item => {
+                    let price = parseInt(item.price);
+                    let sub = item.qty * price;
+                    data += item.name + "\n";
+                    // Format: 1x @20.000 ... 20.000
+                    let line = item.qty + "x @" + price.toLocaleString('id-ID');
+                    let priceStr = sub.toLocaleString('id-ID');
+                    
+                    // Simple spacing logic (Manual Align Right)
+                    let spaces = 32 - line.length - priceStr.length;
+                    if(spaces < 1) spaces = 1;
+                    
+                    data += line + " ".repeat(spaces) + priceStr + "\n";
+                    if(item.note) data += "  (Note: " + item.note + ")\n";
+                });
 
-                html = `<html><head>${css}</head><body>
-                    <div class="center"><img src="img/sbslogo.jpg" style="width:60px; filter:grayscale(100%);"><br><span class="bold">SBS Cafe</span><br>Jl. Mundu 8, Kota Malang, Jawa T<br>imur, 65116<br>085159039877</div>
-                    <div class="line"></div>
-                    <div class="center">Queue No:${queueNum}</div>
-                    <div class="line"></div>
-                    <div class="row"><span>${dateStr}</span><span>${timeStr}</span></div>
-                    <div class="row"><span>Receipt Number</span><span>${order.id.slice(-6).toUpperCase()}</span></div>
-                    <div class="row"><span>Order ID</span><span>2SA${order.id.slice(-4).toUpperCase()}</span></div>
-                    <div class="row"><span>Served By</span><span>Kasir _</span></div>
-                    <div class="line"></div>
-                    ${itemsHtml}
-                    <div class="line"></div>
-                    <div class="row"><span>Subtotal</span><span>Rp ${(parseInt(order.total)||0).toLocaleString('id-ID').replace(/,/g, '.')}</span></div>
-                    <div class="line"></div>
-                    <div class="row bold"><span>Total</span><span>Rp ${(parseInt(order.total)||0).toLocaleString('id-ID').replace(/,/g, '.')}</span></div>
-                    <div class="row"><span>BCA</span><span>Rp ${(parseInt(order.total)||0).toLocaleString('id-ID').replace(/,/g, '.')}</span></div>
-                    <div class="line"></div>
-                    <div style="font-size:10px;">⚪ sbscafemlg<br><br><div class="line"></div>Notes<br>Wifi : SBSkopi8</div>
-                </body></html>`;
+                data += "--------------------------------\n";
+                let totalStr = parseInt(order.total).toLocaleString('id-ID');
+                let totalLabel = "TOTAL";
+                let totalSpaces = 32 - totalLabel.length - totalStr.length;
+                
+                data += BOLD_ON + totalLabel + " ".repeat(totalSpaces > 0 ? totalSpaces : 1) + totalStr + "\n" + BOLD_OFF;
+                data += "--------------------------------\n";
+                data += ALIGN_CENTER + "Wifi: SBSkopi8\n";
+                data += "Terima Kasih!\n\n\n\n"; // Feed kertas
             } else {
-                let itemsHtml = order.items.map(item => `
-                    <div style="margin-bottom:12px; border-bottom:1px solid #ccc; padding-bottom:5px;">
-                        <div class="row"><span class="bold" style="font-size:24px;">${item.qty}x</span><span class="bold" style="font-size:20px; flex:1; margin-left:12px;">${item.name}</span></div>
-                        ${item.note ? `<div class="bold" style="font-size:16px; margin-left:40px;">NOTE: ${item.note}</div>` : ''}
-                    </div>
-                `).join('');
-
-                html = `<html><head>${css}</head><body>
-                    <div class="center bold" style="font-size:22px;">CHECKER DAPUR</div>
-                    <div class="center bold" style="font-size:20px;">Queue No: ${queueNum}</div>
-                    <div class="line"></div>
-                    <div class="row"><span>${timeStr}</span><span>ID: ${order.id.slice(-4)}</span></div>
-                    <div class="line"></div>
-                    ${itemsHtml}
-                </body></html>`;
+                // --- CHECKER LAYOUT ---
+                data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER DAPUR\n" + TEXT_NORMAL + BOLD_OFF;
+                data += "\n" + ALIGN_LEFT + BOLD_ON + "QUEUE: " + queueNum + BOLD_OFF + "\n";
+                data += "TIME : " + timeStr + "\n";
+                data += "ID   : " + order.id.slice(-4) + "\n";
+                data += "--------------------------------\n";
+                
+                order.items.forEach(item => {
+                    data += BOLD_ON + item.qty + " x " + item.name + BOLD_OFF + "\n";
+                    if(item.note) data += "   [ " + item.note + " ]\n";
+                    data += "\n"; 
+                });
+                data += "\n\n\n\n"; // Feed kertas
             }
 
-            // Encode HTML ke Base64 dengan header yang BENAR
-            var s = unescape(encodeURIComponent(html));
-            var base64 = btoa(s);
-            // PENTING: Tambahkan 'data:text/html;' agar RawBT tahu ini HTML bukan raw text
-            var url = "rawbt:data:text/html;base64," + base64;
+            // ENCODE KE BASE64
+            // Kita harus convert string binary ke Base64 agar RawBT bisa membacanya sebagai command
+            const buffer = new Uint8Array(data.length);
+            for (let i = 0; i < data.length; i++) {
+                buffer[i] = data.charCodeAt(i);
+            }
             
-            window.location.href = url;
+            // Konversi manual buffer ke string base64 yang aman
+            let binary = '';
+            for (let i = 0; i < buffer.byteLength; i++) {
+                binary += String.fromCharCode(buffer[i]);
+            }
+            const base64Data = btoa(binary);
+
+            // SEND TO RAWBT (Mode: Base64 Command)
+            // Scheme "rawbt:base64" memberitahu aplikasi: "Ini kode mesin, langsung kirim ke printer!"
+            window.location.href = "rawbt:base64," + base64Data;
         }
 
         setInterval(() => {
@@ -356,12 +370,17 @@
         }
 
         function createCard(order) {
-            let displayName = order.customer || "Pelanggan";
+            // FIX NAMA (MENANGANI UNDEFINED)
+            // Logika: Cek tableNumber dulu -> Cek customerName -> Cek customer (legacy) -> Default
+            let displayName = "Pelanggan";
+            
             if (order.tableNumber) {
-                displayName = `MEJA ${order.tableNumber}`;
-                if (order.customerName) displayName += ` - ${order.customerName.toUpperCase()}`;
-            } else if (order.customer && !isNaN(order.customer)) {
-                displayName = "MEJA " + order.customer;
+                displayName = "MEJA " + order.tableNumber;
+                if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
+            } else if (order.customer) {
+                // Cek apakah customer itu angka (Meja) atau nama
+                if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
+                else displayName = order.customer;
             }
 
             const created = new Date(order.timestamp).getTime();
@@ -397,7 +416,12 @@
                 historyHtml = `<div class="history-details"><div class="history-row"><span>Masak:</span> <span class="h-val">${fmtDur(durMasak)}</span></div><div style="border-top:1px dashed #666; margin-top:5px; padding-top:2px;" class="history-row"><span>TOTAL DURASI:</span> <span class="h-val" style="color:var(--accent); font-size:14px;">${fmtDur(durTotal)}</span></div></div>`;
             }
 
-            const printButtons = `<div class="btn-print-group"><button class="btn-print" onclick="printDirect('${order.id}', 'checker')">🖨 Checker</button><button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">🧾 Invoice</button></div>`;
+            const printButtons = `
+                <div class="btn-print-group">
+                    <button class="btn-print" onclick="printDirect('${order.id}', 'checker')">🖨 Checker</button>
+                    <button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">🧾 Invoice</button>
+                </div>
+            `;
 
             let buttonsHtml = '';
             if (order.status === 'new') buttonsHtml = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button><button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button><button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">Terima</button>`;
