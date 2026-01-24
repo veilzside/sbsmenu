@@ -171,7 +171,7 @@
             });
         });
 
-        // --- FUNGSI HISTORY CARD (SAMA DENGAN DAPUR.HTML) ---
+        // --- FUNGSI CREATE CARD DETIL (IDENTIK DENGAN DAPUR.HTML) ---
         function createHistoryCard(order) {
             let displayName = "Pelanggan";
             if (order.tableNumber) {
@@ -211,10 +211,10 @@
 
             // HEADER INFO
             const dateStr = new Date(created).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
-            const timeIn = new Date(created).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            const timeIn = new Date(created).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
             let timeOut = '-';
             if(order.completedAt) {
-                timeOut = new Date(order.completedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                timeOut = new Date(order.completedAt).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
             }
 
             // METRICS & FOOTER
