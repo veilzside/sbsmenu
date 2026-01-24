@@ -6,7 +6,7 @@
     <title>SBS Kitchen - OPS</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS SAMA PERSIS DENGAN FILE ASLI */
+        /* --- CSS ASLI DARI FILE YANG ANDA KIRIM (TIDAK DIUBAH) --- */
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -52,7 +52,6 @@
         .btn-trash:hover { color: var(--red); }
         .total-row { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
 
-        /* HISTORY DETAIL CSS (WAJIB ADA) */
         .history-details { font-size: 11px; color: #aaa; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
         .history-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
         .h-val { color: #fff; font-weight: bold; }
@@ -67,6 +66,11 @@
         .btn-green { background: var(--green); } .btn-red { background: var(--red); }
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
         .btn-full { grid-column: span 2; }
+
+        /* --- TAMBAHAN STYLE TOMBOL PRINT (AGAR RAPI) --- */
+        .btn-print-group { display: flex; gap: 5px; margin-bottom: 15px; border-top: 1px dashed #444; padding-top: 10px; }
+        .btn-print { flex: 1; background: transparent; border: 1px solid #555; color: #aaa; padding: 5px; border-radius: 5px; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .btn-print:hover { background: #444; color: #fff; border-color: #fff; }
 
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
@@ -215,7 +219,6 @@
             updateBadges();
         });
 
-        // LIVE TIMER UPDATE
         setInterval(() => {
             updateLiveTimers();
             checkNaggingAlarm();
@@ -251,8 +254,6 @@
             const historyGrid = document.getElementById('history-grid');
             grid.innerHTML = '';
             historyGrid.innerHTML = '';
-            
-            // Default Kitchen View: History Hari Ini
             const today = new Date().toDateString();
 
             allOrders.forEach(order => {
@@ -270,20 +271,119 @@
             updateLiveTimers();
         }
 
-        // --- FUNGSI CREATE CARD DIPERBAIKI (HANDLE UNDEFINED) ---
-        function createCard(order) {
-            // FIX: LOGIKA NAMA CUSTOMER
-            let displayName = order.customer || "Pelanggan"; // Default legacy
-            
-            // Cek format baru (tableNumber & customerName)
+        // --- FUNGSI PRINT STRUK (SESUAI GAMBAR) ---
+        function printReceipt(orderId, type) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            // Logika Nama Agar Tidak Undefined
+            let queueName = "";
             if (order.tableNumber) {
-                displayName = `MEJA ${order.tableNumber}`;
-                if (order.customerName) {
-                    displayName += ` - ${order.customerName.toUpperCase()}`;
-                }
-            } 
-            // Cek format lama
-            else if (order.customer && !isNaN(order.customer)) {
+                queueName = `Queue No: ${order.tableNumber}`; // Sesuai format gambar
+            } else if (order.customer && !isNaN(order.customer)) {
+                queueName = `Queue No: ${order.customer}`;
+            } else {
+                queueName = `Customer: ${order.customer || order.customerName || 'Tamu'}`;
+            }
+
+            const dateObj = new Date(order.timestamp);
+            const dateStr = dateObj.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}); // 24 Jan 2026
+            const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}); // 13:52
+
+            const style = `
+                <style>
+                    @page { margin: 0; }
+                    body { font-family: 'Courier New', monospace; font-size: 12px; width: 58mm; margin: 0; padding: 5px; color: #000; }
+                    .center { text-align: center; }
+                    .bold { font-weight: bold; }
+                    .line { border-bottom: 1px dashed #000; margin: 5px 0; }
+                    .row { display: flex; justify-content: space-between; }
+                    .item-name { margin-bottom: 2px; }
+                    .item-detail { font-size: 11px; margin-left: 0px; }
+                    .item-note { font-size: 10px; font-style: italic; margin-left: 0px; }
+                    img { width: 60px; filter: grayscale(100%); margin-bottom: 5px; }
+                </style>
+            `;
+
+            let content = '';
+
+            if (type === 'invoice') {
+                // Format Invoice Sesuai Gambar
+                let itemsHtml = order.items.map(item => `
+                    <div style="margin-bottom: 5px;">
+                        <div class="item-name">${item.name}</div>
+                        <div class="row item-detail">
+                            <span>${item.qty}x @${parseInt(item.price).toLocaleString('id-ID')}</span>
+                            <span>${(item.qty * item.price).toLocaleString('id-ID').replace(/,/g, '.')}</span>
+                        </div>
+                        ${item.note ? `<div class="item-note">+${item.note}</div>` : ''}
+                        <div class="item-detail row"><span>@0</span><span>0</span></div>
+                    </div>
+                `).join('');
+
+                content = `<html><head>${style}</head><body>
+                    <div class="center">
+                        <img src="img/sbslogo.jpg" alt="Logo"><br>
+                        <span class="bold" style="font-size:14px;">SBS Cafe</span><br>
+                        Jl. Mundu 8, Kota Malang, Jawa T<br>imur, 65116<br>
+                        085159039877
+                    </div>
+                    <div class="line"></div>
+                    <div class="center">${queueName}</div>
+                    <div class="line"></div>
+                    <div class="row"><span>${dateStr}</span><span>${timeStr}</span></div>
+                    <div class="row"><span>Receipt Number</span><span>${order.id.slice(-6).toUpperCase()}</span></div>
+                    <div class="row"><span>Order ID</span><span>2SA${order.id.slice(-4).toUpperCase()}</span></div>
+                    <div class="row"><span>Served By</span><span>Kasir _</span></div>
+                    <div class="row"><span>Collected By</span><span>Kasir _</span></div>
+                    <div class="line"></div>
+                    ${itemsHtml}
+                    <div class="line"></div>
+                    <div class="row"><span>Subtotal</span><span>Rp ${(parseInt(order.total)||0).toLocaleString('id-ID').replace(/,/g, '.')}</span></div>
+                    <div class="line"></div>
+                    <div class="row bold"><span>Total</span><span>Rp ${(parseInt(order.total)||0).toLocaleString('id-ID').replace(/,/g, '.')}</span></div>
+                    <div class="row"><span>BCA</span><span>Rp ${(parseInt(order.total)||0).toLocaleString('id-ID').replace(/,/g, '.')}</span></div>
+                    <div class="line"></div>
+                    <div style="font-size:10px;">
+                        <span style="font-weight:bold">⚪ sbscafemlg</span><br><br>
+                        <div class="line"></div>
+                        Notes<br>
+                        Wifi : SBSkopi8
+                    </div>
+                    <br>
+                </body></html>`;
+            } else {
+                // Checker Dapur (Simple)
+                let itemsHtml = order.items.map(item => `
+                    <div style="margin-bottom: 10px; border-bottom: 1px solid #eee;">
+                        <div class="row"><span class="bold" style="font-size:16px;">${item.qty}x</span><span class="bold" style="font-size:16px; flex:1; margin-left:10px;">${item.name}</span></div>
+                        ${item.note ? `<div class="item-note bold" style="font-size:12px; margin-left:30px;">NOTE: ${item.note}</div>` : ''}
+                    </div>
+                `).join('');
+
+                content = `<html><head>${style}</head><body>
+                    <div class="center bold" style="font-size:18px;">CHECKER DAPUR</div>
+                    <div class="center bold">${queueName}</div>
+                    <div class="line"></div>
+                    <div class="row"><span>${timeStr}</span><span>ID: ${order.id.slice(-4)}</span></div>
+                    <div class="line"></div>
+                    ${itemsHtml}
+                </body></html>`;
+            }
+
+            const popup = window.open('', '_blank', 'width=300,height=600');
+            popup.document.write(content);
+            popup.document.close();
+            setTimeout(() => { popup.focus(); popup.print(); popup.close(); }, 500);
+        }
+
+        function createCard(order) {
+            // Logika Nama Agar Tidak Undefined di UI
+            let displayName = order.customer || "Pelanggan";
+            if(order.tableNumber) {
+                displayName = "MEJA " + order.tableNumber;
+                if(order.customerName) displayName += " - " + order.customerName.toUpperCase();
+            } else if (order.customer && !isNaN(order.customer)) {
                 displayName = "MEJA " + order.customer;
             }
 
@@ -410,6 +510,14 @@
             if (typeof rawTotal === 'string') rawTotal = rawTotal.replace(/[^0-9]/g, '');
             const safeTotal = Number(rawTotal) || 0;
 
+            // --- INI BAGIAN YANG DITAMBAHKAN (TOMBOL PRINT) ---
+            const printButtons = `
+                <div class="btn-print-group">
+                    <button class="btn-print" onclick="printReceipt('${order.id}', 'checker')">🖨 Checker</button>
+                    <button class="btn-print" onclick="printReceipt('${order.id}', 'invoice')">🧾 Invoice</button>
+                </div>
+            `;
+
             div.innerHTML = `
                 <div class="card-header">
                     <div>
@@ -420,6 +528,7 @@
                 </div>
                 <div class="item-list">${itemsHtml}</div>
                 ${historyHtml}
+                ${printButtons}
                 <div class="total-row">Total: Rp ${safeTotal.toLocaleString()}</div>
                 <div class="actions">${buttonsHtml}</div>
             `;
