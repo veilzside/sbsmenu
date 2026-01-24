@@ -29,59 +29,61 @@
         /* HEADER LAYOUT */
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .header-left { display: flex; flex-direction: column; }
-        .cust-name { font-size: 16px; font-weight: 800; color: #fff; text-transform: uppercase; margin-bottom: 2px; }
+        .cust-name { font-size: 16px; font-weight: 700; color: #fff; text-transform: uppercase; margin-bottom: 2px; }
         .order-id { font-size: 11px; color: #666; font-family: monospace; }
         
         .header-right { text-align: right; }
         .meta-date { font-size: 13px; color: #ccc; margin-bottom: 2px; display: block; font-weight: 500; }
         .meta-time-block { font-size: 11px; color: #aaa; line-height: 1.4; }
         .time-label { color: #777; margin-right: 3px; }
-        .time-val { color: #ddd; font-weight: bold; }
-        .time-highlight { color: var(--green); font-weight: bold; }
+        .time-val { color: #ddd; font-weight: 600; }
+        .time-highlight { color: var(--green); font-weight: 700; }
 
         /* ITEMS */
         .item-list { margin-bottom: 15px; max-height: 300px; overflow-y: auto; padding-right: 5px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
         .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; align-items: flex-start; }
         .item-name { font-weight: 600; color: #eee; }
         .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: 2px; }
-        .item-price { font-weight: bold; color: #fff; }
+        .item-price { font-weight: 700; color: #fff; }
         .item-unit-price { font-size: 10px; color: #888; display: block; }
 
         /* METRICS (SAMA DENGAN DAPUR) */
         .duration-box { margin-bottom: 15px; font-size: 12px; color: #aaa; padding: 0 5px; }
         .dur-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-        .dur-val { color: #fff; font-weight: bold; }
+        .dur-val { color: #fff; font-weight: 700; }
         .dur-total-row { border-top: 1px dashed #666; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-size: 13px; }
         .dur-total-val { color: var(--accent); font-weight: 900; }
 
         /* TOTAL */
-        .total-display { text-align: right; font-size: 18px; font-weight: 900; color: var(--accent); margin-bottom: 20px; }
+        .total-display { text-align: right; font-size: 18px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
 
         /* STATUS / STAMP */
         .status-footer { text-align: center; margin-top: 10px; }
-        .status-text-done { color: var(--green); font-weight: 900; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; }
-        .rejected-label { 
-            color: var(--red); 
-            font-weight: 900; 
-            font-size: 20px; 
-            text-align: center; 
-            border: 2px solid var(--red); 
-            padding: 10px; 
-            transform: rotate(-5deg); 
-            margin: 15px 0; 
+        .status-text-done { color: var(--green); font-weight: 700; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; }
+        .stamp-rejected {
+            border: 2px solid var(--red);
+            color: var(--red);
+            font-size: 20px;
+            font-weight: 700;
             display: inline-block;
+            padding: 8px 20px;
+            transform: rotate(-5deg);
+            letter-spacing: 1px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            text-transform: uppercase;
         }
 
         /* FINANCE & OTHERS */
         .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; margin-bottom: 20px; }
-        .stat-val { font-size: 32px; font-weight: bold; color: var(--green); }
+        .stat-val { font-size: 32px; font-weight: 700; color: var(--green); }
         .filters { margin-bottom: 20px; display: flex; gap: 10px; }
         .form-input, .form-select { background: #15151a; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; font-family: 'Poppins'; }
 
         .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .log-table th { text-align: left; padding: 10px; background: #111; color: #888; }
         .log-table td { padding: 10px; border-bottom: 1px solid #333; }
-        .log-time { color: var(--accent); font-weight: bold; font-size: 11px; }
+        .log-time { color: var(--accent); font-weight: 700; font-size: 11px; }
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
@@ -188,7 +190,7 @@
             const div = document.createElement('div');
             div.className = `order-card status-${order.status}`;
             
-            // ITEM LIST
+            // Detail Items (Termasuk Harga Satuan & Notes)
             let itemsHtml = (order.items || []).map(item => {
                 const qty = parseInt(item.qty);
                 const price = parseInt(item.price);
@@ -220,7 +222,7 @@
             let statusFooter = '';
             
             if(order.status === 'rejected') {
-                statusFooter = `<div class="status-footer"><div class="rejected-label">DITOLAK</div></div>`;
+                statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
             } else {
                 statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
                 const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
