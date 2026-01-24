@@ -675,8 +675,10 @@
     }
 
     function closeSuccess() {
-        document.getElementById('success-modal').style.display = 'none';
-    }
+    // Memberikan alert agar user tahu pesanannya diproses
+    alert("Terima kasih! Pesanan Kakak sedang diverifikasi oleh Kasir. Silakan duduk manis ya!");
+    document.getElementById('success-modal').style.display = 'none';
+}
 
     // --- RIWAYAT & TRACKING ---
     function saveOrderToHistory(orderId) {
