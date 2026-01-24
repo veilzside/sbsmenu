@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SBS Kitchen Command Center</title>
+    <title>SBS KITCHEN - OPS</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
@@ -11,20 +11,14 @@
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
         
         /* SIDEBAR */
-        .sidebar { width: 260px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
-        .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
+        .sidebar { width: 240px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
+        .brand { font-family: 'Bebas Neue'; font-size: 36px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
         .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .menu-icon { font-size: 20px; }
-        .finance-box { margin-top: auto; background: var(--card-bg); padding: 15px; border-radius: 10px; border: 1px solid #444; }
-        .finance-title { font-size: 12px; color: #888; }
-        .finance-val { font-size: 18px; font-weight: bold; color: var(--green); }
-        .btn-reset { margin-top: 10px; background: #330000; color: #ff4444; border: 1px solid #ff4444; width: 100%; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 10px; text-align: center; }
 
         /* MAIN CONTENT */
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
-        
-        /* TOP BAR */
         .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .page-title { margin:0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
         .header-actions { display: flex; gap: 15px; align-items: center; }
@@ -32,10 +26,6 @@
         #btn-audio { background: transparent; border: 2px solid #555; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: 0.3s; color: #555; }
         #btn-audio.active { background: var(--green); border-color: var(--green); box-shadow: 0 0 10px var(--green); animation: none; color: #fff; }
         #btn-audio.inactive { background: #330000; border-color: var(--red); color: var(--red); animation: pulse 2s infinite; }
-
-        /* FILTERS */
-        .filters { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
-        .date-input, .select-input { background: var(--card-bg); border: 1px solid #444; color: white; padding: 8px; border-radius: 8px; font-family: 'Poppins'; }
 
         /* TABS */
         .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
@@ -64,19 +54,11 @@
         .item-unit-price { font-size: 10px; color: #888; display: block; }
         .btn-trash { background: none; border: none; color: #666; cursor: pointer; font-size: 14px; padding: 5px; }
         .btn-trash:hover { color: var(--red); }
-        
         .total-row { text-align: right; font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--accent); }
 
-        /* HISTORY TEXT */
-        .history-details { font-size: 11px; color: #aaa; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-        .history-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
-        .h-val { color: #fff; font-weight: bold; }
-        .history-info { text-align: right; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px; }
-        .history-label { display: block; font-size: 10px; color: #888; margin-bottom: 2px; }
-        .history-time { display: block; font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 5px; letter-spacing: 1px; }
-        .history-date { font-size: 11px; color: var(--accent); font-weight: bold; }
-        
-        .rejected-label { color: var(--red); font-weight: 900; font-size: 20px; text-align: center; border: 2px solid var(--red); padding: 10px; transform: rotate(-5deg); margin-bottom: 10px; }
+        /* HISTORY TEXT COMPACT */
+        .history-compact { font-size: 12px; color: #aaa; text-align: right; }
+        .h-time-val { font-weight: bold; color: #fff; }
 
         /* BUTTONS */
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -85,32 +67,20 @@
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
         .btn-full { grid-column: span 2; }
 
-        /* STAT CARDS FOR FINANCE */
-        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .stat-title { font-size: 14px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-val { font-size: 24px; font-weight: bold; color: var(--green); }
-
         /* MODAL */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
         .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
-
-        /* CUSTOM CONFIRM MODAL */
-        #custom-confirm-modal .modal-content { text-align: center; }
-        #confirm-msg { margin-bottom: 20px; font-size: 16px; color:#ddd; }
-
-        /* CUSTOM ALERT MODAL */
-        #alert-modal .modal-content { text-align: center; }
-        #alert-text { margin-bottom: 20px; font-size: 16px; color:#ddd; }
+        #custom-confirm-modal .modal-content, #alert-modal .modal-content { text-align: center; }
 
         /* MOBILE */
         @media (max-width: 768px) {
             body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
-            .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; background: #1a1a1a; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 9999; }
-            .brand, .finance-box { display: none; } 
-            .menu-item { flex-direction: column; gap: 3px; font-size: 10px; padding: 10px; margin: 0; background: transparent !important; border-radius: 0; justify-content: center; flex: 1; text-align: center; color: #666; }
+            .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; background: #1a1a1a; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 9999; }
+            .brand { display: none; } 
+            .menu-item { flex-direction: column; gap: 3px; font-size: 10px; padding: 5px; margin: 0; background: transparent !important; border-radius: 0; justify-content: center; flex: 1; text-align: center; color: #666; }
             .menu-item.active { color: var(--accent); }
-            .menu-icon { font-size: 22px; margin-bottom: 2px; display: block; }
+            .menu-icon { font-size: 20px; margin-bottom: 2px; display: block; }
             .main { height: auto; overflow: visible; padding: 15px; padding-bottom: 100px; width: 100%; }
             .status-tabs { position: sticky; top: 0; background: var(--bg-dark); z-index: 50; padding-top: 10px; margin-top: -10px; }
             .orders-grid { grid-template-columns: 1fr; gap: 20px; padding-bottom: 0; } 
@@ -122,24 +92,16 @@
 <body onclick="unlockAudio()">
 
     <div class="sidebar">
-        <div class="brand">SBS ADMIN</div>
-        <div class="menu-item active" onclick="showPage('orders')"><span class="menu-icon">📦</span><span>Pesanan</span></div>
-        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat</span></div>
-        <div class="menu-item" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Omzet</span></div>
-        
-        <div class="finance-box">
-            <div class="finance-title">Omzet Hari Ini</div>
-            <div class="finance-val" id="sidebar-today-rev">Rp 0</div>
-            <button class="btn-reset" onclick="confirmReset()">⚠ RESET SEMUA DATA</button>
-        </div>
+        <div class="brand">SBS KITCHEN</div>
+        <div class="menu-item active" onclick="showPage('orders')"><span class="menu-icon">🔥</span><span>Dapur</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">🕒</span><span>Riwayat (Hari Ini)</span></div>
     </div>
 
     <div class="main" id="orders-page">
         <div class="top-header">
-            <h2 class="page-title">PESANAN AKTIF</h2>
+            <h2 class="page-title">ORDER AKTIF</h2>
             <div class="header-actions">
                 <button id="btn-audio" class="inactive" onclick="toggleAudio()">🔕</button>
-                <button onclick="calculateFinance()" style="background:none; border:none; color:#666; font-size:24px; cursor:pointer;">↻</button>
             </div>
         </div>
 
@@ -152,40 +114,9 @@
     </div>
 
     <div class="main" id="history-page" style="display: none;">
-        <h2 class="page-title">RIWAYAT SELESAI</h2>
-        <div class="filters">
-            <input type="date" id="history-date-picker" class="date-input" onchange="renderOrders()">
-            <button onclick="clearHistoryFilter()" class="btn-grey" style="padding:8px 15px; font-size:12px;">Hari Ini</button>
-        </div>
+        <h2 class="page-title">RIWAYAT HARI INI</h2>
+        <p style="color:#666; font-size:12px; margin-bottom:20px;">*Riwayat lengkap silahkan cek di menu Admin.</p>
         <div id="history-grid" class="orders-grid"></div>
-    </div>
-
-    <div class="main" id="finance-page" style="display: none;">
-        <h2 class="page-title">LAPORAN OMZET</h2>
-        
-        <div class="filters">
-            <select id="finance-mode" class="select-input" onchange="toggleFinanceFilter()">
-                <option value="daily">Harian</option>
-                <option value="monthly">Bulanan</option>
-                <option value="yearly">Tahunan</option>
-            </select>
-            <input type="date" id="finance-date" class="date-input" style="display:block;" onchange="calculateFinance()">
-            <input type="month" id="finance-month" class="date-input" style="display:none;" onchange="calculateFinance()">
-            <select id="finance-year" class="select-input" style="display:none;" onchange="calculateFinance()">
-                <option value="2025">2025</option>
-                <option value="2026">2026</option>
-                <option value="2027">2027</option>
-            </select>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(1, 1fr); gap: 15px; margin-top: 20px;">
-            <div class="stat-card">
-                <div class="stat-title" id="stat-label">TOTAL PENDAPATAN</div>
-                <div class="stat-val" id="main-stat-rev">Rp 0</div>
-            </div>
-        </div>
-        
-        <button class="btn-reset" onclick="confirmReset()" style="margin-top:50px; padding:20px; font-size:14px;">⚠ HAPUS SEMUA DATA & HISTORY (RESET)</button>
     </div>
 
     <div id="edit-modal" class="modal">
@@ -238,20 +169,17 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const soundNew = document.getElementById('sound-new');
-        const soundNag = document.getElementById('sound-nag');
-        const btnAudio = document.getElementById('btn-audio');
         
         let allOrders = [];
         let currentTab = 'new';
         let editingOrderKey = null;
         let audioUnlocked = false;
         let confirmCallback = null;
+        const soundNew = document.getElementById('sound-new');
+        const soundNag = document.getElementById('sound-nag');
+        const btnAudio = document.getElementById('btn-audio');
 
-        document.getElementById('history-date-picker').valueAsDate = new Date();
-        document.getElementById('finance-date').valueAsDate = new Date();
-
-        // --- CUSTOM MODAL UTILS ---
+        // --- CORE UTILS ---
         function showAlert(msg) {
             document.getElementById('alert-text').innerText = msg;
             document.getElementById('alert-modal').style.display = 'flex';
@@ -277,34 +205,27 @@
         function toggleAudio() {
             if (!audioUnlocked) {
                 soundNew.play().then(() => {
-                    soundNew.pause();
-                    soundNew.currentTime = 0;
+                    soundNew.pause(); soundNew.currentTime = 0;
                     audioUnlocked = true;
-                    btnAudio.classList.remove('inactive');
-                    btnAudio.classList.add('active');
-                    btnAudio.innerHTML = "🔔";
+                    btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
                 }).catch(e => showAlert("Error Audio: " + e.message));
             } else {
                 audioUnlocked = false;
-                btnAudio.classList.remove('active');
-                btnAudio.classList.add('inactive');
-                btnAudio.innerHTML = "🔕";
+                btnAudio.className = 'inactive'; btnAudio.innerHTML = "🔕";
             }
         }
 
         function unlockAudio() {
             if (!audioUnlocked) {
                 soundNew.play().then(() => {
-                    soundNew.pause();
-                    soundNew.currentTime = 0;
+                    soundNew.pause(); soundNew.currentTime = 0;
                     audioUnlocked = true;
-                    btnAudio.classList.remove('inactive');
-                    btnAudio.classList.add('active');
-                    btnAudio.innerHTML = "🔔";
-                }).catch(e => console.log("Silent unlock failed"));
+                    btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
+                }).catch(e => {});
             }
         }
 
+        // --- DATA SYNC ---
         db.ref('orders').on('value', (snapshot) => {
             const data = snapshot.val();
             const previousCount = allOrders.length;
@@ -317,15 +238,12 @@
             }
             
             if (allOrders.length > previousCount && audioUnlocked) {
-                const hasNew = allOrders.some(o => o.status === 'new');
-                if(hasNew) soundNew.play().catch(e => console.log(e));
+                if(allOrders.some(o => o.status === 'new')) soundNew.play().catch(e => {});
             }
 
             allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            
             renderOrders();
             updateBadges();
-            calculateFinance();
         });
 
         setInterval(() => {
@@ -336,79 +254,60 @@
         function checkNaggingAlarm() {
             if (!audioUnlocked) return;
             const now = Date.now();
-            let shouldAlarm = false;
-
-            allOrders.forEach(order => {
-                if (order.status === 'new') {
-                    const orderTime = new Date(order.timestamp).getTime();
-                    const diffSeconds = (now - orderTime) / 1000;
-                    if (diffSeconds > 120 && (diffSeconds % 120) < 1.5) {
-                        shouldAlarm = true;
-                    }
-                }
-            });
-
-            if (shouldAlarm) {
+            if (allOrders.some(order => {
+                if (order.status !== 'new') return false;
+                const diff = (now - new Date(order.timestamp).getTime()) / 1000;
+                return diff > 120 && (diff % 120) < 1.5;
+            })) {
                 soundNag.currentTime = 0;
-                soundNag.play().catch(e => console.log(e));
+                soundNag.play().catch(e => {});
             }
         }
 
         function updateLiveTimers() {
-            const timerElements = document.querySelectorAll('.live-timer');
-            timerElements.forEach(el => {
+            document.querySelectorAll('.live-timer').forEach(el => {
                 const startTime = parseInt(el.getAttribute('data-start'));
-                if (!startTime || isNaN(startTime)) { el.innerText = "--:--"; return; }
+                if (!startTime) return;
                 const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                if (elapsed > 86400) { el.innerText = "> 24h"; return; }
                 const min = Math.floor(elapsed / 60);
                 const sec = elapsed % 60;
                 el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
+                if(min > 10) el.style.color = 'var(--red)';
             });
         }
 
-        function clearHistoryFilter() {
-            document.getElementById('history-date-picker').valueAsDate = new Date();
-            renderOrders();
-        }
-
+        // --- RENDER ---
         function renderOrders() {
             const grid = document.getElementById('orders-grid');
             const historyGrid = document.getElementById('history-grid');
             grid.innerHTML = '';
             historyGrid.innerHTML = '';
-
-            const filterDateInput = document.getElementById('history-date-picker').value;
-            const filterDate = new Date(filterDateInput);
+            const today = new Date().toDateString();
 
             allOrders.forEach(order => {
                 const card = createCard(order);
+                const orderDate = new Date(order.completedAt || order.timestamp).toDateString();
+                
                 if (order.status === 'completed' || order.status === 'rejected' || order.status === 'done') {
-                    const orderDate = new Date(order.completedAt || order.timestamp);
-                    if (orderDate.toDateString() === filterDate.toDateString()) {
+                    // History Logic (Only Today for Kitchen View)
+                    if (orderDate === today) {
                         historyGrid.appendChild(card);
                     }
                 } else {
                     if (order.status === currentTab) grid.appendChild(card);
                 }
             });
-            updateLiveTimers();
         }
 
         function createCard(order) {
             let displayName = order.customer;
-            if(!isNaN(order.customer) && order.customer.toString().trim() !== '') {
-                displayName = "MEJA " + order.customer;
-            }
+            if(!isNaN(order.customer) && order.customer.toString().trim() !== '') displayName = "MEJA " + order.customer;
 
             const created = new Date(order.timestamp).getTime();
             const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : 0;
             const paid = order.paidAt ? new Date(order.paidAt).getTime() : 0;
-            const completed = order.completedAt ? new Date(order.completedAt).getTime() : 0;
-
-            let displayTimeHTML = "";
+            
             let timerStart = 0;
-
             if(order.status === 'new') timerStart = created;
             else if (order.status === 'unpaid') timerStart = accepted;
             else if (order.status === 'processing') timerStart = paid;
@@ -417,19 +316,13 @@
             const entryTimeStr = entryDate.getHours() + ":" + (entryDate.getMinutes()<10?'0':'') + entryDate.getMinutes();
 
             const div = document.createElement('div');
-            let statusClass = order.status;
-            if (statusClass === 'rejected') statusClass = 'rejected';
-            div.className = `order-card status-${statusClass}`;
+            div.className = `order-card status-${order.status}`;
             
             let itemsHtml = (order.items || []).map((item, idx) => {
                 const qty = parseInt(item.qty);
                 const price = parseInt(item.price);
-                const subtotal = qty * price;
                 const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-                
-                const trashBtn = (order.status !== 'completed' && order.status !== 'rejected' && order.status !== 'done') 
-                    ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` 
-                    : '';
+                const trashBtn = (['completed','rejected'].includes(order.status)) ? '' : `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>`;
 
                 return `
                 <div class="item-row">
@@ -439,63 +332,17 @@
                         ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
                     </div>
                     <div style="display:flex; align-items:center;">
-                        <span style="font-weight:bold;">${subtotal.toLocaleString()}</span>
+                        <span style="font-weight:bold;">${(qty * price).toLocaleString()}</span>
                         ${trashBtn}
                     </div>
-                </div>
-                `;
+                </div>`;
             }).join('');
 
-            // HISTORY UI
-            let historyHtml = '';
-            if(order.status === 'completed' || order.status === 'done' || order.status === 'rejected') {
-                const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
-                const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
-                const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
-                const durTotal = completed > 0 ? Math.floor((completed - created)/1000) : 0;
-                
-                const fmtDur = (s) => {
-                    if (s <= 0) return "-";
-                    const m = Math.floor(s/60);
-                    const sc = s%60;
-                    return m > 0 ? `${m}m ${sc}s` : `${sc}s`;
-                };
-
-                const dateOut = new Date(completed || Date.now());
-                const dateOutStr = dateOut.toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
-                const timeIn = new Date(created).getHours() + ":" + (new Date(created).getMinutes()<10?'0':'') + new Date(created).getMinutes();
-                const timeOut = dateOut.getHours() + ":" + (dateOut.getMinutes()<10?'0':'') + dateOut.getMinutes();
-
-                displayTimeHTML = `
-                    <div class="history-compact">
-                        <span class="h-date">${dateOutStr}</span>
-                        <div class="h-times">
-                            Masuk: <span class="h-time-val">${timeIn}</span> | 
-                            Selesai: <span class="h-time-val" style="color:var(--green)">${timeOut}</span>
-                        </div>
-                    </div>
-                `;
-
-                let rejectedLabel = '';
-                if(order.status === 'rejected') {
-                    rejectedLabel = `<div class="rejected-label">DITOLAK ❌</div>`;
-                    displayTimeHTML = ''; 
-                }
-
-                historyHtml = `
-                    ${rejectedLabel}
-                    <div class="history-details">
-                        <div class="history-row"><span>Respon:</span> <span class="h-val">${fmtDur(durRespon)}</span></div>
-                        <div class="history-row"><span>Bayar:</span> <span class="h-val">${fmtDur(durBayar)}</span></div>
-                        <div class="history-row"><span>Masak:</span> <span class="h-val">${fmtDur(durMasak)}</span></div>
-                        <div style="border-top:1px dashed #666; margin-top:5px; padding-top:2px;" class="history-row">
-                            <span>TOTAL DURASI:</span> <span class="h-val" style="color:var(--accent); font-size:14px;">${fmtDur(durTotal)}</span>
-                        </div>
-                    </div>
-                `;
-            } else {
-                const dataStartAttr = timerStart > 0 ? `data-start="${timerStart}"` : '';
-                displayTimeHTML = `<span class="time-label">Masuk: ${entryTimeStr}</span><span class="timer-badge live-timer" ${dataStartAttr}>--:--</span>`;
+            let headerRightHTML = `<span class="time-label">Masuk: ${entryTimeStr}</span><span class="timer-badge live-timer" data-start="${timerStart}">--:--</span>`;
+            if (['completed','rejected'].includes(order.status)) {
+                const doneTime = new Date(order.completedAt || Date.now());
+                const timeOut = doneTime.getHours() + ":" + (doneTime.getMinutes()<10?'0':'') + doneTime.getMinutes();
+                headerRightHTML = `<div class="history-compact"><span class="h-time-val">${timeOut}</span></div>`;
             }
 
             let buttonsHtml = '';
@@ -507,41 +354,35 @@
                 `;
             } else if (order.status === 'unpaid') {
                 buttonsHtml = `
-                    <div style="grid-column: span 2; text-align:center; color:#888; font-size:11px; margin-bottom:5px;">Customer belum bayar</div>
                     <button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button>
                     <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>
                 `;
             } else if (order.status === 'processing') {
-                buttonsHtml = `
-                     <div style="grid-column: span 2; text-align:center; color:#FFD200; font-size:11px; margin-bottom:5px; font-weight:bold;">SEDANG DISIAPKAN</div>
-                    <button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>
-                `;
+                buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>`;
+            } else if (order.status === 'rejected') {
+                 buttonsHtml = `<div style="text-align:center; color:var(--red); font-weight:bold; border:2px solid var(--red); transform:rotate(-2deg);">DITOLAK ❌</div>`;
             } else {
-                if(order.status !== 'rejected') {
-                    buttonsHtml = `<div style="text-align:center; color:var(--green); font-weight:bold;">SELESAI</div>`;
-                }
+                 buttonsHtml = `<div style="text-align:center; color:var(--green); font-weight:bold;">SELESAI ✔</div>`;
             }
 
+            // ROBUST CALCULATION (Display Only)
             let rawTotal = order.total;
             if (typeof rawTotal === 'string') rawTotal = rawTotal.replace(/[^0-9]/g, '');
             const safeTotal = Number(rawTotal) || 0;
 
             div.innerHTML = `
                 <div class="card-header">
-                    <div>
-                        <span class="cust-name">${displayName}</span>
-                        <span style="font-size:10px; color:#666;">ID: ...${order.id.slice(-4)}</span>
-                    </div>
-                    <div>${displayTimeHTML}</div>
+                    <div><span class="cust-name">${displayName}</span></div>
+                    <div>${headerRightHTML}</div>
                 </div>
                 <div class="item-list">${itemsHtml}</div>
-                ${historyHtml}
                 <div class="total-row">Total: Rp ${safeTotal.toLocaleString()}</div>
                 <div class="actions">${buttonsHtml}</div>
             `;
             return div;
         }
 
+        // --- ACTIONS ---
         function updateStatus(key, status) {
             const updates = { status: status };
             const now = new Date().toISOString(); 
@@ -552,115 +393,33 @@
         }
 
         function confirmReject(key) {
-            showConfirm("Yakin tolak pesanan ini?", function() {
-                updateStatus(key, 'rejected');
-            });
+            showConfirm("Yakin tolak pesanan ini?", () => updateStatus(key, 'rejected'));
         }
 
         function deleteOrderItem(orderKey, itemIndex) {
-            showConfirm("Hapus item ini dari pesanan?", function() {
+            showConfirm("Hapus item ini?", () => {
                 const order = allOrders.find(o => o.id === orderKey);
                 if(!order || !order.items) return;
-
                 const newItems = [...order.items];
-                const removedItem = newItems.splice(itemIndex, 1)[0];
-
-                let currentTotal = parseInt(order.total);
-                const deductPrice = parseInt(removedItem.price) * parseInt(removedItem.qty);
-                const newTotal = currentTotal - deductPrice;
-
-                if (newItems.length === 0) {
-                    db.ref('orders/' + orderKey).update({ items: [], total: 0 });
-                } else {
-                    db.ref('orders/' + orderKey).update({ items: newItems, total: newTotal });
-                }
-            });
-        }
-
-        function confirmReset() {
-            showConfirm("RESET SEMUA DATA? Data omzet & history akan hilang!", function() {
-                db.ref('orders').remove()
-                .then(() => showAlert("Data berhasil di-reset bersih!"))
-                .catch(e => showAlert("Gagal: " + e.message));
-            });
-        }
-
-        function toggleFinanceFilter() {
-            const mode = document.getElementById('finance-mode').value;
-            document.getElementById('finance-date').style.display = (mode === 'daily') ? 'block' : 'none';
-            document.getElementById('finance-month').style.display = (mode === 'monthly') ? 'block' : 'none';
-            document.getElementById('finance-year').style.display = (mode === 'yearly') ? 'block' : 'none';
-            calculateFinance();
-        }
-
-        function calculateFinance() {
-            const mode = document.getElementById('finance-mode').value;
-            let totalRev = 0;
-            let targetDate, targetMonth, targetYear;
-
-            if (mode === 'daily') {
-                targetDate = new Date(document.getElementById('finance-date').value);
-            } else if (mode === 'monthly') {
-                const val = document.getElementById('finance-month').value;
-                targetYear = parseInt(val.split('-')[0]);
-                targetMonth = parseInt(val.split('-')[1]) - 1;
-            } else if (mode === 'yearly') {
-                targetYear = parseInt(document.getElementById('finance-year').value);
-            }
-
-            const today = new Date();
-            let todayRev = 0;
-
-            allOrders.forEach(order => {
-                if (order.status !== 'completed' && order.status !== 'done') return;
+                const removed = newItems.splice(itemIndex, 1)[0];
                 
-                const rawDate = order.completedAt || order.timestamp;
-                if(!rawDate) return;
-                const oDate = new Date(rawDate);
+                let currentTotal = parseInt(String(order.total).replace(/[^0-9]/g, '')) || 0;
+                const deduct = parseInt(removed.price) * parseInt(removed.qty);
                 
-                let rawTotal = order.total;
-                if (typeof rawTotal === 'string') rawTotal = rawTotal.replace(/[^0-9]/g, '');
-                const total = Number(rawTotal) || 0;
-
-                if(oDate.toDateString() === today.toDateString()) {
-                    todayRev += total;
-                }
-
-                let match = false;
-                if (mode === 'daily') {
-                    if (oDate.toDateString() === targetDate.toDateString()) match = true;
-                } else if (mode === 'monthly') {
-                    if (oDate.getFullYear() === targetYear && oDate.getMonth() === targetMonth) match = true;
-                } else if (mode === 'yearly') {
-                    if (oDate.getFullYear() === targetYear) match = true;
-                }
-
-                if (match) totalRev += total;
+                db.ref('orders/' + orderKey).update({ 
+                    items: newItems.length ? newItems : [], 
+                    total: currentTotal - deduct 
+                });
             });
-
-            const fmt = (n) => "Rp " + n.toLocaleString('id-ID');
-            document.getElementById('sidebar-today-rev').innerText = fmt(todayRev);
-            document.getElementById('main-stat-rev').innerText = fmt(totalRev);
-            
-            let label = "TOTAL PENDAPATAN";
-            if (mode === 'daily') label += " (HARIAN)";
-            if (mode === 'monthly') label += " (BULANAN)";
-            if (mode === 'yearly') label += " (TAHUNAN)";
-            document.getElementById('stat-label').innerText = label;
         }
 
+        // --- UI HELPERS ---
         function showPage(pageId) {
             document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
             document.getElementById(pageId + '-page').style.display = 'block';
-            
-            const menuItems = document.querySelectorAll('.menu-item');
-            menuItems.forEach(item => item.classList.remove('active'));
-            if(pageId === 'orders') menuItems[0].classList.add('active');
-            if(pageId === 'history') menuItems[1].classList.add('active');
-            if(pageId === 'finance') menuItems[2].classList.add('active');
-            
-            if(pageId === 'finance') calculateFinance();
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            if(pageId === 'orders') document.querySelectorAll('.menu-item')[0].classList.add('active');
+            if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
         }
 
         function filterTab(status) {
@@ -680,29 +439,19 @@
             editingOrderKey = key;
             document.getElementById('edit-modal').style.display = 'flex';
         }
-
-        function closeModal() {
-            document.getElementById('edit-modal').style.display = 'none';
-        }
-
+        function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
+        
         function saveExtraItem() {
             const name = document.getElementById('extra-name').value;
             const price = parseInt(document.getElementById('extra-price').value);
-            if(!name || !price) {
-                showAlert("Isi data dengan benar");
-                return;
-            }
+            if(!name || !price) return showAlert("Isi data dengan benar");
 
             const order = allOrders.find(o => o.id === editingOrderKey);
-            let oldTotalRaw = order.total;
-            if(typeof oldTotalRaw === 'string') oldTotalRaw = oldTotalRaw.replace(/[^0-9]/g, '');
-            const currentTotal = Number(oldTotalRaw) || 0;
-            const newPrice = Number(price);
-
-            const newItems = [...(order.items||[]), { name: name, price: newPrice, qty: 1, note: 'Tambahan Manual' }];
-            const newTotal = currentTotal + newPrice;
-
-            db.ref('orders/' + editingOrderKey).update({ items: newItems, total: newTotal }).then(() => {
+            let currentTotal = parseInt(String(order.total).replace(/[^0-9]/g, '')) || 0;
+            
+            const newItems = [...(order.items||[]), { name: name, price: price, qty: 1, note: 'Manual' }];
+            db.ref('orders/' + editingOrderKey).update({ items: newItems, total: currentTotal + price })
+            .then(() => {
                 closeModal();
                 document.getElementById('extra-name').value = '';
                 document.getElementById('extra-price').value = '';
