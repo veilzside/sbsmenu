@@ -14,12 +14,13 @@
         .logo-container img { width: 100%; height: auto; }
         .header-title h1 { font-family: 'Bebas Neue', cursive; font-size: 55px; margin: 0; line-height: 0.8; letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff; }
 
-        /* --- TRACKING STATUS BAR --- */
+        /* --- TRACKING STATUS BAR (UPDATED) --- */
         #status-tracker {
             position: fixed; top: 0; left: 0; width: 100%; 
             background: var(--sbs-black); color: #fff; padding: 10px; 
             z-index: 2000; text-align: center; font-size: 14px; 
             font-weight: bold; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            cursor: pointer; /* Menandakan bisa diklik */
         }
         .status-badge { 
             background: var(--sbs-orange); color: #fff; padding: 3px 10px; 
@@ -99,9 +100,14 @@
         .cart-actions button { background: #ddd; border: none; padding: 2px 8px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-left: 5px;}
         
         .total-row { display: flex; justify-content: space-between; margin-top: 20px; font-weight: bold; font-size: 18px; border-top: 2px solid var(--sbs-black); padding-top: 10px; }
-        .input-group { margin-top: 20px; }
-        .input-group input { width: 100%; padding: 10px; border: 2px solid var(--sbs-black); border-radius: 10px; box-sizing: border-box; font-family: 'Poppins'; font-size: 16px; }
-        .btn-order { background: var(--sbs-orange); color: #fff; border: 3px solid var(--sbs-black); width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; margin-top: 15px; cursor: pointer; font-size: 16px; }
+        
+        /* NEW FORM STYLES */
+        .input-group { margin-top: 15px; }
+        .input-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #666; }
+        .input-group input { width: 100%; padding: 10px; border: 2px solid var(--sbs-black); border-radius: 10px; box-sizing: border-box; font-family: 'Poppins'; font-size: 14px; }
+        .input-group input:focus { border-color: var(--sbs-orange); outline: none; background: #fffdf9; }
+        
+        .btn-order { background: var(--sbs-orange); color: #fff; border: 3px solid var(--sbs-black); width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; margin-top: 20px; cursor: pointer; font-size: 16px; }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; font-weight: bold; }
 
         /* Success Message */
@@ -110,14 +116,21 @@
         .success-msg { font-size: 16px; line-height: 1.6; color: #444; margin-bottom: 20px; }
         .btn-close-final { background: var(--sbs-black); color: #fff; padding: 12px 30px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; width: 100%; }
 
+        /* --- HISTORY MODAL (NEW) --- */
+        .history-card { border: 2px solid #eee; border-radius: 10px; padding: 10px; margin-bottom: 10px; background: #f9f9f9; }
+        .history-header { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; color: #666; margin-bottom: 5px; }
+        .history-status { font-size: 14px; font-weight: 900; color: var(--sbs-black); text-transform: uppercase; }
+        .history-items { font-size: 13px; margin-top: 5px; border-top: 1px dashed #ddd; padding-top: 5px; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUp { from { transform: translateY(100px); } to { transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div id="status-tracker">
-    Pesananmu: <span id="tracker-status" class="status-badge">MENUNGGU</span>
+<div id="status-tracker" onclick="openHistory()">
+    <span id="tracker-summary">Pesananmu Sedang Diproses</span> 
+    <span class="status-badge" style="font-size:10px;">LIHAT DETAIL ></span>
 </div>
 
 <div class="top-bar">
@@ -389,9 +402,20 @@
             <span>TOTAL</span>
             <span id="modal-total">Rp 0</span>
         </div>
+        
         <div class="input-group">
-            <input type="number" id="customer-name" placeholder="Nomor Meja (Wajib)" required inputmode="numeric">
+            <label>Nomor Meja*</label>
+            <input type="number" id="table-number" placeholder="Contoh: 5" required inputmode="numeric">
         </div>
+        <div class="input-group">
+            <label>Nama Kakak*</label>
+            <input type="text" id="customer-real-name" placeholder="Siapa nama kakak?" required>
+        </div>
+        <div class="input-group">
+            <label>Nomor HP / WA (Opsional)</label>
+            <input type="tel" id="customer-phone" placeholder="08xxxxxxxxxx" inputmode="tel">
+        </div>
+
         <button class="btn-order" onclick="submitOrder()">KIRIM KE DAPUR</button>
     </div>
 </div>
@@ -405,6 +429,16 @@
             <b>Mohon lakukan pembayaran di kasir</b> agar tim dapur bisa segera memproses pesanan spesialmu.
         </div>
         <button class="btn-close-final" onclick="closeSuccess()">OK, MENGERTI</button>
+    </div>
+</div>
+
+<div id="history-modal" class="modal">
+    <div class="modal-content">
+        <div class="close-modal" onclick="closeHistory()">&times;</div>
+        <div class="modal-header">RIWAYAT PESANAN</div>
+        <div id="history-container" style="padding-bottom:10px;">
+            </div>
+        <button class="btn-close-final" onclick="closeHistory()">TUTUP</button>
     </div>
 </div>
 
@@ -508,21 +542,24 @@
         document.getElementById('cart-modal').style.display = 'none';
     }
 
-    // --- UPDATED SUBMIT ORDER (SIMPAN ID LOKAL) ---
+    // --- NEW: SUBMIT ORDER WITH EXTRA FIELDS & SESSION MGMT ---
     function submitOrder() {
-        const name = document.getElementById('customer-name').value;
-        if (!name) {
-            alert("Mohon isi Nomor Meja!");
-            return;
-        }
+        // 1. Ambil data dari input baru
+        const tableNum = document.getElementById('table-number').value;
+        const custName = document.getElementById('customer-real-name').value;
+        const custPhone = document.getElementById('customer-phone').value;
 
+        if (!tableNum) { alert("Mohon isi Nomor Meja!"); return; }
+        if (!custName) { alert("Mohon isi Nama Kakak!"); return; }
         if (cart.length === 0) return;
 
         let totalPrice = 0;
         cart.forEach(item => totalPrice += (item.price * item.qty));
 
         const orderData = {
-            customer: name,
+            tableNumber: tableNum,  // Data Meja
+            customerName: custName, // Data Nama
+            customerPhone: custPhone, // Data HP (Opsional)
             items: cart,
             total: totalPrice,
             timestamp: new Date().toISOString(),
@@ -532,12 +569,18 @@
         const newOrderRef = db.ref().child('orders').push();
         newOrderRef.set(orderData)
         .then(() => {
-            localStorage.setItem('myActiveOrder', newOrderRef.key);
-            startTracking(newOrderRef.key);
+            // 2. SIMPAN ID KE ARRAY (Session Management)
+            saveOrderToHistory(newOrderRef.key);
+
+            // Reset UI
             cart = []; 
             updateCartUI();
             closeCart();
-            document.getElementById('customer-name').value = '';
+            // Kosongkan form input
+            document.getElementById('table-number').value = '';
+            document.getElementById('customer-real-name').value = '';
+            document.getElementById('customer-phone').value = '';
+            
             document.getElementById('success-modal').style.display = 'flex';
         })
         .catch((error) => {
@@ -549,41 +592,96 @@
         document.getElementById('success-modal').style.display = 'none';
     }
 
-    // --- TRACKING STATUS ---
-    function startTracking(orderId) {
-        if(!orderId) return;
-        
+    // --- NEW: SESSION & TRACKING LOGIC ---
+    
+    function saveOrderToHistory(orderId) {
+        let history = JSON.parse(localStorage.getItem('sbs_order_history')) || [];
+        history.push(orderId);
+        localStorage.setItem('sbs_order_history', JSON.stringify(history));
+        trackOrders(); // Refresh tracking
+    }
+
+    function trackOrders() {
+        // Ambil data dari LocalStorage baru (Array)
+        let history = JSON.parse(localStorage.getItem('sbs_order_history')) || [];
+        // Cek juga legacy data (single ID) untuk kompatibilitas
+        const legacyOrder = localStorage.getItem('myActiveOrder');
+        if(legacyOrder && !history.includes(legacyOrder)) {
+            history.push(legacyOrder);
+        }
+
+        if (history.length === 0) return;
+
         const trackerUI = document.getElementById('status-tracker');
-        const statusText = document.getElementById('tracker-status');
+        const trackerSummary = document.getElementById('tracker-summary');
+        const historyContainer = document.getElementById('history-container');
+        
+        trackerUI.style.display = 'block';
+        
+        // Reset kontainer history sebelum di-render ulang
+        historyContainer.innerHTML = ''; 
+        let activeCount = 0;
 
-        db.ref('orders/' + orderId).on('value', (snapshot) => {
-            const data = snapshot.val();
-            if(data) {
-                trackerUI.style.display = 'block';
-                let text = '';
-                let color = '#FFD200';
+        // Loop setiap Order ID
+        history.forEach(orderId => {
+            db.ref('orders/' + orderId).on('value', (snapshot) => {
+                const data = snapshot.val();
+                if(data) {
+                    // Tentukan Warna & Teks Status
+                    let statusText = 'MENUNGGU';
+                    let color = '#888';
 
-                if(data.status === 'new') { text = 'MENUNGGU KONFIRMASI'; color = '#888'; }
-                else if(data.status === 'unpaid') { text = 'MENUNGGU PEMBAYARAN'; color = '#FF6600'; }
-                else if(data.status === 'processing') { text = 'SEDANG DISIAPKAN'; color = '#3498db'; }
-                else if(data.status === 'completed') { 
-                    text = 'SELESAI / DIANTAR'; 
-                    color = '#2ecc71'; 
-                    setTimeout(() => {
-                        localStorage.removeItem('myActiveOrder');
-                        trackerUI.style.display = 'none';
-                    }, 10000);
+                    if(data.status === 'new') { statusText = 'MENUNGGU KONFIRMASI'; color = '#888'; activeCount++; }
+                    else if(data.status === 'unpaid') { statusText = 'MENUNGGU PEMBAYARAN'; color = '#FF6600'; activeCount++; }
+                    else if(data.status === 'processing') { statusText = 'SEDANG DISIAPKAN'; color = '#3498db'; activeCount++; }
+                    else if(data.status === 'completed') { statusText = 'SELESAI / DIANTAR'; color = '#2ecc71'; }
+                    else if(data.status === 'rejected') { statusText = 'DITOLAK / KOSONG'; color = 'red'; }
+
+                    // Render Kartu History
+                    const itemNames = data.items.map(i => i.name).join(', ');
+                    
+                    // Cek apakah elemen kartu sudah ada, kalau ada update, kalau belum buat baru
+                    let card = document.getElementById('card-' + orderId);
+                    if(!card) {
+                        card = document.createElement('div');
+                        card.id = 'card-' + orderId;
+                        card.className = 'history-card';
+                        historyContainer.appendChild(card);
+                    }
+
+                    card.innerHTML = `
+                        <div class="history-header">
+                            <span>Meja: ${data.tableNumber || '-'}</span>
+                            <span>${data.customerName || 'Pelanggan'}</span>
+                        </div>
+                        <div class="history-status" style="color:${color}">${statusText}</div>
+                        <div class="history-items">${itemNames}</div>
+                        <div style="font-size:10px; color:#aaa; margin-top:5px;">ID: ...${orderId.slice(-4)}</div>
+                    `;
+                    
+                    // Update Text Bar Atas
+                    if (activeCount > 0) {
+                        trackerSummary.innerText = activeCount + " PESANAN SEDANG PROSES";
+                        trackerUI.style.background = "#1A1A1A"; // Kembali hitam
+                    } else {
+                        trackerSummary.innerText = "SEMUA PESANAN SELESAI";
+                        trackerUI.style.background = "#2ecc71"; // Hijau jika semua selesai
+                    }
                 }
-                else if(data.status === 'rejected') { text = 'DITOLAK / KOSONG'; color = 'red'; }
-
-                statusText.innerText = text;
-                statusText.style.background = color;
-            }
+            });
         });
     }
 
-    const activeOrder = localStorage.getItem('myActiveOrder');
-    if(activeOrder) { startTracking(activeOrder); }
+    function openHistory() {
+        document.getElementById('history-modal').style.display = 'flex';
+    }
+
+    function closeHistory() {
+        document.getElementById('history-modal').style.display = 'none';
+    }
+
+    // Jalankan tracking saat load page
+    trackOrders();
 
     // --- TAB & SWIPE LOGIC ---
     function openT(e, n) {
