@@ -6,7 +6,7 @@
     <title>SBS Kitchen - OPS</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
-        /* CSS ASLI DARI DAPUR (5).HTML (Tidak Diubah) */
+        /* STYLE ASLI DARI DAPUR (5).HTML - TIDAK DIUBAH */
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -18,48 +18,62 @@
         .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .page-title { margin:0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
         #btn-audio { background: transparent; border: 2px solid #555; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; color: #555; transition: 0.3s; }
-        #btn-audio.active { background: var(--green); border-color: var(--green); color: #fff; box-shadow: 0 0 10px var(--green); }
+        #btn-audio.active { background: var(--green); border-color: var(--green); color: #fff; }
+        
         .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
         .tab { padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; flex-shrink: 0; white-space: nowrap; color: #fff; }
         .tab.active { opacity: 1; background: var(--card-bg); border-color: var(--accent); color: var(--accent); }
         .badge { background: var(--red); color: white; padding: 2px 6px; border-radius: 50%; font-size: 10px; margin-left: 5px; vertical-align: top; }
+        
         .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 80px; }
         .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 6px solid #555; animation: slideIn 0.3s ease; position: relative; }
         
         /* STATUS COLORS */
         .order-card.status-new, .order-card.status-unpaid { border-left-color: var(--red); }
-        .order-card.status-qris_unpaid { border-left-color: #777; opacity: 0.7; }
-        .order-card.status-pending_payment { border-left-color: #e67e22; box-shadow: 0 0 15px rgba(230, 126, 34, 0.2); }
+        .order-card.status-qris_unpaid { border-left-color: #777; opacity: 0.8; }
+        .order-card.status-pending_payment { border-left-color: #e67e22; box-shadow: 0 0 10px rgba(230, 126, 34, 0.2); }
         .order-card.status-processing { border-left-color: var(--blue); }
         .order-card.status-completed { border-left-color: var(--green); }
         
-        /* CARD INTERNALS */
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .cust-name { font-size: 16px; font-weight: 700; color: #fff; text-transform: uppercase; }
         .item-list { margin-bottom: 15px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
         .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
-        .item-unit-price { font-size: 11px; color: #888; display: block; margin-top: 2px; } /* NEW STYLE */
         .total-display { text-align: right; font-size: 18px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
         
-        /* ACTIONS GRID (DIPERBAIKI) */
-        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; color: #fff; font-size: 14px; width:100%; }
+        /* LAYOUT TOMBOL DIPERBAIKI SESUAI REQUEST */
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; color: #fff; font-size: 14px; width: 100%; }
         .btn-green { background: var(--green); } .btn-red { background: var(--red); }
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
         .btn-disabled { background: #444; color: #888; cursor: not-allowed; }
-        .btn-full { width: 100%; display: block; margin-top: 5px; } /* FOR FULL WIDTH BUTTONS */
+        .btn-full { grid-column: span 2; } /* TOMBOL PANJANG */
         
         .timer-badge { font-size: 12px; font-weight: 700; background: #000; color: var(--accent); padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-family: monospace; }
         
-        /* MODAL */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
         .modal input, .modal select { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
+        
+        /* UNIT PRICE STYLE */
+        .item-unit-price { font-size: 11px; color: #888; display: block; margin-top: 2px; }
+
+        /* Duration Metrics */
         .duration-box { margin-bottom: 15px; font-size: 12px; color: #aaa; padding: 0 5px; }
         .dur-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
         .dur-val { color: #fff; font-weight: 700; }
+
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @media (max-width: 768px) { body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; } .sidebar { position: fixed; bottom: 0; width: 100%; height: 60px; flex-direction: row; z-index: 999; } .main { padding-bottom: 80px; } .status-tabs { position: sticky; top: 0; background: var(--bg-dark); z-index: 50; padding-top: 10px; margin-top: -10px; } .orders-grid { grid-template-columns: 1fr; } }
+        
+        @media (max-width: 768px) {
+            body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
+            .sidebar { width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; position: fixed; bottom: 0; left: 0; background: #15151a; z-index: 999; }
+            .brand { display: none; } 
+            .menu-item { flex: 1; text-align: center; justify-content: center; font-size: 10px; flex-direction: column; gap: 2px; }
+            .main { padding-bottom: 80px; width: 100%; }
+            .status-tabs { position: sticky; top: 0; background: var(--bg-dark); z-index: 50; padding-top: 10px; margin-top: -10px; }
+            .orders-grid { grid-template-columns: 1fr; } 
+        }
     </style>
 </head>
 <body onclick="unlockAudio()">
@@ -194,7 +208,6 @@
         db.ref('orders').on('value', (snapshot) => {
             const data = snapshot.val();
             const prevCount = allOrders.length; 
-            
             allOrders = [];
             if (data) Object.keys(data).forEach(key => allOrders.push({ id: key, ...data[key] }));
             
@@ -231,12 +244,11 @@
             const displayID = "2SA" + order.id.slice(-4).toUpperCase();
             
             const ESC="\x1B", GS="\x1D", INIT=ESC+"@", CENTER=ESC+"a\x01", LEFT=ESC+"a\x00", BOLD=ESC+"E\x01", NOBOLD=ESC+"E\x00";
-            
             let data = INIT;
             if (type === 'invoice') {
                 data += CENTER + BOLD + GS+"!\x11" + "SBS CAFE\n" + GS+"!\x00" + NOBOLD;
                 data += "Jl. Mundu 8, Kota Malang\n085159039877\n--------------------------------\n";
-                data += LEFT + BOLD + "TABLE: " + tableNum + NOBOLD + "\nQueue: #" + realQueue + "\nDate : " + dateStr + " " + timeStr + "\nID   : " + displayID + "\n--------------------------------\n";
+                data += LEFT + BOLD + "TABLE: " + tableNum + BOLD_OFF + "\nQueue: #" + realQueue + "\nDate : " + dateStr + " " + timeStr + "\nID   : " + displayID + "\n--------------------------------\n";
                 order.items.forEach(i => {
                     let sub = i.qty * i.price;
                     data += i.name + "\n" + i.qty + "x @" + i.price.toLocaleString('id-ID') + " = " + sub.toLocaleString('id-ID') + "\n";
@@ -260,10 +272,7 @@
             window.location.href = "rawbt:base64," + b64;
         }
 
-        setInterval(() => {
-            updateLiveTimers();
-            checkNaggingAlarm();
-        }, 1000);
+        setInterval(() => { updateLiveTimers(); checkNaggingAlarm(); }, 1000);
 
         function checkNaggingAlarm() {
             if (!audioUnlocked) return;
@@ -294,21 +303,17 @@
         function renderOrders() {
             const grid = document.getElementById('orders-grid');
             const historyGrid = document.getElementById('history-grid');
-            grid.innerHTML = '';
-            historyGrid.innerHTML = '';
+            grid.innerHTML = ''; historyGrid.innerHTML = '';
             const today = new Date().toDateString();
 
             allOrders.forEach(order => {
                 const card = createCard(order);
                 const orderDate = new Date(order.completedAt || order.timestamp).toDateString();
-                
                 if (['completed', 'rejected', 'done'].includes(order.status)) {
                     if (orderDate === today) historyGrid.appendChild(card);
                 } else {
                     if (currentTab === 'cashier') {
-                        if (['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(order.status)) {
-                            grid.appendChild(card);
-                        }
+                        if (['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(order.status)) grid.appendChild(card);
                     } else if (currentTab === 'kitchen' && order.status === 'processing') {
                         grid.appendChild(card);
                     }
@@ -333,8 +338,9 @@
             const div = document.createElement('div');
             div.className = `order-card status-${order.status}`;
             
-            // --- UPDATE ITEM LIST: SHOW UNIT PRICE IF QTY > 1 ---
             let itemsHtml = (order.items || []).map((item, idx) => {
+                const qty = parseInt(item.qty);
+                const price = parseInt(item.price);
                 const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
                 
                 let detailText = '';
@@ -345,12 +351,12 @@
                 return `
                 <div class="item-row">
                     <div style="flex:1;">
-                        <span class="item-name">${item.qty}x ${item.name}</span>
+                        <span class="item-name">${qty}x ${item.name}</span>
                         ${detailText}
                         <br><span class="item-note">${item.note||''}</span>
                     </div>
                     <div style="text-align:right;">
-                        <span class="item-price">${(item.qty * item.price).toLocaleString()}</span>${trashBtn}
+                        <span class="item-price">${(qty * price).toLocaleString()}</span>${trashBtn}
                     </div>
                 </div>`;
             }).join('');
@@ -359,11 +365,10 @@
                 ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px;">QRIS</span>' 
                 : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px;">TUNAI</span>';
 
-            // --- UPDATE BUTTON LAYOUT SESUAI REQUEST ---
+            // TOMBOL LAYOUT FIX
             let buttonsHtml = '';
             let statusMsg = '';
 
-            // 1. QRIS BELUM BAYAR
             if (order.status === 'qris_unpaid') {
                 statusMsg = `<div style="text-align:center; color:#888; font-size:11px; margin-bottom:5px;">⏳ Menunggu Customer Klik "Sudah Bayar"</div>`;
                 buttonsHtml = `
@@ -371,30 +376,23 @@
                         <button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>
                         <button class="btn btn-disabled">VERIFIKASI 🔒</button>
                     </div>`;
-            } 
-            // 2. QRIS SUDAH BAYAR (Pending Payment)
-            else if (order.status === 'pending_payment') {
+            } else if (order.status === 'pending_payment') {
                 statusMsg = `<div style="text-align:center; color:#e67e22; font-weight:bold; font-size:11px; margin-bottom:5px; animation:pulse 1s infinite;">⚠ CUSTOMER SUDAH BAYAR!</div>`;
                 buttonsHtml = `
                     <div class="actions">
                         <button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>
-                        <button class="btn btn-disabled" style="opacity:0;">.</button> </div>
-                    <button class="btn btn-blue btn-full" onclick="updateStatusAndPrint('${order.id}', 'processing')">VERIFIKASI & PROSES ✅</button>
-                `;
-            } 
-            // 3. TUNAI (New / Unpaid)
-            else if (['new', 'unpaid'].includes(order.status)) {
-                // Layout: Baris 1: Tolak | +Item. Baris 2: Terima (Full)
+                        <button class="btn btn-disabled" style="opacity:0; pointer-events:none;">.</button>
+                    </div>
+                    <button class="btn btn-blue btn-full" onclick="updateStatusAndPrint('${order.id}', 'processing')">VERIFIKASI & PROSES ✅</button>`;
+            } else if (['new', 'unpaid'].includes(order.status)) {
+                // BARIS 1: TOLAK | + ITEM. BARIS 2: TERIMA (FULL)
                 buttonsHtml = `
                     <div class="actions">
                         <button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>
                         <button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button>
                     </div>
-                    <button class="btn btn-green btn-full" onclick="updateStatusAndPrint('${order.id}', 'processing')">TERIMA ➡</button>
-                `;
-            } 
-            // 4. PROCESSING
-            else if (order.status === 'processing') {
+                    <button class="btn btn-green btn-full" onclick="updateStatusAndPrint('${order.id}', 'processing')">TERIMA ➡</button>`;
+            } else if (order.status === 'processing') {
                 buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">SELESAI & ANTAR ✅</button>`;
             }
 
