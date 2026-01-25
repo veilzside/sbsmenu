@@ -32,16 +32,13 @@
 
         .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 80px; }
         
-        /* CARD STYLE */
         .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 6px solid #555; animation: slideIn 0.3s ease; position: relative; }
-        .order-card.status-new { border-left-color: var(--red); }
-        .order-card.status-unpaid { border-left-color: var(--accent); }
-        .order-card.status-pending_payment { border-left-color: #e67e22; }
+        .order-card.status-new, .order-card.status-unpaid { border-left-color: var(--red); } /* Tunai */
+        .order-card.status-pending_payment { border-left-color: #e67e22; } /* QRIS */
         .order-card.status-processing { border-left-color: var(--blue); }
         .order-card.status-completed { border-left-color: var(--green); opacity: 1; }
         .order-card.status-rejected { border-left-color: #444; background: #222; opacity: 0.8; }
 
-        /* HEADER LAYOUT */
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .header-left { display: flex; flex-direction: column; }
         .cust-name { font-size: 16px; font-weight: 700; color: #fff; text-transform: uppercase; margin-bottom: 2px; }
@@ -49,15 +46,12 @@
         
         .header-right { text-align: right; }
         .meta-date { font-size: 13px; color: #ccc; margin-bottom: 2px; display: block; font-weight: 500; }
-        
         .meta-time-block { font-size: 11px; color: #aaa; line-height: 1.4; }
         .time-label { color: #777; margin-right: 3px; }
         .time-val { color: #ddd; font-weight: 600; }
         .time-highlight { color: var(--green); font-weight: 700; }
-
         .timer-badge { font-size: 12px; font-weight: 700; background: #000; color: var(--accent); padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-family: monospace; }
 
-        /* ITEM LIST */
         .item-list { margin-bottom: 15px; max-height: 250px; overflow-y: auto; padding-right: 5px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
         .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; align-items: flex-start; }
         .item-name { font-weight: 600; color: #eee; }
@@ -67,33 +61,16 @@
         .btn-trash { background: none; border: none; color: #666; cursor: pointer; font-size: 14px; padding: 0 0 0 10px; }
         .btn-trash:hover { color: var(--red); }
 
-        /* DURASI METRICS */
         .duration-box { margin-bottom: 15px; font-size: 12px; color: #aaa; padding: 0 5px; }
         .dur-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
         .dur-val { color: #fff; font-weight: 700; }
         .dur-total-row { border-top: 1px dashed #666; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-size: 13px; }
         .dur-total-val { color: var(--accent); font-weight: 900; }
 
-        /* TOTAL PRICE */
         .total-display { text-align: right; font-size: 18px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
-
-        /* STATUS / STAMP */
         .status-footer { text-align: center; margin-top: 10px; }
         .status-text-done { color: var(--green); font-weight: 700; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; }
-        
-        .stamp-rejected {
-            border: 2px solid var(--red);
-            color: var(--red);
-            font-size: 20px;
-            font-weight: 700;
-            display: inline-block;
-            padding: 8px 20px;
-            transform: rotate(-5deg);
-            letter-spacing: 1px;
-            opacity: 0.9;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-        }
+        .stamp-rejected { border: 2px solid var(--red); color: var(--red); font-size: 20px; font-weight: 700; display: inline-block; padding: 8px 20px; transform: rotate(-5deg); letter-spacing: 1px; opacity: 0.9; margin-bottom: 10px; text-transform: uppercase; }
 
         /* BUTTONS */
         .btn-print-group { display: flex; gap: 10px; margin-bottom: 15px; border-top: 1px solid #444; padding-top: 15px; }
@@ -106,9 +83,10 @@
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
         .btn-full { grid-column: span 2; }
 
+        /* MODAL STYLES */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
-        .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
+        .modal select, .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
         #custom-confirm-modal .modal-content, #alert-modal .modal-content { text-align: center; }
 
         @media (max-width: 768px) {
@@ -141,9 +119,8 @@
         </div>
 
         <div class="status-tabs">
-            <div class="tab" onclick="filterTab('new')" id="tab-new">BARU <span class="badge" id="badge-new">0</span></div>
-            <div class="tab" onclick="filterTab('unpaid')" id="tab-unpaid">BAYAR <span class="badge" id="badge-unpaid">0</span></div>
-            <div class="tab" onclick="filterTab('processing')" id="tab-processing">PROSES <span class="badge" id="badge-processing">0</span></div>
+            <div class="tab" onclick="filterTab('cashier')" id="tab-cashier">KASIR <span class="badge" id="badge-cashier">0</span></div>
+            <div class="tab" onclick="filterTab('kitchen')" id="tab-kitchen">DAPUR <span class="badge" id="badge-kitchen">0</span></div>
         </div>
         <div id="orders-grid" class="orders-grid"></div>
     </div>
@@ -155,8 +132,10 @@
 
     <div id="edit-modal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-top:0;">Tambah Item Manual</h3>
-            <input type="text" id="extra-name" placeholder="Nama Item">
+            <h3 style="margin-top:0;">Tambah Item</h3>
+            <select id="extra-select" onchange="autoFillPrice()">
+                <option value="">-- Pilih Menu --</option>
+                </select>
             <input type="number" id="extra-price" placeholder="Harga (Rp)">
             <div class="actions">
                 <button class="btn btn-grey" onclick="closeModal()">Batal</button>
@@ -183,6 +162,25 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
+        // --- DATA MENU (HARDCODED DARI INDEX.HTML UNTUK MEMUDAHKAN ADD ITEM) ---
+        const MENU_DATA = [
+            {n:"Kalter", p:20000}, {n:"Obama", p:25000}, {n:"Mangku Koe", p:28000}, {n:"Mangku Ayang", p:25000}, 
+            {n:"Barudak", p:20000}, {n:"Sekena Gomes", p:22000}, {n:"Sekena Goput", p:22000}, {n:"Sekena Keren", p:25000},
+            {n:"Paket Sambat", p:35000}, {n:"Cricket", p:25000}, {n:"Potato Freak", p:17000}, {n:"Uhat Lawik", p:17000},
+            {n:"Gyozable", p:18000}, {n:"Tahu Julit", p:19000}, {n:"Fressa", p:25000}, {n:"Americano", p:16000},
+            {n:"Dark Freshly", p:19000}, {n:"Darkberry", p:19000}, {n:"Tubruk Syari", p:13000}, {n:"Hanoi Tears", p:15000},
+            {n:"Penkopi", p:23000}, {n:"Macch Favorito", p:20000}, {n:"Specta", p:25000}, {n:"Comica", p:22000},
+            {n:"Rhumpee", p:20000}, {n:"Crush", p:22000}, {n:"Mammy", p:18000}, {n:"Deep Choc", p:18000},
+            {n:"Schopea", p:25000}, {n:"Creamberry", p:23000}, {n:"Jandu", p:18000}, {n:"Threepi", p:15000},
+            {n:"Teh Gelies", p:10000}, {n:"Red Bloom", p:18000}, {n:"Yagustea", p:15000}, {n:"Chenteal", p:15000},
+            {n:"Trustey", p:18000}, {n:"Rindu", p:15000}, {n:"Literally Water", p:5000},
+            {n:"Bintang Small", p:32000}, {n:"Bintang Radler", p:32000}, {n:"Bintang Large", p:50000},
+            {n:"Anker Lychee", p:29000}, {n:"Anker Pineapple", p:29000}, {n:"Smirnoff Raspberry", p:33000},
+            {n:"Smirnoff Green Apple", p:33000}, {n:"Smirnoff Lemon Lyc", p:33000}, {n:"Smirnoff Pink Lem", p:33000},
+            {n:"Mix Max Anggur", p:34000}, {n:"Mix Max Blue", p:34000}, {n:"Iceland Lychee", p:34000},
+            {n:"Iceland L. Island", p:34000}, {n:"Api Anggur Hijau", p:106000}
+        ];
+
         // --- KONFIGURASI FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
@@ -200,7 +198,8 @@
         const db = firebase.database();
         
         let allOrders = [];
-        let currentTab = localStorage.getItem('sbs_active_tab') || 'new';
+        // Default tab sekarang 'cashier' (menggantikan new/bayar)
+        let currentTab = localStorage.getItem('sbs_active_tab') || 'cashier';
         let editingOrderKey = null;
         let audioUnlocked = false;
         let confirmCallback = null;
@@ -245,7 +244,7 @@
             allOrders = [];
             if (data) Object.keys(data).forEach(key => allOrders.push({ id: key, ...data[key] }));
             
-            // Alarm untuk NEW dan QRIS PENDING
+            // Alarm bunyi jika ada pesanan baru masuk (status new atau pending_payment)
             if (allOrders.length > prevCount && audioUnlocked) {
                 if(allOrders.some(o => o.status === 'new' || o.status === 'pending_payment')) {
                     soundNew.play().catch(e => {});
@@ -257,6 +256,7 @@
             updateBadges();
         });
 
+        // --- FUNGSI PRINT ---
         function getDailyQueueNumber(orderId) {
             const targetOrder = allOrders.find(o => o.id === orderId);
             if(!targetOrder) return "00";
@@ -271,7 +271,6 @@
             if (!order) return;
 
             let tableNum = order.tableNumber || "Take Away";
-
             let realQueue = getDailyQueueNumber(order.id);
             const dateObj = new Date(order.timestamp);
             const dateStr = dateObj.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
@@ -293,12 +292,11 @@
             if (type === 'invoice') {
                 data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF;
                 data += "Jl. Mundu 8, Kota Malang\n";
-                data += "Jawa Timur, 65116\n";
                 data += "085159039877\n";
                 data += "--------------------------------\n";
                 data += ALIGN_LEFT;
                 data += BOLD_ON + "TABLE: " + tableNum + BOLD_OFF + "\n";
-                data += "Queue Order: #" + realQueue + "\n"; 
+                data += "Queue: #" + realQueue + "\n"; 
                 data += "Date : " + dateStr + " " + timeStr + "\n";
                 data += "ID   : " + displayID + "\n";
                 data += "--------------------------------\n";
@@ -354,7 +352,7 @@
             if (!audioUnlocked) return;
             const now = Date.now();
             if (allOrders.some(order => {
-                // Alarm bunyi untuk NEW dan PENDING PAYMENT jika didiamkan > 2 menit
+                // Alarm bunyi jika ada pesanan pending di KASIR lebih dari 2 menit
                 if (order.status !== 'new' && order.status !== 'pending_payment') return false;
                 const diff = (now - new Date(order.timestamp).getTime()) / 1000;
                 return diff > 120 && (diff % 120) < 1.5;
@@ -392,19 +390,15 @@
                         historyGrid.appendChild(card);
                     }
                 } else {
-                    // LOGIKA TAB
-                    // Tab BARU: Tunai
-                    if (currentTab === 'new' && order.status === 'new') {
-                        grid.appendChild(card);
-                    }
-                    // Tab BAYAR: Tunai (Diterima) & QRIS (Pending)
-                    else if (currentTab === 'unpaid') {
-                        if (order.status === 'unpaid' || order.status === 'pending_payment') {
+                    // LOGIKA TAB BARU
+                    // TAB KASIR: Menampung 'new' (Tunai Baru), 'unpaid' (Tunai Blm Lunas), 'pending_payment' (QRIS)
+                    if (currentTab === 'cashier') {
+                        if (['new', 'unpaid', 'pending_payment'].includes(order.status)) {
                             grid.appendChild(card);
                         }
                     }
-                    // Tab PROSES
-                    else if (currentTab === 'processing' && order.status === 'processing') {
+                    // TAB DAPUR: Menampung 'processing'
+                    else if (currentTab === 'kitchen' && order.status === 'processing') {
                         grid.appendChild(card);
                     }
                 }
@@ -423,17 +417,19 @@
             }
 
             const created = new Date(order.timestamp).getTime();
-            const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : 0;
             const paid = order.paidAt ? new Date(order.paidAt).getTime() : 0;
+            const completed = order.completedAt ? new Date(order.completedAt).getTime() : 0;
 
+            // --- REVISI LOGIKA TIMER DISPLAY ---
             let timerStart = 0;
-            if(order.status === 'new' || order.status === 'pending_payment') timerStart = created;
-            else if (order.status === 'unpaid') timerStart = accepted;
+            // Jika di Kasir (Menunggu Bayar/Verifikasi), hitung dari Created
+            if(['new', 'unpaid', 'pending_payment'].includes(order.status)) timerStart = created;
+            // Jika di Dapur (Sedang Masak), hitung dari PaidAt
             else if (order.status === 'processing') timerStart = paid;
 
             const div = document.createElement('div');
             div.className = `order-card status-${order.status}`;
-            if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; // Warna oranye QRIS
+            if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; // Warna QRIS
             
             let itemsHtml = (order.items || []).map((item, idx) => {
                 const qty = parseInt(item.qty);
@@ -499,37 +495,49 @@
                 </div>`;
             }
 
-            // BUTTON LOGIC
+            // BUTTON LOGIC - SIMPLIFIED
             let buttonsHtml = '';
-            if (order.status === 'new') {
-                buttonsHtml = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button><button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button><button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">Terima</button>`;
-            } 
-            else if (order.status === 'pending_payment') {
-                // KHUSUS QRIS: VERIFIKASI LANGSUNG KE PROSES
+            
+            // 1. Tunai Baru / Tunai Belum Lunas
+            if (order.status === 'new' || order.status === 'unpaid') {
                 buttonsHtml = `
-                    <div style="grid-column:span 2; text-align:center; color:#e67e22; font-weight:bold; font-size:12px; margin-bottom:5px;">
-                        ⚠ CEK BUKTI TRANSFER
-                    </div>
                     <button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>
-                    <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">VERIFIKASI & PROSES</button>
+                    <button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button>
+                    <button class="btn btn-blue btn-full" onclick="updateStatusAndPrint('${order.id}', 'processing')">TERIMA UANG & PROSES ➡</button>
+                `;
+            } 
+            // 2. QRIS Pending
+            else if (order.status === 'pending_payment') {
+                buttonsHtml = `
+                    <div style="grid-column:span 2; text-align:center; color:#e67e22; font-weight:bold; font-size:12px; margin-bottom:5px;">⚠ CEK BUKTI TRANSFER</div>
+                    <button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>
+                    <button class="btn btn-blue" onclick="updateStatusAndPrint('${order.id}', 'processing')">VERIFIKASI & PROSES ➡</button>
                 `;
             }
-            else if (order.status === 'unpaid') {
-                buttonsHtml = `<button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button><button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>`;
-            } 
+            // 3. Sedang Proses (Di Dapur)
             else if (order.status === 'processing') {
-                buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>`;
+                buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">SELESAI & ANTAR ✅</button>`;
             }
 
-            // Status Footer
+            // Footer History
             let metricsHtml = '';
             let statusFooter = '';
             if(order.status === 'completed' || order.status === 'rejected') {
                 if(order.status === 'rejected') statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
                 else statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
                 
-                // Metrics (sama seperti file lama)
-                // ...
+                // Durasi Bayar: Dari Created sampai Paid
+                const durBayar = paid > 0 ? Math.floor((paid - created)/1000) : 0;
+                // Durasi Masak: Dari Paid sampai Completed
+                const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
+                
+                const fmt = (s) => { if (s <= 0) return "-"; const m = Math.floor(s/60); const sc = s%60; return m > 0 ? `${m}m ${sc}s` : `${sc}s`; };
+
+                metricsHtml = `
+                <div class="duration-box">
+                    <div class="dur-row"><span>Durasi Bayar:</span> <span class="dur-val">${fmt(durBayar)}</span></div>
+                    <div class="dur-row"><span>Durasi Masak:</span> <span class="dur-val">${fmt(durMasak)}</span></div>
+                </div>`;
             }
 
             div.innerHTML = `
@@ -550,13 +558,23 @@
             return div;
         }
 
+        // --- UPDATE STATUS & AUTO PRINT (POIN 2) ---
         function updateStatus(key, status) {
             const updates = { status: status };
             const now = new Date().toISOString(); 
-            if(status === 'unpaid') updates.acceptedAt = now; 
+            // Jika masuk ke processing (Lunas), set PaidAt
             if(status === 'processing') updates.paidAt = now; 
             if(status === 'completed' || status === 'rejected') updates.completedAt = now; 
             db.ref('orders/' + key).update(updates);
+        }
+
+        // Fungsi Spesial: Update Status lalu Print Checker Otomatis
+        function updateStatusAndPrint(key, status) {
+            updateStatus(key, status);
+            // Auto Print Checker (beri delay sedikit agar data terupdate)
+            setTimeout(() => {
+                printDirect(key, 'checker');
+            }, 500); 
         }
 
         function confirmReject(key) { showConfirm("Yakin tolak pesanan ini?", () => updateStatus(key, 'rejected')); }
@@ -588,24 +606,56 @@
         }
 
         function updateBadges() {
-            document.getElementById('badge-new').innerText = allOrders.filter(o => o.status === 'new').length;
-            document.getElementById('badge-unpaid').innerText = allOrders.filter(o => o.status === 'unpaid' || o.status === 'pending_payment').length;
-            document.getElementById('badge-processing').innerText = allOrders.filter(o => o.status === 'processing').length;
+            // Badge Kasir = New + Unpaid + Pending_Payment
+            const cashierCount = allOrders.filter(o => ['new', 'unpaid', 'pending_payment'].includes(o.status)).length;
+            document.getElementById('badge-cashier').innerText = cashierCount;
+            // Badge Dapur = Processing
+            document.getElementById('badge-kitchen').innerText = allOrders.filter(o => o.status === 'processing').length;
         }
 
         function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
         function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
         document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
 
-        function openEditModal(k) { editingOrderKey = k; document.getElementById('edit-modal').style.display = 'flex'; }
+        // --- ADD ITEM LOGIC (REVISI: DROPDOWN & AUTO PRICE) ---
+        function openEditModal(k) { 
+            editingOrderKey = k; 
+            
+            // Populate Dropdown
+            const select = document.getElementById('extra-select');
+            select.innerHTML = '<option value="">-- Pilih Menu --</option>';
+            MENU_DATA.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.n;
+                opt.text = item.n;
+                opt.setAttribute('data-price', item.p);
+                select.appendChild(opt);
+            });
+            
+            document.getElementById('extra-price').value = '';
+            document.getElementById('edit-modal').style.display = 'flex'; 
+        }
+
+        function autoFillPrice() {
+            const select = document.getElementById('extra-select');
+            const priceInput = document.getElementById('extra-price');
+            const selectedOpt = select.options[select.selectedIndex];
+            if(selectedOpt && selectedOpt.getAttribute('data-price')) {
+                priceInput.value = selectedOpt.getAttribute('data-price');
+            }
+        }
+
         function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
         
         function saveExtraItem() {
-            const n = document.getElementById('extra-name').value;
+            const select = document.getElementById('extra-select');
+            const n = select.value || document.getElementById('extra-select').options[select.selectedIndex]?.text;
             const p = parseInt(document.getElementById('extra-price').value);
+            
             if(!n || !p) return;
+            
             const o = allOrders.find(x => x.id === editingOrderKey);
-            const items = [...(o.items||[]), { name: n, price: p, qty: 1, note: 'Manual' }];
+            const items = [...(o.items||[]), { name: n, price: p, qty: 1, note: 'Manual Add' }];
             const tot = (Number(String(o.total).replace(/[^0-9]/g, '')) || 0) + p;
             db.ref('orders/' + editingOrderKey).update({ items: items, total: tot }).then(() => closeModal());
         }
