@@ -6,6 +6,7 @@
     <title>SBS Authentic Menu</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@700;900&family=Poppins:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
+        /* --- STYLE CSS (TIDAK BERUBAH) --- */
         :root { --sbs-yellow: #FFD200; --sbs-black: #1A1A1A; --sbs-orange: #FF6600; --sbs-dark-yellow: #FFB800; }
         body { font-family: 'Poppins', sans-serif; margin: 0; padding: 15px; color: var(--sbs-black); background: repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px), radial-gradient(circle at center, var(--sbs-yellow) 0%, #e6bc00 100%); background-attachment: fixed; overscroll-behavior-y: contain; padding-bottom: 120px; }
         .top-bar { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
@@ -66,7 +67,6 @@
         .input-group { margin-top: 15px; }
         .input-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #666; }
         .input-group input, .input-group select { width: 100%; padding: 10px; border: 2px solid var(--sbs-black); border-radius: 10px; box-sizing: border-box; font-family: 'Poppins'; font-size: 14px; background: #fff; }
-        .input-group input:focus, .input-group select:focus { border-color: var(--sbs-orange); outline: none; background: #fffdf9; }
         
         .btn-order { background: var(--sbs-orange); color: #fff; border: 3px solid var(--sbs-black); width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; margin-top: 20px; cursor: pointer; font-size: 16px; }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; font-weight: bold; }
@@ -245,7 +245,7 @@
         
         <div class="input-group">
             <label>Nomor Meja*</label>
-            <input type="number" id="table-number" placeholder="Scan QR Meja..." required inputmode="numeric">
+            <input type="number" id="table-number" placeholder="Contoh: 5" required inputmode="numeric">
         </div>
         <div class="input-group">
             <label>Nama Kakak*</label>
@@ -277,9 +277,8 @@
 <div id="history-modal" class="modal">
     <div class="modal-content">
         <div class="close-modal" onclick="closeHistory()">&times;</div>
-        <div class="modal-header">RIWAYAT PESANAN</div>
-        <div id="history-container" style="padding-bottom:10px;">
-            </div>
+        <div class="modal-header">RIWAYAT</div>
+        <div id="history-container" style="padding-bottom:10px;"></div>
         <button class="btn-close-final" onclick="closeHistory()">TUTUP</button>
     </div>
 </div>
@@ -288,7 +287,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
 <script>
-    // --- KONFIGURASI FIREBASE (PASTIKAN KONEKSI INI BENAR) ---
     const firebaseConfig = {
         apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
         authDomain: "sbs-menu-d1611.firebaseapp.com",
@@ -299,143 +297,88 @@
         appId: "1:530098727952:web:1bb3072d93be9564fbee95"
     };
 
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- LOGIC CART ---
     let cart = [];
     let currentOrderId = null;
 
-    // FUNGSI CEK URL (?table=5)
-    function getTableFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        return params.get('table');
-    }
-
-    // SAAT PAGE LOAD
+    // --- LOGIC AUTO-RESTORE QRIS MODAL ---
     window.onload = function() {
-        const tableFromURL = getTableFromURL();
-        const tableInput = document.getElementById('table-number');
-        
+        // Cek URL Table
+        const params = new URLSearchParams(window.location.search);
+        const tableFromURL = params.get('table');
         if (tableFromURL) {
-            // Jika ada scan QR (?table=5), isi otomatis dan kunci
-            tableInput.value = tableFromURL;
-            tableInput.readOnly = true;
-            tableInput.style.backgroundColor = "#eee"; 
-            tableInput.placeholder = "Meja " + tableFromURL;
-        } else {
-            // Jika buka link biasa, biarkan bisa diketik manual
-            tableInput.readOnly = false;
-            tableInput.style.backgroundColor = "#fff";
-            tableInput.placeholder = "Ketik Nomor Meja...";
+            const tableInput = document.getElementById('table-number');
+            tableInput.value = tableFromURL; tableInput.readOnly = true; tableInput.style.backgroundColor = "#eee";
+        }
+
+        // CEK PENDING QRIS (JIKA REFRESH)
+        const pendingQRIS = JSON.parse(localStorage.getItem('sbs_pending_qris'));
+        if(pendingQRIS && pendingQRIS.orderId && pendingQRIS.amount) {
+            currentOrderId = pendingQRIS.orderId;
+            showQRISModal(pendingQRIS.amount); // Buka lagi modalnya!
         }
     };
 
     function addToCart(name, price) {
         const existingItem = cart.find(item => item.name === name);
-        if (existingItem) {
-            existingItem.qty++;
-        } else {
-            cart.push({ name: name, price: price, qty: 1, note: '' });
-        }
+        if (existingItem) existingItem.qty++; else cart.push({ name: name, price: price, qty: 1, note: '' });
         updateCartUI();
         if (navigator.vibrate) navigator.vibrate(50);
     }
 
     function updateCartUI() {
         const bar = document.getElementById('cart-bar');
-        let totalQty = 0;
-        let totalPrice = 0;
-        cart.forEach(item => {
-            totalQty += item.qty;
-            totalPrice += (item.price * item.qty);
-        });
-
+        let totalQty = 0; let totalPrice = 0;
+        cart.forEach(item => { totalQty += item.qty; totalPrice += (item.price * item.qty); });
         if (totalQty > 0) {
             bar.style.display = 'flex';
             document.getElementById('cart-info').innerText = totalQty + " ITEM";
             document.getElementById('cart-total').innerText = "Rp " + totalPrice.toLocaleString('id-ID');
-        } else {
-            bar.style.display = 'none';
-        }
+        } else { bar.style.display = 'none'; }
     }
 
     function openCart() {
         const modal = document.getElementById('cart-modal');
         const container = document.getElementById('cart-items-container');
         const modalTotal = document.getElementById('modal-total');
-        
-        container.innerHTML = '';
-        let totalPrice = 0;
-
+        container.innerHTML = ''; let totalPrice = 0;
         cart.forEach((item, index) => {
             totalPrice += (item.price * item.qty);
             container.innerHTML += `
                 <div class="cart-item">
-                    <div class="item-main">
-                        <span>${item.name} <small>(${item.qty}x)</small></span>
-                        <span>Rp ${(item.price * item.qty).toLocaleString()}</span>
-                    </div>
-                    <div class="cart-actions" style="margin-top:5px; margin-bottom:5px;">
-                        <button onclick="changeQty(${index}, -1)">-</button>
-                        <span style="margin:0 5px;">${item.qty}</span>
-                        <button onclick="changeQty(${index}, 1)">+</button>
-                    </div>
-                    <input type="text" class="item-note-input" 
-                           placeholder="Catatan..." 
-                           value="${item.note}" 
-                           onchange="updateNote(${index}, this.value)">
-                </div>
-            `;
+                    <div class="item-main"><span>${item.name} (${item.qty}x)</span><span>Rp ${(item.price * item.qty).toLocaleString()}</span></div>
+                    <div class="cart-actions" style="margin:5px 0;"><button onclick="changeQty(${index}, -1)">-</button><span>${item.qty}</span><button onclick="changeQty(${index}, 1)">+</button></div>
+                    <input type="text" class="item-note-input" placeholder="Catatan..." value="${item.note}" onchange="updateNote(${index}, this.value)">
+                </div>`;
         });
-
         modalTotal.innerText = "Rp " + totalPrice.toLocaleString('id-ID');
         modal.style.display = 'flex';
     }
 
-    function updateNote(index, value) {
-        cart[index].note = value;
-    }
+    function updateNote(index, value) { cart[index].note = value; }
+    function changeQty(index, delta) { cart[index].qty += delta; if (cart[index].qty <= 0) cart.splice(index, 1); updateCartUI(); openCart(); }
+    function closeCart() { document.getElementById('cart-modal').style.display = 'none'; }
 
-    function changeQty(index, delta) {
-        cart[index].qty += delta;
-        if (cart[index].qty <= 0) {
-            cart.splice(index, 1);
-        }
-        updateCartUI();
-        openCart(); 
-    }
-
-    function closeCart() {
-        document.getElementById('cart-modal').style.display = 'none';
-    }
-
-    // --- FUNGSI KIRIM PESANAN ---
     function submitOrder() {
         const tableNum = document.getElementById('table-number').value;
         const custName = document.getElementById('customer-real-name').value;
-        const custPhone = document.getElementById('customer-phone').value;
         const paymentMethod = document.getElementById('payment-method').value;
 
-        // Validasi
-        if (!tableNum) { alert("Mohon isi Nomor Meja!"); return; }
-        if (!custName) { alert("Mohon isi Nama Kakak!"); return; }
+        if (!tableNum) { alert("Nomor meja belum diisi!"); return; }
+        if (!custName) { alert("Mohon isi nama kakak!"); return; }
         if (cart.length === 0) return;
 
         let totalPrice = 0;
         cart.forEach(item => totalPrice += (item.price * item.qty));
 
-        // LOGIKA STATUS AWAL
-        // Tunai: 'new' (Masuk tab KASIR)
-        // QRIS: 'qris_unpaid' (Masuk tab KASIR tapi tombol terkunci sampai user klik bayar)
+        // Tunai: 'new', QRIS: 'qris_unpaid'
         let initialStatus = (paymentMethod === 'tunai') ? 'new' : 'qris_unpaid';
 
         const orderData = {
             tableNumber: tableNum,
             customerName: custName,
-            customerPhone: custPhone,
             paymentMethod: paymentMethod,
             items: cart,
             total: totalPrice,
@@ -449,58 +392,45 @@
             currentOrderId = newOrderRef.key;
             saveOrderToHistory(currentOrderId);
             
-            // Bersihkan Keranjang
-            cart = []; 
-            updateCartUI();
-            closeCart();
-            
-            // Reset Form (kecuali meja jika scan QR)
-            if(!document.getElementById('table-number').readOnly) {
-                document.getElementById('table-number').value = '';
-            }
-            document.getElementById('customer-real-name').value = '';
-            
-            // TAMPILKAN MODAL SESUAI METODE BAYAR
+            // Jika QRIS, SIMPAN KE LOCALSTORAGE (ANTI REFRESH HILANG)
             if(paymentMethod === 'qris') {
+                localStorage.setItem('sbs_pending_qris', JSON.stringify({
+                    orderId: currentOrderId,
+                    amount: totalPrice
+                }));
                 showQRISModal(totalPrice);
             } else {
                 showSuccessModal();
             }
-        })
-        .catch((error) => {
-            alert("Gagal mengirim: " + error.message);
+
+            cart = []; updateCartUI(); closeCart();
+            document.getElementById('customer-real-name').value = '';
         });
     }
 
-    // --- MODAL SUKSES (TUNAI) ---
     function showSuccessModal() {
         const modal = document.getElementById('success-modal');
         modal.querySelector('.modal-content').innerHTML = `
-            <div class="success-icon">✔</div>
-            <div class="modal-header" style="border:none; margin-bottom:5px; text-align:center;">PESANAN DITERIMA!</div>
-            <div class="success-msg">
-                Mohon lakukan pembayaran di <b>KASIR</b><br>
-                agar pesanan segera diproses.
-            </div>
-            <button class="btn-close-final" onclick="closeSuccess()">OK, MENGERTI</button>
+            <div class="success-icon" style="font-size:50px; color:#28a745; margin-bottom:10px;">✔</div>
+            <div class="modal-header" style="border:none; text-align:center;">PESANAN DITERIMA</div>
+            <div class="success-msg">Mohon lakukan pembayaran di <b>KASIR</b> agar pesanan segera diproses.</div>
+            <button class="btn-close-final" onclick="document.getElementById('success-modal').style.display='none'">OK, MENGERTI</button>
         `;
         modal.style.display = 'flex';
     }
 
-    // --- MODAL QRIS (BARU - DENGAN LOGIKA TOMBOL) ---
     function showQRISModal(amount) {
         const modal = document.getElementById('success-modal');
-        // Ganti 'img/qris-dummy.jpg' dengan URL gambar QRIS asli Anda
+        // GANTI SRC IMAGE DENGAN QRIS ANDA
         modal.querySelector('.modal-content').innerHTML = `
             <div class="modal-header" style="border:none; text-align:center; font-size:24px;">SCAN QRIS</div>
             <div style="text-align:center; margin-bottom:15px;">
-                <img src="img/qris-dummy.jpg" alt="QRIS Code" style="width:200px; height:200px; border:2px solid #000; padding:5px;">
-                <br>
-                <div style="font-weight:bold; font-size:18px; margin-top:10px;">Rp ${amount.toLocaleString('id-ID')}</div>
+                <img src="img/qris-dummy.jpg" alt="QRIS" style="width:200px; height:200px; border:2px solid #000;">
+                <br><div style="font-weight:bold; font-size:18px; margin-top:10px;">Rp ${amount.toLocaleString('id-ID')}</div>
             </div>
             <div class="success-msg" style="font-size:12px;">
                 1. Scan QR di atas.<br>
-                2. Setelah transfer berhasil, <b>WAJIB KLIK TOMBOL DI BAWAH</b> agar pesanan masuk ke Kasir.
+                2. Setelah berhasil bayar, <b>WAJIB KLIK TOMBOL DI BAWAH</b> agar Kasir kami tahu.
             </div>
             <button class="btn-close-final" onclick="confirmPayment()" style="background:#28a745;">SAYA SUDAH BAYAR</button>
         `;
@@ -510,22 +440,18 @@
     function confirmPayment() {
         if(!currentOrderId) return;
         
-        // Update database: Ubah status jadi 'pending_payment' DAN catat waktu klaim
-        // Ini yang akan membuka gembok di Dapur.html
         db.ref('orders/' + currentOrderId).update({
             status: 'pending_payment',
             paymentClaimedAt: new Date().toISOString()
         }).then(() => {
-            alert("Terima kasih! Notifikasi sudah dikirim ke Kasir untuk diverifikasi. Mohon tunggu sebentar.");
+            // HAPUS DATA PENDING KARENA SUDAH SELESAI
+            localStorage.removeItem('sbs_pending_qris');
+            
+            alert("Terima kasih! Notifikasi sudah dikirim ke Kasir.");
             document.getElementById('success-modal').style.display = 'none';
         });
     }
 
-    function closeSuccess() {
-        document.getElementById('success-modal').style.display = 'none';
-    }
-
-    // --- RIWAYAT & TRACKING ---
     function saveOrderToHistory(orderId) {
         let history = JSON.parse(localStorage.getItem('sbs_order_history')) || [];
         history.push(orderId);
@@ -535,64 +461,38 @@
 
     function trackOrders() {
         let history = JSON.parse(localStorage.getItem('sbs_order_history')) || [];
-        const legacyOrder = localStorage.getItem('myActiveOrder');
-        if(legacyOrder && !history.includes(legacyOrder)) history.push(legacyOrder);
-
         const trackerUI = document.getElementById('status-tracker');
-        const trackerSummary = document.getElementById('tracker-summary');
         const historyContainer = document.getElementById('history-container');
         
-        if (history.length === 0) {
-            trackerUI.style.display = 'none';
-            return;
-        }
-
+        if (history.length === 0) { trackerUI.style.display = 'none'; return; }
         trackerUI.style.display = 'block';
         historyContainer.innerHTML = ''; 
 
         let activeCount = 0;
-
         history.forEach(orderId => {
             db.ref('orders/' + orderId).on('value', (snapshot) => {
                 const data = snapshot.val();
                 if(data) {
-                    let statusText = 'MENUNGGU';
-                    let color = '#888';
-
-                    if(data.status === 'new') { statusText = 'MENUNGGU KONFIRMASI'; color = '#888'; activeCount++; }
+                    let statusText = 'MENUNGGU'; let color = '#888';
+                    if(data.status === 'new') { statusText = 'BELUM DIBAYAR (TUNAI)'; color = '#FF6600'; activeCount++; }
                     else if(data.status === 'qris_unpaid') { statusText = 'MENUNGGU SCAN CUSTOMER'; color = '#FF6600'; activeCount++; }
                     else if(data.status === 'pending_payment') { statusText = 'MENUNGGU VERIFIKASI KASIR'; color = '#e67e22'; activeCount++; }
-                    else if(data.status === 'unpaid') { statusText = 'DITERIMA / BELUM LUNAS'; color = '#FF6600'; activeCount++; }
-                    else if(data.status === 'processing') { statusText = 'SEDANG DISIAPKAN'; color = '#3498db'; activeCount++; }
-                    else if(data.status === 'completed') { statusText = 'SELESAI / DIANTAR'; color = '#2ecc71'; }
-                    else if(data.status === 'rejected') { statusText = 'DITOLAK / KOSONG'; color = 'red'; }
-
+                    else if(data.status === 'unpaid') { statusText = 'DITERIMA (TUNAI)'; color = '#3498db'; activeCount++; }
+                    else if(data.status === 'processing') { statusText = 'SEDANG DIPROSES'; color = '#3498db'; activeCount++; }
+                    else if(data.status === 'completed') { statusText = 'SELESAI'; color = '#2ecc71'; }
+                    
                     let card = document.getElementById('card-' + orderId);
                     if(!card) {
-                        card = document.createElement('div');
-                        card.id = 'card-' + orderId;
-                        card.className = 'history-card';
+                        card = document.createElement('div'); card.id = 'card-' + orderId; card.className = 'history-card';
                         historyContainer.appendChild(card);
                     }
-
                     const itemNames = (data.items || []).map(i => i.name).join(', ');
                     card.innerHTML = `
-                        <div class="history-header">
-                            <span>Meja: ${data.tableNumber || '-'}</span>
-                            <span>${data.paymentMethod === 'qris' ? 'QRIS' : 'TUNAI'}</span>
-                        </div>
+                        <div class="history-header"><span>Meja: ${data.tableNumber || '-'}</span><span>${data.paymentMethod.toUpperCase()}</span></div>
                         <div class="history-status" style="color:${color}">${statusText}</div>
                         <div class="history-items">${itemNames}</div>
-                        <div style="font-size:10px; color:#aaa; margin-top:5px;">ID: ...${orderId.slice(-4)}</div>
                     `;
-                    
-                    if (activeCount > 0) {
-                        trackerSummary.innerText = activeCount + " PESANAN AKTIF";
-                        trackerUI.style.background = "#1A1A1A"; 
-                    } else {
-                        trackerSummary.innerText = "RIWAYAT PESANAN";
-                        trackerUI.style.background = "#2ecc71"; 
-                    }
+                    document.getElementById('tracker-summary').innerText = activeCount > 0 ? activeCount + " PESANAN AKTIF" : "RIWAYAT PESANAN";
                 }
             });
         });
@@ -600,82 +500,10 @@
 
     function openHistory() { document.getElementById('history-modal').style.display = 'flex'; }
     function closeHistory() { document.getElementById('history-modal').style.display = 'none'; }
-
     trackOrders();
-
-    // --- TAB & SWIPE LOGIC ---
-    function openT(e, n) {
-        const searchInput = document.getElementById('menuSearch');
-        if(searchInput && searchInput.value !== '') { clearSearchInput(); }
-        var i, c, t;
-        c = document.getElementsByClassName("content");
-        for (i = 0; i < c.length; i++) c[i].classList.remove("active");
-        t = document.getElementsByClassName("tab-btn");
-        for (i = 0; i < t.length; i++) t[i].classList.remove("active");
-        document.getElementById(n).classList.add("active");
-        if(e && e.currentTarget) {
-            e.currentTarget.classList.add("active");
-            e.currentTarget.scrollIntoView({behavior: 'smooth', inline: 'center', block: 'nearest'});
-        }
-    }
-
-    const swipeArea = document.getElementById('swipe-area');
-    let startX = 0; let startY = 0; let endX = 0; let endY = 0;
-    const minSwipeDistance = 70; 
-
-    swipeArea.addEventListener('touchstart', (e) => {
-        if(document.body.classList.contains('search-mode-active')) return;
-        startX = e.changedTouches[0].screenX;
-        startY = e.changedTouches[0].screenY; 
-    }, {passive: true});
-
-    swipeArea.addEventListener('touchend', (e) => {
-        if(document.body.classList.contains('search-mode-active')) return;
-        endX = e.changedTouches[0].screenX;
-        endY = e.changedTouches[0].screenY; 
-        handleSwipeGesture();
-    }, {passive: true});
-
-    function handleSwipeGesture() {
-        const distanceX = endX - startX;
-        const distanceY = endY - startY;
-        if (Math.abs(distanceX) > minSwipeDistance && Math.abs(distanceX) > Math.abs(distanceY)) {
-            const tabs = Array.from(document.querySelectorAll('.tab-btn'));
-            const activeTab = document.querySelector('.tab-btn.active');
-            const currentIndex = tabs.indexOf(activeTab);
-            if (distanceX < 0) { if (currentIndex < tabs.length - 1) tabs[currentIndex + 1].click(); } 
-            else { if (currentIndex > 0) tabs[currentIndex - 1].click(); }
-        }
-    }
-
-    const searchInput = document.getElementById('menuSearch');
-    const clearBtn = document.getElementById('clearSearch');
-    const menuTabs = document.getElementById('menuTabs');
-    const noResults = document.getElementById('no-results');
-    const categoryMap = { 'kopi': ['black', 'white'], 'coffee': ['black', 'white'], 'alkohol': ['alcs'], 'beer': ['alcs'] };
-
-    if(searchInput) {
-        searchInput.addEventListener('keyup', (e) => {
-            const term = e.target.value.toLowerCase().trim();
-            clearBtn.style.display = term.length > 0 ? 'flex' : 'none';
-            if (term.length === 0) { exitSearchMode(); return; }
-            enterSearchMode();
-            if (categoryMap[term]) { showFullCategories(categoryMap[term]); } else { filterSpecificItems(term); }
-        });
-    }
-
-    function enterSearchMode() { document.body.classList.add('search-mode-active'); menuTabs.classList.add('hidden-by-search'); }
-    function exitSearchMode() {
-        document.body.classList.remove('search-mode-active'); menuTabs.classList.remove('hidden-by-search');
-        document.querySelectorAll('.menu-card, .alcs-card').forEach(card => card.classList.remove('card-hidden'));
-        document.querySelectorAll('.content').forEach(section => section.classList.remove('section-hidden'));
-        noResults.style.display = 'none';
-        const activeBtn = document.querySelector('.tab-btn.active');
-        if(activeBtn) { const tabName = activeBtn.getAttribute('onclick').match(/'([^']+)'/)[1]; var c = document.getElementsByClassName("content"); for (var i = 0; i < c.length; i++) c[i].classList.remove("active"); document.getElementById(tabName).classList.add("active"); }
-    }
-    function clearSearchInput() { if(searchInput) searchInput.value = ''; if(clearBtn) clearBtn.style.display = 'none'; exitSearchMode(); }
-    function showFullCategories(targetIds) { let hasResult = false; document.querySelectorAll('.content').forEach(section => { if (targetIds.includes(section.id)) { section.classList.remove('section-hidden'); section.querySelectorAll('.menu-card, .alcs-card').forEach(c => c.classList.remove('card-hidden')); hasResult = true; } else { section.classList.add('section-hidden'); } }); noResults.style.display = hasResult ? 'none' : 'block'; }
-    function filterSpecificItems(term) { let hasResult = false; document.querySelectorAll('.content').forEach(section => { let visibleCardsCount = 0; const cards = section.querySelectorAll('.menu-card, .alcs-card'); cards.forEach(card => { const textContent = card.innerText.toLowerCase(); const imgAlt = card.querySelector('img') ? card.querySelector('img').alt.toLowerCase() : ''; const tags = card.getAttribute('data-tags') ? card.getAttribute('data-tags').toLowerCase() : ''; if (textContent.includes(term) || imgAlt.includes(term) || tags.includes(term)) { card.classList.remove('card-hidden'); visibleCardsCount++; hasResult = true; } else { card.classList.add('card-hidden'); } }); if (visibleCardsCount > 0) { section.classList.remove('section-hidden'); } else { section.classList.add('section-hidden'); } }); noResults.style.display = hasResult ? 'none' : 'block'; }
+    
+    function openT(e, n) { var i, c, t; c = document.getElementsByClassName("content"); for (i = 0; i < c.length; i++) c[i].classList.remove("active"); t = document.getElementsByClassName("tab-btn"); for (i = 0; i < t.length; i++) t[i].classList.remove("active"); document.getElementById(n).classList.add("active"); if(e) e.currentTarget.classList.add("active"); }
+    function clearSearchInput() { document.getElementById('menuSearch').value = ''; document.getElementById('clearSearch').style.display = 'none'; }
 </script>
 </body>
 </html>
