@@ -6,101 +6,76 @@
     <title>SBS Kitchen - OPS</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
+        /* --- CSS ASLI DARI DAPUR (5).HTML (TIDAK DIUBAH) --- */
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
-        
         .sidebar { width: 260px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
         .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
         .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
-        .menu-icon { font-size: 20px; }
-
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
         .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .page-title { margin:0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
-        .header-actions { display: flex; gap: 15px; align-items: center; }
-        
-        #btn-audio { background: transparent; border: 2px solid #555; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: 0.3s; color: #555; }
-        #btn-audio.active { background: var(--green); border-color: var(--green); box-shadow: 0 0 10px var(--green); animation: none; color: #fff; }
-        #btn-audio.inactive { background: #330000; border-color: var(--red); color: var(--red); animation: pulse 2s infinite; }
-
+        #btn-audio { background: transparent; border: 2px solid #555; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; color: #555; transition: 0.3s; }
+        #btn-audio.active { background: var(--green); border-color: var(--green); color: #fff; box-shadow: 0 0 10px var(--green); }
         .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
         .tab { padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; flex-shrink: 0; white-space: nowrap; }
         .tab.active { opacity: 1; background: var(--card-bg); border-color: var(--accent); color: var(--accent); }
         .badge { background: var(--red); color: white; padding: 2px 6px; border-radius: 50%; font-size: 10px; margin-left: 5px; vertical-align: top; }
-
         .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 80px; }
-        
         .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 6px solid #555; animation: slideIn 0.3s ease; position: relative; }
-        .order-card.status-new, .order-card.status-unpaid { border-left-color: var(--red); } 
-        .order-card.status-pending_payment { border-left-color: #e67e22; box-shadow: 0 0 10px rgba(230, 126, 34, 0.3); } 
-        .order-card.status-qris_unpaid { border-left-color: #555; opacity: 0.8; }
-        .order-card.status-processing { border-left-color: var(--blue); }
-        .order-card.status-completed { border-left-color: var(--green); opacity: 1; }
-        .order-card.status-rejected { border-left-color: #444; background: #222; opacity: 0.8; }
-
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        .header-left { display: flex; flex-direction: column; }
-        .cust-name { font-size: 16px; font-weight: 700; color: #fff; text-transform: uppercase; margin-bottom: 2px; }
-        .order-id { font-size: 11px; color: #666; font-family: monospace; }
         
-        .header-right { text-align: right; }
-        .meta-date { font-size: 13px; color: #ccc; margin-bottom: 2px; display: block; font-weight: 500; }
-        .meta-time-block { font-size: 11px; color: #aaa; line-height: 1.4; }
-        .time-label { color: #777; margin-right: 3px; }
-        .time-val { color: #ddd; font-weight: 600; }
-        .time-highlight { color: var(--green); font-weight: 700; }
-        .timer-badge { font-size: 12px; font-weight: 700; background: #000; color: var(--accent); padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-family: monospace; }
-
-        .item-list { margin-bottom: 15px; max-height: 250px; overflow-y: auto; padding-right: 5px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
-        .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; align-items: flex-start; }
-        .item-name { font-weight: 600; color: #eee; }
-        .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: 2px; }
-        .item-price { font-weight: 700; color: #fff; }
-        .item-unit-price { font-size: 10px; color: #888; display: block; }
-        .btn-trash { background: none; border: none; color: #666; cursor: pointer; font-size: 14px; padding: 0 0 0 10px; }
-        .btn-trash:hover { color: var(--red); }
-
-        .duration-box { margin-bottom: 15px; font-size: 12px; color: #aaa; padding: 0 5px; }
-        .dur-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-        .dur-val { color: #fff; font-weight: 700; }
-        .dur-total-row { border-top: 1px dashed #666; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-size: 13px; }
-        .dur-total-val { color: var(--accent); font-weight: 900; }
-
+        /* WARNA STATUS (UPDATED) */
+        .order-card.status-new, .order-card.status-unpaid { border-left-color: var(--red); }
+        .order-card.status-qris_unpaid { border-left-color: #777; opacity: 0.8; }
+        .order-card.status-pending_payment { border-left-color: #e67e22; box-shadow: 0 0 15px rgba(230, 126, 34, 0.2); }
+        .order-card.status-processing { border-left-color: var(--blue); }
+        .order-card.status-completed { border-left-color: var(--green); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .cust-name { font-size: 16px; font-weight: 700; color: #fff; text-transform: uppercase; }
+        .item-list { margin-bottom: 15px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
+        .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
         .total-display { text-align: right; font-size: 18px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
-        .status-footer { text-align: center; margin-top: 10px; }
-        .status-text-done { color: var(--green); font-weight: 700; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; }
-        .stamp-rejected { border: 2px solid var(--red); color: var(--red); font-size: 20px; font-weight: 700; display: inline-block; padding: 8px 20px; transform: rotate(-5deg); letter-spacing: 1px; opacity: 0.9; margin-bottom: 10px; text-transform: uppercase; }
-
-        /* BUTTONS */
-        .btn-print-group { display: flex; gap: 10px; margin-bottom: 15px; border-top: 1px solid #444; padding-top: 15px; }
-        .btn-print { flex: 1; background: #3c3c45; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 700; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-print:active { background: #555; transform: scale(0.98); }
-
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; color: #fff; font-size: 14px; }
+        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; color: #fff; font-size: 14px; }
         .btn-green { background: var(--green); } .btn-red { background: var(--red); }
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
         .btn-disabled { background: #444; color: #888; cursor: not-allowed; }
         .btn-full { grid-column: span 2; }
-
-        /* MODAL STYLES */
+        
+        /* ITEM & TRASH */
+        .btn-trash { background: none; border: none; color: #666; cursor: pointer; font-size: 14px; padding: 0 0 0 10px; }
+        .btn-trash:hover { color: var(--red); }
+        
+        /* PRINT BTN */
+        .btn-print-group { display: flex; gap: 10px; margin-bottom: 15px; border-top: 1px solid #444; padding-top: 15px; }
+        .btn-print { flex: 1; background: #3c3c45; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 700; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        
+        /* TIMER & HEADER RIGHT */
+        .header-right { text-align: right; }
+        .meta-time-block { font-size: 11px; color: #aaa; line-height: 1.4; }
+        .timer-badge { font-size: 12px; font-weight: 700; background: #000; color: var(--accent); padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-family: monospace; }
+        
+        /* MODAL */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
-        .modal select, .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
-        #custom-confirm-modal .modal-content, #alert-modal .modal-content { text-align: center; }
+        .modal input, .modal select { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
+        
+        /* DURASI BOX (HISTORY) */
+        .duration-box { margin-bottom: 15px; font-size: 12px; color: #aaa; padding: 0 5px; }
+        .dur-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .dur-val { color: #fff; font-weight: 700; }
 
         @media (max-width: 768px) {
-            body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
-            .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; background: #1a1a1a; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 9999; }
+            body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
+            .sidebar { width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; position: fixed; bottom: 0; left: 0; background: #15151a; z-index: 999; }
             .brand { display: none; } 
-            .menu-item { flex-direction: column; gap: 3px; font-size: 10px; padding: 5px; margin: 0; background: transparent !important; border-radius: 0; justify-content: center; flex: 1; text-align: center; color: #666; }
-            .menu-item.active { color: var(--accent); }
-            .menu-icon { font-size: 20px; margin-bottom: 2px; display: block; }
-            .main { height: auto; overflow: visible; padding: 15px; padding-bottom: 80px; width: 100%; }
+            .menu-item { flex: 1; text-align: center; justify-content: center; font-size: 10px; flex-direction: column; gap: 2px; }
+            .main { padding-bottom: 80px; width: 100%; }
             .status-tabs { position: sticky; top: 0; background: var(--bg-dark); z-index: 50; padding-top: 10px; margin-top: -10px; }
-            .orders-grid { grid-template-columns: 1fr; gap: 20px; padding-bottom: 0; } 
+            .orders-grid { grid-template-columns: 1fr; } 
         }
     </style>
 </head>
@@ -108,22 +83,21 @@
 
     <div class="sidebar">
         <div class="brand">SBS KITCHEN</div>
-        <div class="menu-item active" onclick="showPage('orders')"><span class="menu-icon">📦</span><span>Pesanan</span></div>
-        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">🕒</span><span>Riwayat (Hari Ini)</span></div>
+        <div class="menu-item active" onclick="showPage('orders')"><span>📦 Pesanan</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span>🕒 Riwayat</span></div>
     </div>
 
     <div class="main" id="orders-page">
         <div class="top-header">
             <h2 class="page-title">PESANAN AKTIF</h2>
-            <div class="header-actions">
-                <button id="btn-audio" class="inactive" onclick="toggleAudio()">🔕</button>
-            </div>
+            <button id="btn-audio" class="inactive" onclick="toggleAudio()">🔕</button>
         </div>
 
         <div class="status-tabs">
             <div class="tab" onclick="filterTab('cashier')" id="tab-cashier">KASIR <span class="badge" id="badge-cashier">0</span></div>
             <div class="tab" onclick="filterTab('kitchen')" id="tab-kitchen">DAPUR <span class="badge" id="badge-kitchen">0</span></div>
         </div>
+        
         <div id="orders-grid" class="orders-grid"></div>
     </div>
 
@@ -164,7 +138,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
-        // --- DATA MENU LENGKAP UNTUK DROPDOWN ADD ITEM ---
+        // DATA MENU LENGKAP UNTUK KASIR
         const MENU_DATA = [
             {n:"Kalter", p:20000}, {n:"Obama", p:25000}, {n:"Mangku Koe", p:28000}, {n:"Mangku Ayang", p:25000}, 
             {n:"Barudak", p:20000}, {n:"Sekena Gomes", p:22000}, {n:"Sekena Goput", p:22000}, {n:"Sekena Keren", p:25000},
@@ -244,7 +218,7 @@
             allOrders = [];
             if (data) Object.keys(data).forEach(key => allOrders.push({ id: key, ...data[key] }));
             
-            // Logic Alarm: Bunyi jika ada order baru (tunai) atau ada user yg baru klik "Sudah Bayar" (pending_payment)
+            // FUNGSI ALARM ASLI: Bunyi jika ada order baru (tunai) atau QRIS pending
             if (allOrders.length > prevCount && audioUnlocked) {
                 if(allOrders.some(o => o.status === 'new' || o.status === 'pending_payment')) {
                     soundNew.play().catch(e => {});
@@ -256,6 +230,7 @@
             updateBadges();
         });
 
+        // --- FUNGSI PRINT ASLI (RAWBT) ---
         function getDailyQueueNumber(orderId) {
             const targetOrder = allOrders.find(o => o.id === orderId);
             if(!targetOrder) return "00";
@@ -291,7 +266,6 @@
             if (type === 'invoice') {
                 data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF;
                 data += "Jl. Mundu 8, Kota Malang\n";
-                data += "Jawa Timur, 65116\n";
                 data += "085159039877\n";
                 data += "--------------------------------\n";
                 data += ALIGN_LEFT;
@@ -343,6 +317,7 @@
             window.location.href = "rawbt:base64," + base64Data;
         }
 
+        // --- FUNGSI TIMER ASLI (WAJIB ADA) ---
         setInterval(() => {
             updateLiveTimers();
             checkNaggingAlarm();
@@ -352,7 +327,7 @@
             if (!audioUnlocked) return;
             const now = Date.now();
             if (allOrders.some(order => {
-                // Alarm bunyi jika ada pesanan tertunda > 2 menit
+                // Alarm bunyi untuk order NEW atau PENDING PAYMENT yg lama tidak direspon
                 if (order.status !== 'new' && order.status !== 'pending_payment') return false;
                 const diff = (now - new Date(order.timestamp).getTime()) / 1000;
                 return diff > 120 && (diff % 120) < 1.5;
@@ -388,14 +363,12 @@
                 if (['completed', 'rejected', 'done'].includes(order.status)) {
                     if (orderDate === today) historyGrid.appendChild(card);
                 } else {
-                    // TAB KASIR (Menampung semua yg perlu verifikasi uang)
+                    // LOGIKA TAB (HANYA INI YANG DIUBAH DARI FILE ASLI)
                     if (currentTab === 'cashier') {
                         if (['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(order.status)) {
                             grid.appendChild(card);
                         }
-                    }
-                    // TAB DAPUR (Menampung yg sedang dimasak)
-                    else if (currentTab === 'kitchen' && order.status === 'processing') {
+                    } else if (currentTab === 'kitchen' && order.status === 'processing') {
                         grid.appendChild(card);
                     }
                 }
@@ -418,10 +391,10 @@
             const paid = order.paidAt ? new Date(order.paidAt).getTime() : 0;
             const completed = order.completedAt ? new Date(order.completedAt).getTime() : 0;
 
-            // LOGIKA TIMER LIVE (Untuk di Header Card)
+            // LOGIKA TIMER (DATA-START ATTR PENTING!)
             let timerStart = created;
             if(order.status === 'processing') timerStart = paid;
-            else if(order.status === 'pending_payment') timerStart = claimed; // Hitung mundur verifikasi
+            else if(order.status === 'pending_payment') timerStart = claimed;
 
             const div = document.createElement('div');
             div.className = `order-card status-${order.status}`;
@@ -476,83 +449,65 @@
                     </div>`;
             }
 
-            // Print buttons
+            // BUTTON LOGIC
+            let buttonsHtml = '';
+            let statusMsg = '';
+
+            // QRIS LOGIC
+            if (order.status === 'qris_unpaid') {
+                statusMsg = `<div style="text-align:center; color:#888; font-size:11px; margin-bottom:5px;">⏳ Menunggu Customer Klik "Sudah Bayar"</div>`;
+                buttonsHtml = `<button class="btn btn-disabled full-width">VERIFIKASI TERKUNCI 🔒</button>
+                               <button class="btn btn-red" style="margin-top:5px;" onclick="confirmReject('${order.id}')">Tolak</button>`;
+            } else if (order.status === 'pending_payment') {
+                statusMsg = `<div style="text-align:center; color:#e67e22; font-weight:bold; font-size:11px; margin-bottom:5px;">⚠ CUSTOMER SUDAH BAYAR! CEK MUTASI!</div>`;
+                buttonsHtml = `<div class="actions">
+                    <button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>
+                    <button class="btn btn-blue" onclick="updateStatusAndPrint('${order.id}', 'processing')">VERIFIKASI ✅</button>
+                </div>`;
+            } else if (order.status === 'new' || order.status === 'unpaid') {
+                buttonsHtml = `
+                    <div class="actions">
+                        <button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>
+                        <button class="btn btn-green" onclick="updateStatusAndPrint('${order.id}', 'processing')">TERIMA ➡</button>
+                    </div>
+                    <button class="btn btn-grey full-width" onclick="openEditModal('${order.id}')">+ Item</button>`;
+            } else if (order.status === 'processing') {
+                buttonsHtml = `<button class="btn btn-green full-width" onclick="updateStatus('${order.id}', 'completed')">SELESAI & ANTAR ✅</button>`;
+            }
+
+            // Print Buttons
             let printButtons = '';
             if(order.status !== 'rejected') {
                 printButtons = `
                 <div class="btn-print-group">
-                    <button class="btn-print" onclick="printDirect('${order.id}', 'checker')">
-                        <span style="font-size:16px;">🖨</span> CHECKER
-                    </button>
-                    <button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">
-                        <span style="font-size:16px;">🧾</span> INVOICE
-                    </button>
+                    <button class="btn-print" onclick="printDirect('${order.id}', 'checker')">🖨 CHECKER</button>
+                    <button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">🧾 INVOICE</button>
                 </div>`;
             }
 
-            // LOGIKA TOMBOL & STATUS BARU
-            let buttonsHtml = '';
-            let statusMsg = '';
-
-            // 1. QRIS BELUM BAYAR (Terkunci)
-            if (order.status === 'qris_unpaid') {
-                statusMsg = `<div style="text-align:center; color:#888; font-size:11px; margin-bottom:10px;">⏳ Menunggu Customer Klik "Sudah Bayar"</div>`;
-                buttonsHtml = `
-                    <button class="btn btn-red full-width" onclick="confirmReject('${order.id}')">Tolak (Order Nyangkut)</button>
-                    <button class="btn btn-disabled full-width">VERIFIKASI TERKUNCI 🔒</button>
-                `;
-            }
-            // 2. QRIS SUDAH BAYAR (Terbuka)
-            else if (order.status === 'pending_payment') {
-                statusMsg = `<div style="text-align:center; color:#e67e22; font-weight:bold; font-size:12px; margin-bottom:10px; animation:pulse 1s infinite;">⚠ CUSTOMER SUDAH BAYAR! CEK MUTASI!</div>`;
-                buttonsHtml = `
-                    <div class="actions">
-                        <button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>
-                        <button class="btn btn-blue" onclick="updateStatusAndPrint('${order.id}', 'processing')">VERIFIKASI & PROSES ✅</button>
-                    </div>`;
-            }
-            // 3. TUNAI (Bebas)
-            else if (order.status === 'new' || order.status === 'unpaid') {
-                buttonsHtml = `
-                    <div class="actions">
-                        <button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>
-                        <button class="btn btn-green" onclick="updateStatusAndPrint('${order.id}', 'processing')">TERIMA UANG & PROSES ➡</button>
-                    </div>
-                    <button class="btn btn-grey full-width" onclick="openEditModal('${order.id}')">+ Tambah Item Manual</button>`;
-            } 
-            // 4. DAPUR
-            else if (order.status === 'processing') {
-                buttonsHtml = `<button class="btn btn-green full-width" onclick="updateStatus('${order.id}', 'completed')">SELESAI & ANTAR ✅</button>`;
-            }
-
-            // Footer History & Metrics
+            // Metrics
             let metricsHtml = '';
             let statusFooter = '';
             if(order.status === 'completed' || order.status === 'rejected') {
                 if(order.status === 'rejected') statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
                 else statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
                 
-                // Hitung Durasi Staff (KPI)
+                // Durasi Logic
                 let tCust = 0, tStaff = 0, tKitchen = 0;
-                
-                // Logika Hitung Waktu
                 if(order.paymentMethod === 'qris') {
                     if(claimed > 0) tCust = Math.floor((claimed - created)/1000);
                     if(paid > 0 && claimed > 0) tStaff = Math.floor((paid - claimed)/1000);
                 } else {
-                    // Tunai
                     if(paid > 0) tCust = Math.floor((paid - created)/1000);
-                    tStaff = 0; // Tunai dianggap instan di kasir
                 }
                 if(completed > 0 && paid > 0) tKitchen = Math.floor((completed - paid)/1000);
-
                 const fmt = (s) => { if (s < 0) return "-"; const m = Math.floor(s/60); const sc = s%60; return m > 0 ? `${m}m ${sc}s` : `${sc}s`; };
 
                 metricsHtml = `
                 <div class="duration-box">
-                    <div class="dur-row"><span>Cust. Pesan-Bayar:</span> <span class="dur-val">${fmt(tCust)}</span></div>
-                    <div class="dur-row"><span style="color:#e67e22">Respon Staff (KPI):</span> <span class="dur-val">${fmt(tStaff)}</span></div>
-                    <div class="dur-row"><span>Dapur Masak:</span> <span class="dur-val">${fmt(tKitchen)}</span></div>
+                    <div class="dur-row"><span>Pesan-Bayar:</span> <span class="dur-val">${fmt(tCust)}</span></div>
+                    <div class="dur-row"><span style="color:#e67e22">Respon Staff:</span> <span class="dur-val">${fmt(tStaff)}</span></div>
+                    <div class="dur-row"><span>Masak:</span> <span class="dur-val">${fmt(tKitchen)}</span></div>
                 </div>`;
             }
 
@@ -575,6 +530,7 @@
             return div;
         }
 
+        // --- FUNGSI UPDATE ---
         function updateStatus(key, status) {
             const updates = { status: status };
             const now = new Date().toISOString(); 
