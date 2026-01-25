@@ -180,435 +180,471 @@
     <audio id="sound-nag" src="https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3" preload="auto"></audio>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
-    <script>
-        // --- KONFIGURASI FIREBASE ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
-            authDomain: "sbs-menu-d1611.firebaseapp.com",
-            databaseURL: "https://sbs-menu-d1611-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "sbs-menu-d1611",
-            storageBucket: "sbs-menu-d1611.firebasestorage.app",
-            messagingSenderId: "530098727952",
-            appId: "1:530098727952:web:1bb3072d93be9564fbee95"
-        };
+<script>
+    // --- KONFIGURASI FIREBASE ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
+        authDomain: "sbs-menu-d1611.firebaseapp.com",
+        databaseURL: "https://sbs-menu-d1611-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "sbs-menu-d1611",
+        storageBucket: "sbs-menu-d1611.firebasestorage.app",
+        messagingSenderId: "530098727952",
+        appId: "1:530098727952:web:1bb3072d93be9564fbee95"
+    };
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.database();
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+    
+    let allOrders = [];
+    let currentTab = localStorage.getItem('sbs_active_tab') || 'kasir'; // Default ke Kasir
+    let editingOrderKey = null;
+    let audioUnlocked = false;
+    let confirmCallback = null;
+    const soundNew = document.getElementById('sound-new');
+    const soundNag = document.getElementById('sound-nag');
+    const btnAudio = document.getElementById('btn-audio');
+
+    // SETUP TABS VIA JS (Tanpa ubah HTML)
+    function setupTabs() {
+        const t1 = document.getElementById('tab-new');
+        const t2 = document.getElementById('tab-unpaid');
+        const t3 = document.getElementById('tab-processing');
+
+        // Ubah Text dan Fungsi Tab
+        t1.innerHTML = 'KASIR <span class="badge" id="badge-kasir">0</span>';
+        t1.setAttribute('onclick', "filterTab('kasir')");
         
-        let allOrders = [];
-        let currentTab = localStorage.getItem('sbs_active_tab') || 'new';
-        let editingOrderKey = null;
-        let audioUnlocked = false;
-        let confirmCallback = null;
-        const soundNew = document.getElementById('sound-new');
-        const soundNag = document.getElementById('sound-nag');
-        const btnAudio = document.getElementById('btn-audio');
+        t2.innerHTML = 'DAPUR <span class="badge" id="badge-dapur">0</span>';
+        t2.setAttribute('onclick', "filterTab('dapur')");
 
-        function initActiveTab() {
-            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-            const activeEl = document.getElementById('tab-' + currentTab);
-            if(activeEl) activeEl.classList.add('active');
+        // Sembunyikan tab ke-3 yang tidak terpakai
+        t3.style.display = 'none';
+
+        // Set Active Class
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        if(currentTab === 'kasir') t1.classList.add('active');
+        else t2.classList.add('active');
+    }
+
+    function toggleAudio() {
+        if (!audioUnlocked) {
+            soundNew.play().then(() => {
+                soundNew.pause(); soundNew.currentTime = 0;
+                audioUnlocked = true;
+                btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
+            }).catch(e => console.log(e));
+        } else {
+            audioUnlocked = false;
+            btnAudio.className = 'inactive'; btnAudio.innerHTML = "🔕";
         }
-        initActiveTab();
+    }
 
-        function toggleAudio() {
-            if (!audioUnlocked) {
-                soundNew.play().then(() => {
-                    soundNew.pause(); soundNew.currentTime = 0;
-                    audioUnlocked = true;
-                    btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
-                }).catch(e => console.log(e));
-            } else {
-                audioUnlocked = false;
-                btnAudio.className = 'inactive'; btnAudio.innerHTML = "🔕";
+    function unlockAudio() {
+        if (!audioUnlocked) {
+            soundNew.play().then(() => {
+                soundNew.pause(); soundNew.currentTime = 0;
+                audioUnlocked = true;
+                btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
+            }).catch(e => {});
+        }
+    }
+
+    db.ref('orders').on('value', (snapshot) => {
+        const data = snapshot.val();
+        const prevCount = allOrders.length; 
+        
+        allOrders = [];
+        if (data) Object.keys(data).forEach(key => allOrders.push({ id: key, ...data[key] }));
+        
+        // Alarm: Bunyi jika ada order status 'new' (tunai) atau 'pending_payment' (QRIS sudah dibayar user)
+        if (allOrders.length > prevCount && audioUnlocked) {
+            if(allOrders.some(o => o.status === 'new' || o.status === 'pending_payment')) {
+                soundNew.play().catch(e => {});
             }
         }
+        
+        allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        setupTabs(); // Refresh tampilan tab
+        renderOrders();
+        updateBadges();
+    });
 
-        function unlockAudio() {
-            if (!audioUnlocked) {
-                soundNew.play().then(() => {
-                    soundNew.pause(); soundNew.currentTime = 0;
-                    audioUnlocked = true;
-                    btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
-                }).catch(e => {});
-            }
+    function getDailyQueueNumber(orderId) {
+        const targetOrder = allOrders.find(o => o.id === orderId);
+        if(!targetOrder) return "00";
+        const targetDate = new Date(targetOrder.timestamp).toDateString();
+        const dailyOrders = allOrders.filter(o => new Date(o.timestamp).toDateString() === targetDate).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+        const index = dailyOrders.findIndex(o => o.id === orderId);
+        return index + 1;
+    }
+
+    function printDirect(orderId, type) {
+        const order = allOrders.find(o => o.id === orderId);
+        if (!order) return;
+
+        let tableNum = order.tableNumber || "Take Away";
+        let realQueue = getDailyQueueNumber(order.id);
+        const dateObj = new Date(order.timestamp);
+        const dateStr = dateObj.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
+        const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', hour12: false});
+        const displayID = "2SA" + order.id.slice(-4).toUpperCase();
+
+        const ESC = "\x1B"; const GS = "\x1D"; const INIT = ESC + "@";
+        const ALIGN_CENTER = ESC + "a" + "\x01"; const ALIGN_LEFT = ESC + "a" + "\x00";
+        const BOLD_ON = ESC + "E" + "\x01"; const BOLD_OFF = ESC + "E" + "\x00";
+        const TEXT_DOUBLE = GS + "!" + "\x11"; const TEXT_NORMAL = GS + "!" + "\x00";
+
+        let data = INIT;
+
+        if (type === 'invoice') {
+            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF;
+            data += "Jl. Mundu 8, Kota Malang\n";
+            data += "085159039877\n";
+            data += "--------------------------------\n";
+            data += ALIGN_LEFT;
+            data += BOLD_ON + "TABLE: " + tableNum + BOLD_OFF + "\n";
+            data += "Queue Order: #" + realQueue + "\n"; 
+            data += "Date : " + dateStr + " " + timeStr + "\n";
+            data += "ID   : " + displayID + "\n";
+            data += "--------------------------------\n";
+            order.items.forEach(item => {
+                let price = parseInt(item.price);
+                let sub = item.qty * price;
+                data += item.name + "\n";
+                let line = item.qty + "x @" + price.toLocaleString('id-ID');
+                let priceStr = sub.toLocaleString('id-ID');
+                let spaces = 32 - line.length - priceStr.length;
+                if(spaces < 1) spaces = 1;
+                data += line + " ".repeat(spaces) + priceStr + "\n";
+                if(item.note) data += "  (Note: " + item.note + ")\n";
+            });
+            data += "--------------------------------\n";
+            let totalStr = parseInt(order.total).toLocaleString('id-ID');
+            let totalLabel = "TOTAL";
+            let totalSpaces = 32 - totalLabel.length - totalStr.length;
+            data += BOLD_ON + totalLabel + " ".repeat(totalSpaces > 0 ? totalSpaces : 1) + totalStr + "\n" + BOLD_OFF;
+            data += "--------------------------------\n";
+            data += ALIGN_CENTER + "Wifi: SBSkopi8\nTerima Kasih!\n\n\n\n";
+        } else {
+            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF;
+            data += "\n" + ALIGN_LEFT;
+            data += "TABLE: " + BOLD_ON + tableNum + BOLD_OFF + "\n";
+            data += "QUEUE: #" + realQueue + "\n";
+            data += "TIME : " + timeStr + "\n";
+            data += "ID   : " + displayID + "\n";
+            data += "--------------------------------\n";
+            order.items.forEach(item => {
+                data += BOLD_ON + item.qty + " x " + item.name + BOLD_OFF + "\n";
+                if(item.note) data += "   [ " + item.note + " ]\n";
+                data += "\n"; 
+            });
+            data += "\n\n\n\n"; 
         }
 
-        db.ref('orders').on('value', (snapshot) => {
-            const data = snapshot.val();
-            const prevCount = allOrders.length; 
-            
-            allOrders = [];
-            if (data) Object.keys(data).forEach(key => allOrders.push({ id: key, ...data[key] }));
-            
-            // Alarm untuk NEW dan QRIS PENDING
-            if (allOrders.length > prevCount && audioUnlocked) {
-                if(allOrders.some(o => o.status === 'new' || o.status === 'pending_payment')) {
-                    soundNew.play().catch(e => {});
-                }
-            }
-            
-            allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            renderOrders();
-            updateBadges();
+        const buffer = new Uint8Array(data.length);
+        for (let i = 0; i < data.length; i++) { buffer[i] = data.charCodeAt(i); }
+        let binary = '';
+        for (let i = 0; i < buffer.byteLength; i++) { binary += String.fromCharCode(buffer[i]); }
+        const base64Data = btoa(binary);
+        window.location.href = "rawbt:base64," + base64Data;
+    }
+
+    setInterval(() => {
+        updateLiveTimers();
+        checkNaggingAlarm();
+    }, 1000);
+
+    function checkNaggingAlarm() {
+        if (!audioUnlocked) return;
+        const now = Date.now();
+        if (allOrders.some(order => {
+            // Alarm bunyi untuk NEW dan PENDING PAYMENT (QRIS yg sudah di-klik bayar)
+            if (order.status !== 'new' && order.status !== 'pending_payment') return false;
+            const diff = (now - new Date(order.timestamp).getTime()) / 1000;
+            return diff > 120 && (diff % 120) < 1.5;
+        })) {
+            soundNag.currentTime = 0;
+            soundNag.play().catch(e => {});
+        }
+    }
+
+    function updateLiveTimers() {
+        document.querySelectorAll('.live-timer').forEach(el => {
+            const startTime = parseInt(el.getAttribute('data-start'));
+            if (!startTime || isNaN(startTime)) { el.innerText = "--:--"; return; }
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            if (elapsed > 86400) { el.innerText = "> 24h"; return; }
+            const min = Math.floor(elapsed / 60);
+            const sec = elapsed % 60;
+            el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
         });
+    }
 
-        function getDailyQueueNumber(orderId) {
-            const targetOrder = allOrders.find(o => o.id === orderId);
-            if(!targetOrder) return "00";
-            const targetDate = new Date(targetOrder.timestamp).toDateString();
-            const dailyOrders = allOrders.filter(o => new Date(o.timestamp).toDateString() === targetDate).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
-            const index = dailyOrders.findIndex(o => o.id === orderId);
-            return index + 1;
-        }
+    function renderOrders() {
+        const grid = document.getElementById('orders-grid');
+        const historyGrid = document.getElementById('history-grid');
+        grid.innerHTML = '';
+        historyGrid.innerHTML = '';
+        const today = new Date().toDateString();
 
-        function printDirect(orderId, type) {
-            const order = allOrders.find(o => o.id === orderId);
-            if (!order) return;
-
-            let tableNum = order.tableNumber || "Take Away";
-
-            let realQueue = getDailyQueueNumber(order.id);
-            const dateObj = new Date(order.timestamp);
-            const dateStr = dateObj.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
-            const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', hour12: false});
-            const displayID = "2SA" + order.id.slice(-4).toUpperCase();
-
-            const ESC = "\x1B";
-            const GS = "\x1D";
-            const INIT = ESC + "@";
-            const ALIGN_CENTER = ESC + "a" + "\x01";
-            const ALIGN_LEFT = ESC + "a" + "\x00";
-            const BOLD_ON = ESC + "E" + "\x01";
-            const BOLD_OFF = ESC + "E" + "\x00";
-            const TEXT_DOUBLE = GS + "!" + "\x11"; 
-            const TEXT_NORMAL = GS + "!" + "\x00";
-
-            let data = INIT;
-
-            if (type === 'invoice') {
-                data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF;
-                data += "Jl. Mundu 8, Kota Malang\n";
-                data += "Jawa Timur, 65116\n";
-                data += "085159039877\n";
-                data += "--------------------------------\n";
-                data += ALIGN_LEFT;
-                data += BOLD_ON + "TABLE: " + tableNum + BOLD_OFF + "\n";
-                data += "Queue Order: #" + realQueue + "\n"; 
-                data += "Date : " + dateStr + " " + timeStr + "\n";
-                data += "ID   : " + displayID + "\n";
-                data += "--------------------------------\n";
-                order.items.forEach(item => {
-                    let price = parseInt(item.price);
-                    let sub = item.qty * price;
-                    data += item.name + "\n";
-                    let line = item.qty + "x @" + price.toLocaleString('id-ID');
-                    let priceStr = sub.toLocaleString('id-ID');
-                    let spaces = 32 - line.length - priceStr.length;
-                    if(spaces < 1) spaces = 1;
-                    data += line + " ".repeat(spaces) + priceStr + "\n";
-                    if(item.note) data += "  (Note: " + item.note + ")\n";
-                });
-                data += "--------------------------------\n";
-                let totalStr = parseInt(order.total).toLocaleString('id-ID');
-                let totalLabel = "TOTAL";
-                let totalSpaces = 32 - totalLabel.length - totalStr.length;
-                data += BOLD_ON + totalLabel + " ".repeat(totalSpaces > 0 ? totalSpaces : 1) + totalStr + "\n" + BOLD_OFF;
-                data += "--------------------------------\n";
-                data += ALIGN_CENTER + "Wifi: SBSkopi8\n";
-                data += "Terima Kasih!\n\n\n\n";
+        allOrders.forEach(order => {
+            const card = createCard(order);
+            const orderDate = new Date(order.completedAt || order.timestamp).toDateString();
+            
+            if (['completed', 'rejected', 'done'].includes(order.status)) {
+                if (orderDate === today) {
+                    historyGrid.appendChild(card);
+                }
             } else {
-                data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF;
-                data += "\n" + ALIGN_LEFT;
-                data += "TABLE: " + BOLD_ON + tableNum + BOLD_OFF + "\n";
-                data += "QUEUE: #" + realQueue + "\n";
-                data += "TIME : " + timeStr + "\n";
-                data += "ID   : " + displayID + "\n";
-                data += "--------------------------------\n";
-                order.items.forEach(item => {
-                    data += BOLD_ON + item.qty + " x " + item.name + BOLD_OFF + "\n";
-                    if(item.note) data += "   [ " + item.note + " ]\n";
-                    data += "\n"; 
-                });
-                data += "\n\n\n\n"; 
-            }
-
-            const buffer = new Uint8Array(data.length);
-            for (let i = 0; i < data.length; i++) { buffer[i] = data.charCodeAt(i); }
-            let binary = '';
-            for (let i = 0; i < buffer.byteLength; i++) { binary += String.fromCharCode(buffer[i]); }
-            const base64Data = btoa(binary);
-            window.location.href = "rawbt:base64," + base64Data;
-        }
-
-        setInterval(() => {
-            updateLiveTimers();
-            checkNaggingAlarm();
-        }, 1000);
-
-        function checkNaggingAlarm() {
-            if (!audioUnlocked) return;
-            const now = Date.now();
-            if (allOrders.some(order => {
-                // Alarm bunyi untuk NEW dan PENDING PAYMENT jika didiamkan > 2 menit
-                if (order.status !== 'new' && order.status !== 'pending_payment') return false;
-                const diff = (now - new Date(order.timestamp).getTime()) / 1000;
-                return diff > 120 && (diff % 120) < 1.5;
-            })) {
-                soundNag.currentTime = 0;
-                soundNag.play().catch(e => {});
-            }
-        }
-
-        function updateLiveTimers() {
-            document.querySelectorAll('.live-timer').forEach(el => {
-                const startTime = parseInt(el.getAttribute('data-start'));
-                if (!startTime || isNaN(startTime)) { el.innerText = "--:--"; return; }
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                if (elapsed > 86400) { el.innerText = "> 24h"; return; }
-                const min = Math.floor(elapsed / 60);
-                const sec = elapsed % 60;
-                el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
-            });
-        }
-
-        function renderOrders() {
-            const grid = document.getElementById('orders-grid');
-            const historyGrid = document.getElementById('history-grid');
-            grid.innerHTML = '';
-            historyGrid.innerHTML = '';
-            const today = new Date().toDateString();
-
-            allOrders.forEach(order => {
-                const card = createCard(order);
-                const orderDate = new Date(order.completedAt || order.timestamp).toDateString();
-                
-                if (['completed', 'rejected', 'done'].includes(order.status)) {
-                    if (orderDate === today) {
-                        historyGrid.appendChild(card);
-                    }
-                } else {
-                    // LOGIKA TAB
-                    // Tab BARU: Tunai
-                    if (currentTab === 'new' && order.status === 'new') {
-                        grid.appendChild(card);
-                    }
-                    // Tab BAYAR: Tunai (Diterima) & QRIS (Pending)
-                    else if (currentTab === 'unpaid') {
-                        if (order.status === 'unpaid' || order.status === 'pending_payment') {
-                            grid.appendChild(card);
-                        }
-                    }
-                    // Tab PROSES
-                    else if (currentTab === 'processing' && order.status === 'processing') {
+                // LOGIKA TAB BARU
+                // Tab KASIR: 'new', 'unpaid', 'qris_unpaid', 'pending_payment'
+                if (currentTab === 'kasir') {
+                    if (['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(order.status)) {
                         grid.appendChild(card);
                     }
                 }
-            });
-            updateLiveTimers();
-        }
-
-        function createCard(order) {
-            let displayName = "Pelanggan";
-            if (order.tableNumber) {
-                displayName = "MEJA " + order.tableNumber;
-                if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
-            } else if (order.customer) {
-                if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
-                else displayName = order.customer;
+                // Tab DAPUR: 'processing'
+                else if (currentTab === 'dapur' && order.status === 'processing') {
+                    grid.appendChild(card);
+                }
             }
+        });
+        updateLiveTimers();
+    }
 
-            const created = new Date(order.timestamp).getTime();
-            const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : 0;
-            const paid = order.paidAt ? new Date(order.paidAt).getTime() : 0;
+    function createCard(order) {
+        let displayName = "Pelanggan";
+        if (order.tableNumber) {
+            displayName = "MEJA " + order.tableNumber;
+            if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
+        } else if (order.customer) displayName = order.customer;
 
-            let timerStart = 0;
-            if(order.status === 'new' || order.status === 'pending_payment') timerStart = created;
-            else if (order.status === 'unpaid') timerStart = accepted;
-            else if (order.status === 'processing') timerStart = paid;
-
-            const div = document.createElement('div');
-            div.className = `order-card status-${order.status}`;
-            if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; // Warna oranye QRIS
-            
-            let itemsHtml = (order.items || []).map((item, idx) => {
-                const qty = parseInt(item.qty);
-                const price = parseInt(item.price);
-                const subtotal = qty * price;
-                const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-                const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
-                return `
-                <div class="item-row">
-                    <div style="flex:1;">
-                        <span class="item-name">${qty}x ${item.name}</span>
-                        ${unitPriceHtml}
-                        ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
-                    </div>
-                    <div style="text-align:right;">
-                        <span class="item-price">${subtotal.toLocaleString()}</span>
-                        ${trashBtn}
-                    </div>
-                </div>`;
-            }).join('');
-
-            const dateStr = new Date(created).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
-            const timeIn = new Date(created).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
-            
-            // Badge Metode Bayar
-            let paymentBadge = '';
-            if(order.paymentMethod === 'qris') paymentBadge = '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">QRIS</span>';
-            else paymentBadge = '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">TUNAI</span>';
-
-            let headerRight = '';
-            if(order.status === 'completed' || order.status === 'rejected') {
-                let timeOut = order.completedAt ? new Date(order.completedAt).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
-                headerRight = `
-                    <div class="header-right">
-                        <span class="meta-date">${dateStr}</span>
-                        <div class="meta-time-block">
-                            <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br>
-                            <span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span>
-                        </div>
-                    </div>`;
-            } else {
-                headerRight = `
-                    <div class="header-right">
-                        <span class="meta-date">${dateStr}</span>
-                        <div class="meta-time-block">
-                            <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span>
-                        </div>
-                        <div class="timer-badge live-timer" data-start="${timerStart}">--:--</div>
-                    </div>`;
-            }
-
-            // Print buttons
-            let printButtons = '';
-            if(order.status !== 'rejected') {
-                printButtons = `
-                <div class="btn-print-group">
-                    <button class="btn-print" onclick="printDirect('${order.id}', 'checker')">
-                        <span style="font-size:16px;">🖨</span> CHECKER
-                    </button>
-                    <button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">
-                        <span style="font-size:16px;">🧾</span> INVOICE
-                    </button>
-                </div>`;
-            }
-
-            // BUTTON LOGIC
-            let buttonsHtml = '';
-            if (order.status === 'new') {
-                buttonsHtml = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button><button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button><button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">Terima</button>`;
-            } 
-            else if (order.status === 'pending_payment') {
-                // KHUSUS QRIS: VERIFIKASI LANGSUNG KE PROSES
-                buttonsHtml = `
-                    <div style="grid-column:span 2; text-align:center; color:#e67e22; font-weight:bold; font-size:12px; margin-bottom:5px;">
-                        ⚠ CEK BUKTI TRANSFER
-                    </div>
-                    <button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>
-                    <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">VERIFIKASI & PROSES</button>
-                `;
-            }
-            else if (order.status === 'unpaid') {
-                buttonsHtml = `<button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button><button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">Lunas & Proses</button>`;
-            } 
-            else if (order.status === 'processing') {
-                buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">Selesai & Antar</button>`;
-            }
-
-            // Status Footer
-            let metricsHtml = '';
-            let statusFooter = '';
-            if(order.status === 'completed' || order.status === 'rejected') {
-                if(order.status === 'rejected') statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
-                else statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
-                
-                // Metrics (sama seperti file lama)
-                // ...
-            }
-
-            div.innerHTML = `
-                <div class="card-header">
-                    <div class="header-left">
-                        <span class="cust-name">${displayName}</span>
-                        <div style="margin-top:2px;">${paymentBadge} <span class="order-id">ID: ...${order.id.slice(-4)}</span></div>
-                    </div>
-                    ${headerRight}
-                </div>
-                <div class="item-list">${itemsHtml}</div>
-                ${metricsHtml}
-                <div class="total-display">Total: Rp ${Number(String(order.total).replace(/[^0-9]/g, '')).toLocaleString()}</div>
-                ${statusFooter}
-                ${printButtons}
-                <div class="actions">${buttonsHtml}</div>
-            `;
-            return div;
-        }
-
-        function updateStatus(key, status) {
-            const updates = { status: status };
-            const now = new Date().toISOString(); 
-            if(status === 'unpaid') updates.acceptedAt = now; 
-            if(status === 'processing') updates.paidAt = now; 
-            if(status === 'completed' || status === 'rejected') updates.completedAt = now; 
-            db.ref('orders/' + key).update(updates);
-        }
-
-        function confirmReject(key) { showConfirm("Yakin tolak pesanan ini?", () => updateStatus(key, 'rejected')); }
-
-        function deleteOrderItem(orderKey, itemIndex) {
-            showConfirm("Hapus item ini?", () => {
-                const order = allOrders.find(o => o.id === orderKey);
-                const newItems = [...order.items];
-                const removed = newItems.splice(itemIndex, 1)[0];
-                let currentTotal = parseInt(String(order.total).replace(/[^0-9]/g, '')) || 0;
-                db.ref('orders/' + orderKey).update({ items: newItems, total: currentTotal - (removed.price * removed.qty) });
-            });
-        }
-
-        function showPage(pageId) {
-            document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
-            document.getElementById(pageId + '-page').style.display = 'block';
-            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-            if(pageId === 'orders') document.querySelectorAll('.menu-item')[0].classList.add('active');
-            if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
-        }
-
-        function filterTab(status) {
-            currentTab = status;
-            localStorage.setItem('sbs_active_tab', status);
-            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            renderOrders();
-        }
-
-        function updateBadges() {
-            document.getElementById('badge-new').innerText = allOrders.filter(o => o.status === 'new').length;
-            document.getElementById('badge-unpaid').innerText = allOrders.filter(o => o.status === 'unpaid' || o.status === 'pending_payment').length;
-            document.getElementById('badge-processing').innerText = allOrders.filter(o => o.status === 'processing').length;
-        }
-
-        function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
-        function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
-        document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
-
-        function openEditModal(k) { editingOrderKey = k; document.getElementById('edit-modal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
+        const created = new Date(order.timestamp).getTime();
+        // Paid at adalah titik masuk ke DAPUR
+        const paidAt = order.paidAt ? new Date(order.paidAt).getTime() : 0;
         
-        function saveExtraItem() {
-            const n = document.getElementById('extra-name').value;
-            const p = parseInt(document.getElementById('extra-price').value);
-            if(!n || !p) return;
-            const o = allOrders.find(x => x.id === editingOrderKey);
-            const items = [...(o.items||[]), { name: n, price: p, qty: 1, note: 'Manual' }];
-            const tot = (Number(String(o.total).replace(/[^0-9]/g, '')) || 0) + p;
-            db.ref('orders/' + editingOrderKey).update({ items: items, total: tot }).then(() => closeModal());
+        let timerStart = 0;
+        if(['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(order.status)) timerStart = created;
+        else if (order.status === 'processing') timerStart = paidAt;
+
+        const div = document.createElement('div');
+        div.className = `order-card status-${order.status}`;
+        
+        // Warna Card Border Khusus
+        if(order.status === 'qris_unpaid') div.style.borderLeftColor = '#888'; // Abu-abu (Belum bayar)
+        if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; // Oranye (Verifikasi)
+        if(order.status === 'unpaid') div.style.borderLeftColor = '#FF6600'; // Belum Lunas Tunai
+        
+        let itemsHtml = (order.items || []).map((item, idx) => {
+            const qty = parseInt(item.qty);
+            const price = parseInt(item.price);
+            const subtotal = qty * price;
+            // VISUAL DETAIL: Pastikan unit price muncul jika qty > 1
+            const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
+            const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
+            return `
+            <div class="item-row">
+                <div style="flex:1;">
+                    <span class="item-name">${qty}x ${item.name}</span>
+                    ${unitPriceHtml}
+                    ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
+                </div>
+                <div style="text-align:right;">
+                    <span class="item-price">${subtotal.toLocaleString()}</span>
+                    ${trashBtn}
+                </div>
+            </div>`;
+        }).join('');
+
+        const dateStr = new Date(created).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
+        const timeIn = new Date(created).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
+        
+        // Badge Metode Bayar
+        let paymentBadge = order.paymentMethod === 'qris' 
+            ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">QRIS</span>' 
+            : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">TUNAI</span>';
+
+        // KPI: Hitung Durasi Respon Karyawan untuk QRIS
+        let responseTimeMetric = '';
+        if (order.status === 'completed' && order.paymentMethod === 'qris' && order.clientPaidAt && order.paidAt) {
+            const clientClick = new Date(order.clientPaidAt).getTime();
+            const staffVerify = new Date(order.paidAt).getTime();
+            const diffSec = Math.floor((staffVerify - clientClick)/1000);
+            const color = diffSec < 60 ? '#2ecc71' : (diffSec < 180 ? '#f1c40f' : '#e74c3c');
+            responseTimeMetric = `<div style="font-size:11px; margin-top:4px; color:#aaa;">Respon: <span style="color:${color}; font-weight:bold;">${diffSec}s</span></div>`;
         }
-    </script>
+
+        let headerRight = '';
+        if(order.status === 'completed' || order.status === 'rejected') {
+            let timeOut = order.completedAt ? new Date(order.completedAt).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
+            headerRight = `
+                <div class="header-right">
+                    <span class="meta-date">${dateStr}</span>
+                    <div class="meta-time-block">
+                        <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br>
+                        <span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span>
+                    </div>
+                    ${responseTimeMetric}
+                </div>`;
+        } else {
+            headerRight = `
+                <div class="header-right">
+                    <span class="meta-date">${dateStr}</span>
+                    <div class="meta-time-block">
+                        <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span>
+                    </div>
+                    <div class="timer-badge live-timer" data-start="${timerStart}">--:--</div>
+                </div>`;
+        }
+
+        let printButtons = '';
+        if(order.status !== 'rejected') {
+            printButtons = `
+            <div class="btn-print-group">
+                <button class="btn-print" onclick="printDirect('${order.id}', 'checker')">
+                    <span style="font-size:16px;">🖨</span> CHECKER
+                </button>
+                <button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">
+                    <span style="font-size:16px;">🧾</span> INVOICE
+                </button>
+            </div>`;
+        }
+
+        // --- BUTTON LOGIC LAYOUT (WAJIB SESUAI) ---
+        // Layout: 
+        // Row 1: [Tolak] [Edit/+Item]
+        // Row 2: [Action Utama Full Width]
+        let buttonsHtml = '';
+        
+        const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>`;
+        const btnEdit = `<button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button>`;
+        const btnRow1 = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">${btnTolak}${btnEdit}</div>`;
+
+        if (order.status === 'new') { // Tunai Baru
+            buttonsHtml = `
+                ${btnRow1}
+                <button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">TERIMA (TUNAI)</button>
+            `;
+        } 
+        else if (order.status === 'qris_unpaid') { // QRIS Belum Dibayar (Anti Scam)
+            buttonsHtml = `
+                ${btnRow1}
+                <button class="btn btn-grey btn-full" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGGU PEMBAYARAN...</button>
+                <div style="text-align:center; font-size:10px; color:#aaa; margin-top:5px;">Tombol aktif setelah pelanggan klik 'Sudah Bayar'</div>
+            `;
+        }
+        else if (order.status === 'pending_payment') { // QRIS Sudah Klik Bayar
+            buttonsHtml = `
+                ${btnRow1}
+                <button class="btn btn-blue btn-full" onclick="updateStatus('${order.id}', 'processing')">VERIFIKASI & PROSES</button>
+                <div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">⚠ CEK MUTASI REKENING!</div>
+            `;
+        }
+        else if (order.status === 'unpaid') { // Tunai Diterima, Belum Lunas/Masuk Dapur? 
+            // Note: Di logika lama, 'unpaid' tombolnya 'Lunas & Proses'. Kita anggap ini tahap verifikasi akhir tunai sebelum masak.
+            buttonsHtml = `
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                    <button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button>
+                    ${btnEdit}
+                </div>
+                <button class="btn btn-blue btn-full" onclick="updateStatus('${order.id}', 'processing')">LUNAS & MASAK</button>
+            `;
+        } 
+        else if (order.status === 'processing') {
+            buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">SELESAI & ANTAR</button>`;
+        }
+
+        // Status Footer
+        let statusFooter = '';
+        if(order.status === 'rejected') statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
+        else if (order.status === 'completed') statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
+
+        div.innerHTML = `
+            <div class="card-header">
+                <div class="header-left">
+                    <span class="cust-name">${displayName}</span>
+                    <div style="margin-top:2px;">${paymentBadge} <span class="order-id">ID: ...${order.id.slice(-4)}</span></div>
+                </div>
+                ${headerRight}
+            </div>
+            <div class="item-list">${itemsHtml}</div>
+            <div class="total-display">Total: Rp ${Number(String(order.total).replace(/[^0-9]/g, '')).toLocaleString()}</div>
+            ${statusFooter}
+            ${printButtons}
+            <div class="actions" style="display:block;">${buttonsHtml}</div>
+        `;
+        return div;
+    }
+
+    function updateStatus(key, status) {
+        const updates = { status: status };
+        const now = new Date().toISOString(); 
+        if(status === 'unpaid') updates.acceptedAt = now; 
+        if(status === 'processing') updates.paidAt = now; // Titik masuk dapur
+        if(status === 'completed' || status === 'rejected') updates.completedAt = now; 
+        db.ref('orders/' + key).update(updates);
+    }
+
+    function confirmReject(key) { showConfirm("Yakin tolak pesanan ini?", () => updateStatus(key, 'rejected')); }
+
+    function deleteOrderItem(orderKey, itemIndex) {
+        showConfirm("Hapus item ini?", () => {
+            const order = allOrders.find(o => o.id === orderKey);
+            const newItems = [...order.items];
+            const removed = newItems.splice(itemIndex, 1)[0];
+            let currentTotal = parseInt(String(order.total).replace(/[^0-9]/g, '')) || 0;
+            db.ref('orders/' + orderKey).update({ items: newItems, total: currentTotal - (removed.price * removed.qty) });
+        });
+    }
+
+    function showPage(pageId) {
+        document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
+        document.getElementById(pageId + '-page').style.display = 'block';
+        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+        if(pageId === 'orders') document.querySelectorAll('.menu-item')[0].classList.add('active');
+        if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
+    }
+
+    function filterTab(status) {
+        currentTab = status;
+        localStorage.setItem('sbs_active_tab', status);
+        setupTabs(); // Refresh active class
+        renderOrders();
+    }
+
+    function updateBadges() {
+        // Badge KASIR: New + Unpaid + QRIS Unpaid + Pending Payment
+        const countKasir = allOrders.filter(o => ['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(o.status)).length;
+        // Badge DAPUR: Processing
+        const countDapur = allOrders.filter(o => o.status === 'processing').length;
+        
+        document.getElementById('badge-kasir').innerText = countKasir;
+        document.getElementById('badge-dapur').innerText = countDapur;
+    }
+
+    function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
+    function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
+    document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
+
+    function openEditModal(k) { editingOrderKey = k; document.getElementById('edit-modal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
+    
+    function saveExtraItem() {
+        const n = document.getElementById('extra-name').value;
+        const p = parseInt(document.getElementById('extra-price').value);
+        if(!n || !p) return;
+        const o = allOrders.find(x => x.id === editingOrderKey);
+        const items = [...(o.items||[]), { name: n, price: p, qty: 1, note: 'Manual' }];
+        const tot = (Number(String(o.total).replace(/[^0-9]/g, '')) || 0) + p;
+        db.ref('orders/' + editingOrderKey).update({ items: items, total: tot }).then(() => closeModal());
+    }
+
+    // Inisialisasi awal
+    setupTabs();
+</script>
 </body>
 </html>
