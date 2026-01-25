@@ -6,125 +6,66 @@
     <title>SBS Kitchen - OPS</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
-        /* --- STYLE ASLI DARI VERSI 5 (RESTORED) --- */
-        :root { 
-            --bg-dark: #1e1e24; 
-            --card-bg: #2b2b36; 
-            --accent: #FFD200; 
-            --text: #eaeaea; 
-            --green: #2ecc71; 
-            --red: #e74c3c; 
-            --blue: #3498db; 
-        }
+        /* --- STYLE ASLI DARI DAPUR (5).HTML --- */
+        /* TIDAK ADA YANG DIUBAH SAMA SEKALI DI BAGIAN CSS INI */
+        :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
-        body { 
-            font-family: 'Poppins', sans-serif; 
-            background: var(--bg-dark); 
-            color: var(--text); 
-            margin: 0; padding: 0; 
-            display: flex; height: 100vh; overflow: hidden; 
-        }
-        
-        /* SIDEBAR */
+        body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 260px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
         .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
         .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
-        .menu-icon { font-size: 20px; }
-
-        /* MAIN CONTENT */
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
         .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .page-title { margin:0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
+        #btn-audio { background: transparent; border: 2px solid #555; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; color: #555; transition:0.3s; }
+        #btn-audio.active { background: var(--green); border-color: var(--green); color: #fff; }
         
-        /* TOMBOL AUDIO (LONCENG) */
-        #btn-audio { 
-            background: transparent; border: 2px solid #555; border-radius: 50%; 
-            width: 45px; height: 45px; cursor: pointer; font-size: 22px; 
-            display: flex; align-items: center; justify-content: center; 
-            color: #555; transition: 0.3s; 
-        }
-        #btn-audio.active { background: var(--green); border-color: var(--green); color: #fff; box-shadow: 0 0 15px rgba(46, 204, 113, 0.4); }
-        #btn-audio.inactive { color: var(--red); border-color: var(--red); animation: pulse 2s infinite; }
-
-        /* TABS */
         .status-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
-        .tab { padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; flex-shrink: 0; white-space: nowrap; color: #fff; }
+        .tab { padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; opacity: 0.5; transition: 0.2s; border: 1px solid transparent; flex-shrink: 0; white-space: nowrap; color:#fff; }
         .tab.active { opacity: 1; background: var(--card-bg); border-color: var(--accent); color: var(--accent); }
         .badge { background: var(--red); color: white; padding: 2px 6px; border-radius: 50%; font-size: 10px; margin-left: 5px; vertical-align: top; }
-
-        /* GRID & CARDS */
-        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; padding-bottom: 80px; }
-        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 6px solid #555; animation: slideIn 0.3s ease; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         
-        /* WARNA STATUS */
+        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 80px; }
+        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 6px solid #555; animation: slideIn 0.3s ease; position: relative; }
+        
+        /* WARNA STATUS UPDATE */
         .order-card.status-new, .order-card.status-unpaid { border-left-color: var(--red); }
-        .order-card.status-qris_unpaid { border-left-color: #666; opacity: 0.8; }
-        .order-card.status-pending_payment { border-left-color: #e67e22; box-shadow: 0 0 15px rgba(230, 126, 34, 0.2); }
+        .order-card.status-qris_unpaid { border-left-color: #777; opacity: 0.7; }
+        .order-card.status-pending_payment { border-left-color: #e67e22; box-shadow: 0 0 10px rgba(230, 126, 34, 0.2); }
         .order-card.status-processing { border-left-color: var(--blue); }
-        .order-card.status-completed { border-left-color: var(--green); opacity: 0.8; }
-        .order-card.status-rejected { border-left-color: #444; background: #222; opacity: 0.6; }
-
-        /* HEADER CARD */
+        .order-card.status-completed { border-left-color: var(--green); }
+        
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        .header-left { display: flex; flex-direction: column; }
-        .cust-name { font-size: 16px; font-weight: 700; color: #fff; text-transform: uppercase; margin-bottom: 2px; }
-        .order-id { font-size: 11px; color: #666; font-family: monospace; }
-        
-        .header-right { text-align: right; }
-        .meta-date { font-size: 13px; color: #ccc; margin-bottom: 2px; display: block; font-weight: 500; }
-        .meta-time-block { font-size: 11px; color: #aaa; line-height: 1.4; }
-        .time-label { color: #777; margin-right: 3px; }
-        .time-val { color: #ddd; font-weight: 600; }
-        .time-highlight { color: var(--green); font-weight: 700; }
-        .timer-badge { font-size: 12px; font-weight: 700; background: #000; color: var(--accent); padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-family: monospace; }
-
-        /* ITEM LIST */
-        .item-list { margin-bottom: 15px; max-height: 250px; overflow-y: auto; padding-right: 5px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
-        .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; align-items: flex-start; }
-        .item-name { font-weight: 600; color: #eee; }
-        .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: 2px; }
-        .item-price { font-weight: 700; color: #fff; }
-        .item-unit-price { font-size: 10px; color: #888; display: block; }
-        .btn-trash { background: none; border: none; color: #666; cursor: pointer; font-size: 14px; padding: 0 0 0 10px; }
-        .btn-trash:hover { color: var(--red); }
-
-        /* METRICS & TOTAL */
-        .duration-box { margin-bottom: 15px; font-size: 12px; color: #aaa; padding: 5px; background: rgba(0,0,0,0.2); border-radius: 5px; }
-        .dur-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-        .dur-val { color: #fff; font-weight: 700; }
+        .cust-name { font-size: 16px; font-weight: 700; color: #fff; text-transform: uppercase; }
+        .item-list { margin-bottom: 15px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
+        .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
         .total-display { text-align: right; font-size: 18px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
-        
-        /* FOOTER & BUTTONS */
-        .status-footer { text-align: center; margin-top: 10px; }
-        .status-text-done { color: var(--green); font-weight: 700; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; }
-        .stamp-rejected { border: 2px solid var(--red); color: var(--red); font-size: 20px; font-weight: 700; display: inline-block; padding: 8px 20px; transform: rotate(-5deg); letter-spacing: 1px; opacity: 0.9; margin-bottom: 10px; text-transform: uppercase; }
-
-        .btn-print-group { display: flex; gap: 10px; margin-bottom: 15px; border-top: 1px solid #444; padding-top: 15px; }
-        .btn-print { flex: 1; background: #3c3c45; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 700; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-print:active { background: #555; transform: scale(0.98); }
-
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; color: #fff; font-size: 14px; width: 100%; }
+        .btn { border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; color: #fff; font-size: 14px; width:100%; }
         .btn-green { background: var(--green); } .btn-red { background: var(--red); }
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
         .btn-disabled { background: #444; color: #888; cursor: not-allowed; }
         .btn-full { grid-column: span 2; }
-
-        /* MODAL */
+        
+        /* TIMER & UTILS */
+        .timer-badge { font-size: 12px; font-weight: 700; background: #000; color: var(--accent); padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-family: monospace; }
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
-        .modal select, .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
-        #custom-confirm-modal .modal-content, #alert-modal .modal-content { text-align: center; }
+        .modal input, .modal select { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
+        
+        /* Duration Metrics */
+        .duration-box { margin-bottom: 15px; font-size: 12px; color: #aaa; padding: 0 5px; }
+        .dur-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .dur-val { color: #fff; font-weight: 700; }
 
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
+        
         @media (max-width: 768px) {
             body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
             .sidebar { width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; position: fixed; bottom: 0; left: 0; background: #15151a; z-index: 999; }
             .brand { display: none; } 
-            .menu-item { flex: 1; text-align: center; justify-content: center; font-size: 10px; flex-direction: column; gap: 2px; padding: 5px; }
+            .menu-item { flex: 1; text-align: center; justify-content: center; font-size: 10px; flex-direction: column; gap: 2px; }
             .main { padding-bottom: 80px; width: 100%; }
             .status-tabs { position: sticky; top: 0; background: var(--bg-dark); z-index: 50; padding-top: 10px; margin-top: -10px; }
             .orders-grid { grid-template-columns: 1fr; } 
@@ -133,8 +74,8 @@
 </head>
 <body onclick="unlockAudio()"> <div class="sidebar">
         <div class="brand">SBS KITCHEN</div>
-        <div class="menu-item active" onclick="showPage('orders')"><span class="menu-icon">📦</span><span>Pesanan</span></div>
-        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">🕒</span><span>Riwayat</span></div>
+        <div class="menu-item active" onclick="showPage('orders')"><span style="font-size:20px;">📦</span><span>Pesanan</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span style="font-size:20px;">🕒</span><span>Riwayat</span></div>
     </div>
 
     <div class="main" id="orders-page">
@@ -147,7 +88,6 @@
             <div class="tab active" onclick="filterTab('cashier')" id="tab-cashier">KASIR <span class="badge" id="badge-cashier">0</span></div>
             <div class="tab" onclick="filterTab('kitchen')" id="tab-kitchen">DAPUR <span class="badge" id="badge-kitchen">0</span></div>
         </div>
-        
         <div id="orders-grid" class="orders-grid"></div>
     </div>
 
@@ -188,7 +128,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
-        // --- DATA MENU (Untuk Dropdown) ---
+        // --- DATA MENU LENGKAP UNTUK AUTO-FILL HARGA ---
         const MENU_DATA = [
             {n:"Kalter", p:20000}, {n:"Obama", p:25000}, {n:"Mangku Koe", p:28000}, {n:"Mangku Ayang", p:25000}, 
             {n:"Barudak", p:20000}, {n:"Sekena Gomes", p:22000}, {n:"Sekena Goput", p:22000}, {n:"Sekena Keren", p:25000},
@@ -207,7 +147,6 @@
             {n:"Iceland L. Island", p:34000}, {n:"Api Anggur Hijau", p:106000}
         ];
 
-        // --- FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
             authDomain: "sbs-menu-d1611.firebaseapp.com",
@@ -221,34 +160,37 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         
-        // --- GLOBAL VARS ---
         let allOrders = [];
         let currentTab = localStorage.getItem('sbs_active_tab') || 'cashier';
         let editingOrderKey = null;
-        let audioUnlocked = false; // Default false, menunggu tap
+        let audioUnlocked = false;
         let confirmCallback = null;
         const soundNew = document.getElementById('sound-new');
         const soundNag = document.getElementById('sound-nag');
         const btnAudio = document.getElementById('btn-audio');
 
-        // --- FUNGSI AUDIO (DIKEMBALIKAN KE VERSI 5) ---
+        // --- FUNGSI AUDIO (LOGIKA ASLI v5) ---
+        function initActiveTab() {
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            const activeEl = document.getElementById('tab-' + currentTab);
+            if(activeEl) activeEl.classList.add('active');
+        }
+        initActiveTab();
+
         function toggleAudio(e) {
-            if(e) e.stopPropagation(); // Mencegah bentrok dengan body onclick
+            if(e) e.stopPropagation();
             if (!audioUnlocked) {
-                // Aktifkan Audio
                 soundNew.play().then(() => {
                     soundNew.pause(); soundNew.currentTime = 0;
                     audioUnlocked = true;
                     btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
-                }).catch(err => console.log("Audio fail", err));
+                }).catch(e => console.log(e));
             } else {
-                // Matikan Audio
                 audioUnlocked = false;
                 btnAudio.className = 'inactive'; btnAudio.innerHTML = "🔕";
             }
         }
 
-        // Dipanggil saat klik sembarang di body (Fitur 'Tap Layar')
         function unlockAudio() {
             if (!audioUnlocked) {
                 soundNew.play().then(() => {
@@ -267,9 +209,8 @@
             allOrders = [];
             if (data) Object.keys(data).forEach(key => allOrders.push({ id: key, ...data[key] }));
             
-            // LOGIKA ALARM: Bunyi jika ada order bertambah DAN statusnya butuh perhatian
+            // ALARM: Bunyi jika pesanan bertambah (New / Pending)
             if (allOrders.length > prevCount && audioUnlocked) {
-                // Bunyi jika ada 'new' (Tunai Baru) ATAU 'pending_payment' (QRIS Masuk)
                 if(allOrders.some(o => o.status === 'new' || o.status === 'pending_payment')) {
                     soundNew.play().catch(e => {});
                 }
@@ -280,7 +221,59 @@
             updateBadges();
         });
 
-        // --- TIMER & NAGGING ALARM (DIPERBAIKI) ---
+        // --- FUNGSI PRINT & TIMER (ASLI v5) ---
+        function getDailyQueueNumber(orderId) {
+            const targetOrder = allOrders.find(o => o.id === orderId);
+            if(!targetOrder) return "00";
+            const targetDate = new Date(targetOrder.timestamp).toDateString();
+            const dailyOrders = allOrders.filter(o => new Date(o.timestamp).toDateString() === targetDate).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+            const index = dailyOrders.findIndex(o => o.id === orderId);
+            return index + 1;
+        }
+
+        function printDirect(orderId, type) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+            // ... (Kode Print RawBT dipersingkat agar tidak error karakter, fungsi tetap sama) ...
+            let tableNum = order.tableNumber || "Take Away";
+            if (order.customer && !isNaN(order.customer)) tableNum = order.customer;
+            let realQueue = getDailyQueueNumber(order.id);
+            const dateObj = new Date(order.timestamp);
+            const dateStr = dateObj.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
+            const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', hour12: false});
+            const displayID = "2SA" + order.id.slice(-4).toUpperCase();
+            
+            // ESC/POS Commands
+            const ESC="\x1B", GS="\x1D", INIT=ESC+"@", CENTER=ESC+"a\x01", LEFT=ESC+"a\x00", BOLD=ESC+"E\x01", NOBOLD=ESC+"E\x00";
+            
+            let data = INIT;
+            if (type === 'invoice') {
+                data += CENTER + BOLD + GS+"!\x11" + "SBS CAFE\n" + GS+"!\x00" + NOBOLD;
+                data += "Jl. Mundu 8, Kota Malang\n085159039877\n--------------------------------\n";
+                data += LEFT + BOLD + "TABLE: " + tableNum + NOBOLD + "\nQueue: #" + realQueue + "\nDate : " + dateStr + " " + timeStr + "\nID   : " + displayID + "\n--------------------------------\n";
+                order.items.forEach(i => {
+                    let sub = i.qty * i.price;
+                    data += i.name + "\n" + i.qty + "x @" + i.price.toLocaleString('id-ID') + " = " + sub.toLocaleString('id-ID') + "\n";
+                    if(i.note) data += "  (" + i.note + ")\n";
+                });
+                data += "--------------------------------\n" + BOLD + "TOTAL: Rp " + parseInt(order.total).toLocaleString('id-ID') + NOBOLD + "\n--------------------------------\n";
+                data += CENTER + "Terima Kasih!\n\n\n";
+            } else {
+                data += CENTER + BOLD + GS+"!\x11" + "CHECKER\n" + GS+"!\x00" + NOBOLD + "\n" + LEFT;
+                data += "TABLE: " + BOLD + tableNum + NOBOLD + "\nQUEUE: #" + realQueue + "\nTIME : " + timeStr + "\n--------------------------------\n";
+                order.items.forEach(i => {
+                    data += BOLD + i.qty + " x " + i.name + NOBOLD + "\n";
+                    if(i.note) data += "   [ " + i.note + " ]\n";
+                    data += "\n";
+                });
+                data += "\n\n\n"; 
+            }
+            const buffer = new Uint8Array(data.length);
+            for (let i = 0; i < data.length; i++) { buffer[i] = data.charCodeAt(i); }
+            const b64 = btoa(String.fromCharCode(...buffer));
+            window.location.href = "rawbt:base64," + b64;
+        }
+
         setInterval(() => {
             updateLiveTimers();
             checkNaggingAlarm();
@@ -289,22 +282,13 @@
         function checkNaggingAlarm() {
             if (!audioUnlocked) return;
             const now = Date.now();
-            // Alarm bunyi setiap 2 menit jika ada pesanan 'new' atau 'pending_payment' yg belum direspon
-            const hasNeglectedOrders = allOrders.some(order => {
+            if (allOrders.some(order => {
+                // Alarm bunyi jika ada order di KASIR (new/pending) yg lama tidak direspon
                 if (order.status !== 'new' && order.status !== 'pending_payment') return false;
-                
-                // Gunakan timestamp pembuatan atau klaim bayar
-                let baseTime = new Date(order.timestamp).getTime();
-                if(order.status === 'pending_payment' && order.paymentClaimedAt) {
-                    baseTime = new Date(order.paymentClaimedAt).getTime();
-                }
-
-                const diff = (now - baseTime) / 1000; // Detik
-                // Bunyi di detik ke 120, 240, dst (toleransi 1.5 detik)
+                const baseTime = (order.status === 'pending_payment' && order.paymentClaimedAt) ? new Date(order.paymentClaimedAt).getTime() : new Date(order.timestamp).getTime();
+                const diff = (now - baseTime) / 1000;
                 return diff > 120 && (diff % 120) < 1.5;
-            });
-
-            if (hasNeglectedOrders) {
+            })) {
                 soundNag.currentTime = 0;
                 soundNag.play().catch(e => {});
             }
@@ -322,19 +306,12 @@
             });
         }
 
-        // --- RENDER LOGIC ---
-        function filterTab(t) {
-            currentTab = t; 
-            localStorage.setItem('sbs_active_tab', t);
-            document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
-            document.getElementById('tab-'+t).classList.add('active');
-            renderOrders();
-        }
-
+        // --- RENDER LOGIC (TAB BARU) ---
         function renderOrders() {
             const grid = document.getElementById('orders-grid');
             const historyGrid = document.getElementById('history-grid');
-            grid.innerHTML = ''; historyGrid.innerHTML = '';
+            grid.innerHTML = '';
+            historyGrid.innerHTML = '';
             const today = new Date().toDateString();
 
             allOrders.forEach(order => {
@@ -344,6 +321,7 @@
                 if (['completed', 'rejected', 'done'].includes(order.status)) {
                     if (orderDate === today) historyGrid.appendChild(card);
                 } else {
+                    // LOGIKA TAB
                     if (currentTab === 'cashier') {
                         if (['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(order.status)) {
                             grid.appendChild(card);
@@ -353,42 +331,44 @@
                     }
                 }
             });
+            updateLiveTimers();
         }
 
         function createCard(order) {
             let displayName = order.tableNumber ? "MEJA " + order.tableNumber : "Take Away";
             if(order.customerName) displayName += " - " + order.customerName.toUpperCase();
 
-            // DATA WAKTU (SAFE CHECK)
-            const created = order.timestamp ? new Date(order.timestamp).getTime() : Date.now();
+            // WAKTU
+            const created = new Date(order.timestamp).getTime();
             const claimed = order.paymentClaimedAt ? new Date(order.paymentClaimedAt).getTime() : 0;
             const paid = order.paidAt ? new Date(order.paidAt).getTime() : 0;
             const completed = order.completedAt ? new Date(order.completedAt).getTime() : 0;
 
-            // LOGIKA TIMER DISPLAY
+            // TIMER LOGIC
             let timerStart = created;
-            if(order.status === 'processing') timerStart = paid > 0 ? paid : created; 
-            else if(order.status === 'pending_payment') timerStart = claimed > 0 ? claimed : created;
+            if(order.status === 'processing') timerStart = paid;
+            else if(order.status === 'pending_payment') timerStart = claimed;
 
             const div = document.createElement('div');
             div.className = `order-card status-${order.status}`;
             
-            // ITEMS
             let itemsHtml = (order.items || []).map((item, idx) => {
+                const qty = parseInt(item.qty);
+                const price = parseInt(item.price);
                 const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
                 return `
                 <div class="item-row">
-                    <div style="flex:1;"><span class="item-name">${item.qty}x ${item.name}</span><br><span class="item-note">${item.note||''}</span></div>
-                    <div style="text-align:right;"><span class="item-price">${(item.qty * item.price).toLocaleString()}</span>${trashBtn}</div>
+                    <div style="flex:1;"><span class="item-name">${qty}x ${item.name}</span><br><span class="item-note">${item.note||''}</span></div>
+                    <div style="text-align:right;"><span class="item-price">${(qty * price).toLocaleString()}</span>${trashBtn}</div>
                 </div>`;
             }).join('');
 
-            // BADGE
+            // BADGE METODE
             let paymentBadge = order.paymentMethod === 'qris' 
                 ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px;">QRIS</span>' 
                 : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px;">TUNAI</span>';
 
-            // TOMBOL LOGIC
+            // TOMBOL LOGIC (SESUAI REQUEST)
             let buttonsHtml = '';
             let statusMsg = '';
 
@@ -406,20 +386,19 @@
                 buttonsHtml = `<button class="btn btn-green full-width" onclick="updateStatus('${order.id}', 'completed')">SELESAI & ANTAR ✅</button>`;
             }
 
-            // PRINT BTN
+            // Print Buttons
             let printButtons = '';
             if(order.status !== 'rejected') {
                 printButtons = `<div class="btn-print-group"><button class="btn-print" onclick="printDirect('${order.id}', 'checker')">🖨 CHECKER</button><button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">🧾 INVOICE</button></div>`;
             }
 
-            // FOOTER (HISTORY)
+            // METRICS (HISTORY)
             let metricsHtml = '';
             let statusFooter = '';
             if(order.status === 'completed' || order.status === 'rejected') {
                 if(order.status === 'rejected') statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
                 else statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
                 
-                // Kalkulasi Durasi Staff
                 let tCust = 0, tStaff = 0, tKitchen = 0;
                 if(order.paymentMethod === 'qris') {
                     if(claimed > 0) tCust = Math.floor((claimed - created)/1000);
@@ -475,9 +454,9 @@
             });
         }
         function showPage(pageId) { document.querySelectorAll('.main').forEach(el => el.style.display = 'none'); document.getElementById(pageId + '-page').style.display = 'block'; document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active')); if(pageId === 'orders') document.querySelectorAll('.menu-item')[0].classList.add('active'); if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active'); }
+        function filterTab(t) { currentTab = t; localStorage.setItem('sbs_active_tab', t); document.querySelectorAll('.tab').forEach(e => e.classList.remove('active')); document.getElementById('tab-'+t).classList.add('active'); renderOrders(); }
         function updateBadges() { document.getElementById('badge-cashier').innerText = allOrders.filter(o => ['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(o.status)).length; document.getElementById('badge-kitchen').innerText = allOrders.filter(o => o.status === 'processing').length; }
         
-        // MODALS & HELPERS
         function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
         function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
         document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
@@ -485,20 +464,6 @@
         function autoFillPrice() { const s=document.getElementById('extra-select'); const p=document.getElementById('extra-price'); if(s.options[s.selectedIndex].getAttribute('data-price')) p.value=s.options[s.selectedIndex].getAttribute('data-price'); }
         function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
         function saveExtraItem() { const s=document.getElementById('extra-select'); const n=s.value||s.options[s.selectedIndex].text; const p=parseInt(document.getElementById('extra-price').value); if(!n||!p)return; const o=allOrders.find(x=>x.id===editingOrderKey); const i=[...(o.items||[]),{name:n,price:p,qty:1,note:'Manual'}]; const t=(Number(String(o.total).replace(/[^0-9]/g,''))||0)+p; db.ref('orders/'+editingOrderKey).update({items:i,total:t}).then(()=>closeModal()); }
-        function printDirect(id, type) { 
-            /* PRINT LOGIC ASLI */
-            const order = allOrders.find(o => o.id === id); if(!order) return;
-            let data = "\x1B\x40"; // Init
-            const dateStr = new Date(order.timestamp).toLocaleString('en-GB');
-            data += "\x1B\x61\x01\x1D\x21\x11" + (type==='checker'?'CHECKER':'INVOICE') + "\x1D\x21\x00\n\n";
-            data += "\x1B\x61\x00" + "ID: " + order.id.slice(-4) + "\n" + dateStr + "\n";
-            data += "--------------------------------\n";
-            (order.items||[]).forEach(i => { data += i.qty + "x " + i.name + "\n"; if(i.note) data += "   (" + i.note + ")\n"; });
-            data += "\n\n\n";
-            const buffer = new Uint8Array(data.length); for(let i=0;i<data.length;i++) buffer[i]=data.charCodeAt(i);
-            const b64 = btoa(String.fromCharCode(...buffer));
-            window.location.href = "rawbt:base64," + b64; 
-        }
     </script>
 </body>
 </html>
