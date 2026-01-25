@@ -6,7 +6,7 @@
     <title>SBS Authentic Menu</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@700;900&family=Poppins:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
-        /* --- STYLE CSS (TIDAK BERUBAH) --- */
+        /* --- COPY STYLE DARI INDEX (5) --- */
         :root { --sbs-yellow: #FFD200; --sbs-black: #1A1A1A; --sbs-orange: #FF6600; --sbs-dark-yellow: #FFB800; }
         body { font-family: 'Poppins', sans-serif; margin: 0; padding: 15px; color: var(--sbs-black); background: repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px), radial-gradient(circle at center, var(--sbs-yellow) 0%, #e6bc00 100%); background-attachment: fixed; overscroll-behavior-y: contain; padding-bottom: 120px; }
         .top-bar { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
@@ -245,7 +245,7 @@
         
         <div class="input-group">
             <label>Nomor Meja*</label>
-            <input type="number" id="table-number" placeholder="Contoh: 5" required inputmode="numeric">
+            <input type="number" id="table-number" placeholder="Scan QR Meja..." required inputmode="numeric">
         </div>
         <div class="input-group">
             <label>Nama Kakak*</label>
@@ -277,7 +277,7 @@
 <div id="history-modal" class="modal">
     <div class="modal-content">
         <div class="close-modal" onclick="closeHistory()">&times;</div>
-        <div class="modal-header">RIWAYAT</div>
+        <div class="modal-header">RIWAYAT PESANAN</div>
         <div id="history-container" style="padding-bottom:10px;"></div>
         <button class="btn-close-final" onclick="closeHistory()">TUTUP</button>
     </div>
@@ -305,7 +305,6 @@
 
     // --- LOGIC AUTO-RESTORE QRIS MODAL ---
     window.onload = function() {
-        // Cek URL Table
         const params = new URLSearchParams(window.location.search);
         const tableFromURL = params.get('table');
         if (tableFromURL) {
