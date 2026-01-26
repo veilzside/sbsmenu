@@ -321,7 +321,6 @@
         }
     }
 
-    // --- FIREBASE REALTIME ---
     db.ref('orders').on('value', (snapshot) => {
         const data = snapshot.val();
         let shouldRing = false;
@@ -334,27 +333,21 @@
                 allOrders.push(order);
                 currentStatuses[key] = order.status;
 
-                // --- DETEKSI PERUBAHAN STATUS UNTUK NOTIFIKASI ---
                 if (!isFirstLoad) {
                     const currentStat = order.status;
                     const prevStat = previousOrderStatuses[key];
 
-                    // 1. Pesanan Baru Masuk 
-                    // PERBAIKAN: Gunakan !prevStat agar angka hanya bertambah jika ada ID pesanan baru, 
-                    // bukan setiap kali status berubah (mencegah dobel hitung pada QRIS)
-                    const isActive = ['new', 'qris_unpaid', 'pending_payment'].includes(currentStat);
-                    if (isActive && !prevStat) { 
+                    // Notifikasi Pesanan Baru
+                    if (['new', 'qris_unpaid', 'pending_payment'].includes(currentStat) && (!prevStat || prevStat !== currentStat)) {
                         if (activePage !== 'orders') unreadOrdersCount++;
                     }
 
-                    // 2. Pesanan Selesai (Masuk Riwayat)
-                    const isDone = ['completed', 'rejected'].includes(currentStat);
-                    const wasActive = prevStat && !['completed', 'rejected'].includes(prevStat);
-                    if (isDone && wasActive) {
+                    // Notifikasi Riwayat Baru
+                    if (['completed', 'rejected'].includes(currentStat) && prevStat && !['completed', 'rejected'].includes(prevStat)) {
                         if (activePage !== 'history') unreadHistoryCount++;
                     }
 
-                    // 3. Alarm (Tetap berbunyi jika ada perubahan ke status penting)
+                    // Alarm
                     if (audioUnlocked) {
                         if (currentStat === 'new' && prevStat !== 'new') shouldRing = true;
                         if (currentStat === 'pending_payment' && prevStat === 'qris_unpaid') shouldRing = true;
@@ -659,15 +652,14 @@
                 </div>
             `;
         } 
-       else if (order.status === 'qris_unpaid') {
-            // Teks Kapital, Warna Orange Terang (#FF6600), dan Simbol Segitiga (⚠)
-            bHtml = `
-                <div class="actions">
-                    ${btnT}
+        else if (order.status === 'qris_unpaid') {
+            buttonsHtml = `
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    ${btnTolak}
                     <button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGGU PEMBAYARAN</button>
                 </div>
                 <div style="text-align:center; font-size:10px; color:#FF6600; font-weight:bold; margin-top:5px;">
-                    ⚠ Customer Belum Melakukan Pembayaran
+                    ⚠ CUSTOMER BELUM MELAKUKAN PEMBAYARAN
                 </div>
             `;
         }
