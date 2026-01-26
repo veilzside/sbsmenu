@@ -12,9 +12,41 @@
         
         .sidebar { width: 260px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
         .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
-        .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
+        
+        /* MENU ITEM DENGAN POSISI RELATIF UNTUK BADGE */
+        .menu-item { 
+            padding: 15px; 
+            cursor: pointer; 
+            border-radius: 10px; 
+            margin-bottom: 10px; 
+            font-weight: 600; 
+            transition: 0.2s; 
+            color: #888; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
+            position: relative; /* Penting untuk badge */
+        }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .menu-icon { font-size: 20px; }
+
+        /* STYLE BADGE NOTIFIKASI MERAH */
+        .nav-badge {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background-color: var(--red);
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 50%;
+            min-width: 18px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
         .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -110,7 +142,7 @@
         .btn-green { background: var(--green); } .btn-red { background: var(--red); }
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
         .btn-full { 
-            grid-column: 1 / -1; /* Memaksa tombol mengambil seluruh lebar kolom */
+            grid-column: 1 / -1; 
             width: 100%; 
             display: block;
             text-align: center;
@@ -140,6 +172,10 @@
             .menu-item { flex-direction: column; gap: 3px; font-size: 10px; padding: 5px; margin: 0; background: transparent !important; border-radius: 0; justify-content: center; flex: 1; text-align: center; color: #666; }
             .menu-item.active { color: var(--accent); }
             .menu-icon { font-size: 20px; margin-bottom: 2px; display: block; }
+            
+            /* Penyesuaian Badge di Mobile */
+            .nav-badge { top: 2px; right: 25%; font-size: 9px; padding: 2px 5px; min-width: 16px; }
+
             .main { height: auto; overflow: visible; padding: 15px; padding-bottom: 80px; width: 100%; }
             .status-tabs { position: sticky; top: 0; background: var(--bg-dark); z-index: 50; padding-top: 10px; margin-top: -10px; }
             .orders-grid { grid-template-columns: 1fr; gap: 20px; padding-bottom: 0; } 
@@ -150,8 +186,18 @@
 
     <div class="sidebar">
         <div class="brand">SBS KITCHEN</div>
-        <div class="menu-item active" onclick="showPage('orders')"><span class="menu-icon">📦</span><span>Pesanan</span></div>
-        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">🕒</span><span>Riwayat (Hari Ini)</span></div>
+        
+        <div class="menu-item active" onclick="showPage('orders')">
+            <span class="menu-icon">📦</span>
+            <span>Pesanan</span>
+            <span id="badge-nav-orders" class="nav-badge" style="display:none;">0</span>
+        </div>
+        
+        <div class="menu-item" onclick="showPage('history')">
+            <span class="menu-icon">🕒</span>
+            <span>Riwayat (Hari Ini)</span>
+            <span id="badge-nav-history" class="nav-badge" style="display:none;">0</span>
+        </div>
     </div>
 
     <div class="main" id="orders-page">
@@ -223,9 +269,15 @@
     
     let allOrders = [];
     let currentTab = localStorage.getItem('sbs_active_tab') || 'kasir'; 
+    let activePage = 'orders'; // Menandakan halaman aktif saat ini
     let audioUnlocked = false;
     let confirmCallback = null;
+    
+    // --- Variabel State untuk Notifikasi ---
     let previousOrderStatuses = {}; 
+    let isFirstLoad = true;
+    let unreadOrdersCount = 0;
+    let unreadHistoryCount = 0;
 
     const soundNew = document.getElementById('sound-new');
     const soundNag = document.getElementById('sound-nag');
@@ -239,6 +291,7 @@
         return `${m}m ${rs}s`;
     }
 
+    // --- SETUP TABS (KASIR vs DAPUR) ---
     function setupTabs() {
         const t1 = document.getElementById('tab-new');
         const t2 = document.getElementById('tab-unpaid');
@@ -280,6 +333,29 @@
         }
     }
 
+    // --- LOGIKA UPDATE TAMPILAN BADGE NAVIGASI ---
+    function updateNavBadges() {
+        const badgeOrd = document.getElementById('badge-nav-orders');
+        const badgeHis = document.getElementById('badge-nav-history');
+
+        // Badge Pesanan: Muncul jika ada pesan baru dan user TIDAK sedang di halaman pesanan
+        if(unreadOrdersCount > 0 && activePage !== 'orders') {
+            badgeOrd.innerText = unreadOrdersCount;
+            badgeOrd.style.display = 'inline-block';
+        } else {
+            badgeOrd.style.display = 'none';
+        }
+
+        // Badge Riwayat: Muncul jika ada pesanan selesai dan user TIDAK sedang di halaman riwayat
+        if(unreadHistoryCount > 0 && activePage !== 'history') {
+            badgeHis.innerText = unreadHistoryCount;
+            badgeHis.style.display = 'inline-block';
+        } else {
+            badgeHis.style.display = 'none';
+        }
+    }
+
+    // --- LISTENER FIREBASE UTAMA ---
     db.ref('orders').on('value', (snapshot) => {
         const data = snapshot.val();
         let shouldRing = false;
@@ -292,31 +368,49 @@
                 allOrders.push(order);
                 currentStatuses[key] = order.status;
 
-                if (audioUnlocked) {
-                    // Alarm Tunai Baru
-                    if (order.status === 'new' && (!previousOrderStatuses[key] || previousOrderStatuses[key] !== 'new')) {
-                        shouldRing = true;
+                // --- DETEKSI PERUBAHAN STATUS UNTUK NOTIFIKASI ---
+                if (!isFirstLoad) {
+                    const currentStat = order.status;
+                    const prevStat = previousOrderStatuses[key];
+
+                    // 1. Cek Pesanan Masuk (Tunai Baru atau QRIS Pending)
+                    const isActive = ['new', 'qris_unpaid', 'pending_payment'].includes(currentStat);
+                    // Jika ini pesanan baru (belum ada di prev) ATAU statusnya berubah jadi aktif
+                    if (isActive && (!prevStat || prevStat !== currentStat)) {
+                        if (activePage !== 'orders') {
+                            unreadOrdersCount++;
+                        }
                     }
-                    // Alarm QRIS Terverifikasi (Pending Payment)
-                    if (order.status === 'pending_payment') {
-                         if (!previousOrderStatuses[key] || previousOrderStatuses[key] === 'qris_unpaid') {
-                             shouldRing = true;
-                         }
+
+                    // 2. Cek Alarm Bunyi (Hanya Tunai Baru & QRIS Sudah Bayar)
+                    if (audioUnlocked) {
+                        if (currentStat === 'new' && prevStat !== 'new') shouldRing = true;
+                        if (currentStat === 'pending_payment' && prevStat === 'qris_unpaid') shouldRing = true;
+                    }
+
+                    // 3. Cek Pesanan Selesai (Masuk Riwayat)
+                    const isDone = ['completed', 'rejected'].includes(currentStat);
+                    const wasActive = prevStat && !['completed', 'rejected'].includes(prevStat);
+                    
+                    if (isDone && wasActive) {
+                        if (activePage !== 'history') {
+                            unreadHistoryCount++;
+                        }
                     }
                 }
             });
         }
         
         previousOrderStatuses = currentStatuses;
-
-        if (shouldRing) {
-            soundNew.play().catch(e => {});
-        }
+        if (isFirstLoad) isFirstLoad = false; 
+        
+        updateNavBadges();
+        if (shouldRing) soundNew.play().catch(e => {});
         
         allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         setupTabs(); 
         renderOrders();
-        updateBadges();
+        updateBadges(); // Update badge angka di tab Kasir/Dapur
     });
 
     function getDailyQueueNumber(orderId) {
@@ -493,7 +587,6 @@
             const price = parseInt(item.price);
             const subtotal = qty * price;
             const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-            // Tombol hapus item masih ada, tapi fitur tambah item (edit) sudah dihapus
             const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
             return `
             <div class="item-row">
@@ -585,12 +678,11 @@
             </div>`;
         }
 
-        // --- BUTTON LOGIC UPDATE: HAPUS +ITEM, KEMBALI KE SIDE-BY-SIDE ---
+        // --- BUTTON LOGIC (REVISI TEKS QRIS DI SINI) ---
         let buttonsHtml = '';
         const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>`;
 
         if (order.status === 'new') { 
-            // Tunai Baru: [Tolak] [Terima]
             buttonsHtml = `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     ${btnTolak}
@@ -599,17 +691,16 @@
             `;
         } 
         else if (order.status === 'qris_unpaid') {
-            // QRIS Belum Bayar: [Tolak] [Menunggu]
+            // -- BAGIAN YANG DIUBAH: TEKS TOMBOL & HELPER TEXT --
             buttonsHtml = `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     ${btnTolak}
-                    <button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGGU...</button>
+                    <button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">Menunggu Pembayaran</button>
                 </div>
-                <div style="text-align:center; font-size:10px; color:#aaa; margin-top:5px;">Customer belum klik bayar</div>
+                <div style="text-align:center; font-size:10px; color:#aaa; margin-top:5px;">customer belum melakukan pembayaran</div>
             `;
         }
         else if (order.status === 'pending_payment') {
-            // QRIS Verifikasi: [Tolak] [Verifikasi & Proses]
             buttonsHtml = `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     ${btnTolak}
@@ -619,7 +710,6 @@
             `;
         }
         else if (order.status === 'unpaid') { 
-            // Tunai Lunas: [Kembali] [Lunas & Masak]
             buttonsHtml = `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     <button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button>
@@ -628,7 +718,6 @@
             `;
         } 
         else if (order.status === 'processing') {
-            // Processing: [Selesai & Antar] (Tetap Full Width)
             buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">SELESAI & ANTAR</button>`;
         }
 
@@ -678,6 +767,12 @@
     }
 
     function showPage(pageId) {
+        activePage = pageId; 
+        // Reset count saat masuk ke halaman tersebut
+        if (pageId === 'orders') unreadOrdersCount = 0;
+        if (pageId === 'history') unreadHistoryCount = 0;
+        updateNavBadges();
+
         document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
         document.getElementById(pageId + '-page').style.display = 'block';
         document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
@@ -703,8 +798,19 @@
     function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
     document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
 
-    // Fitur +Item dan Edit Modal telah dihapus sepenuhnya.
+    function openEditModal(k) { editingOrderKey = k; document.getElementById('edit-modal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
     
+    function saveExtraItem() {
+        const n = document.getElementById('extra-name').value;
+        const p = parseInt(document.getElementById('extra-price').value);
+        if(!n || !p) return;
+        const o = allOrders.find(x => x.id === editingOrderKey);
+        const items = [...(o.items||[]), { name: n, price: p, qty: 1, note: 'Manual' }];
+        const tot = (Number(String(o.total).replace(/[^0-9]/g, '')) || 0) + p;
+        db.ref('orders/' + editingOrderKey).update({ items: items, total: tot }).then(() => closeModal());
+    }
+
     setupTabs();
 </script>
 </body>
