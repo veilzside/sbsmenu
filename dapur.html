@@ -185,8 +185,18 @@
 
     <div class="sidebar">
         <div class="brand">SBS KITCHEN</div>
-        <div class="menu-item active" onclick="showPage('orders')"><span class="menu-icon">📦</span><span>Pesanan</span></div>
-        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">🕒</span><span>Riwayat (Hari Ini)</span></div>
+        
+        <div class="menu-item active" onclick="showPage('orders')">
+            <span class="menu-icon">📦</span>
+            <span>Pesanan</span>
+            <span id="badge-nav-orders" class="nav-badge" style="display:none;">0</span>
+        </div>
+        
+        <div class="menu-item" onclick="showPage('history')">
+            <span class="menu-icon">🕒</span>
+            <span>Riwayat (Hari Ini)</span>
+            <span id="badge-nav-history" class="nav-badge" style="display:none;">0</span>
+        </div>
     </div>
 
     <div class="main" id="orders-page">
@@ -258,9 +268,15 @@
     
     let allOrders = [];
     let currentTab = localStorage.getItem('sbs_active_tab') || 'kasir'; 
+    let activePage = 'orders'; // Default page
     let audioUnlocked = false;
     let confirmCallback = null;
+    
+    // Variabel untuk Notifikasi Badge
     let previousOrderStatuses = {}; 
+    let isFirstLoad = true;
+    let unreadOrdersCount = 0;
+    let unreadHistoryCount = 0;
 
     const soundNew = document.getElementById('sound-new');
     const soundNag = document.getElementById('sound-nag');
@@ -315,6 +331,26 @@
         }
     }
 
+    // --- FUNGSI UPDATE BADGE NAVIGASI ---
+    function updateNavBadges() {
+        const badgeOrd = document.getElementById('badge-nav-orders');
+        const badgeHis = document.getElementById('badge-nav-history');
+
+        if(unreadOrdersCount > 0) {
+            badgeOrd.innerText = unreadOrdersCount;
+            badgeOrd.style.display = 'inline-block';
+        } else {
+            badgeOrd.style.display = 'none';
+        }
+
+        if(unreadHistoryCount > 0) {
+            badgeHis.innerText = unreadHistoryCount;
+            badgeHis.style.display = 'inline-block';
+        } else {
+            badgeHis.style.display = 'none';
+        }
+    }
+
     db.ref('orders').on('value', (snapshot) => {
         const data = snapshot.val();
         let shouldRing = false;
@@ -327,31 +363,50 @@
                 allOrders.push(order);
                 currentStatuses[key] = order.status;
 
-                if (audioUnlocked) {
-                    // Alarm Tunai Baru
-                    if (order.status === 'new' && (!previousOrderStatuses[key] || previousOrderStatuses[key] !== 'new')) {
-                        shouldRing = true;
+                // --- LOGIKA NOTIFIKASI & BADGE ---
+                if (!isFirstLoad) {
+                    // 1. Cek Pesanan Baru Masuk (Utk Alarm & Badge Pesanan)
+                    const isNewOrder = (order.status === 'new' || order.status === 'qris_unpaid' || order.status === 'pending_payment');
+                    const isNewlyAdded = !previousOrderStatuses[key]; // Order ini sebelumnya tidak ada
+                    
+                    if (isNewOrder && isNewlyAdded) {
+                        // Jika ada pesanan baru masuk dan user TIDAK sedang di halaman orders
+                        if (activePage !== 'orders') {
+                            unreadOrdersCount++;
+                        }
                     }
-                    // Alarm QRIS Terverifikasi (Pending Payment)
-                    if (order.status === 'pending_payment') {
-                         if (!previousOrderStatuses[key] || previousOrderStatuses[key] === 'qris_unpaid') {
-                             shouldRing = true;
-                         }
+
+                    // 2. Cek Alarm Bunyi (Khusus Tunai Baru & QRIS Verifikasi)
+                    if (audioUnlocked) {
+                        if (order.status === 'new' && (!previousOrderStatuses[key] || previousOrderStatuses[key] !== 'new')) shouldRing = true;
+                        if (order.status === 'pending_payment' && (!previousOrderStatuses[key] || previousOrderStatuses[key] === 'qris_unpaid')) shouldRing = true;
+                    }
+
+                    // 3. Cek Pesanan Selesai (Utk Badge Riwayat)
+                    const isCompleted = ['completed', 'rejected'].includes(order.status);
+                    const wasActive = previousOrderStatuses[key] && !['completed', 'rejected'].includes(previousOrderStatuses[key]);
+                    
+                    if (isCompleted && wasActive) {
+                        // Jika pesanan pindah ke riwayat dan user TIDAK sedang di halaman history
+                        if (activePage !== 'history') {
+                            unreadHistoryCount++;
+                        }
                     }
                 }
             });
         }
         
         previousOrderStatuses = currentStatuses;
-
-        if (shouldRing) {
-            soundNew.play().catch(e => {});
-        }
+        if (isFirstLoad) isFirstLoad = false; // Tandai load pertama selesai
+        
+        // Update UI
+        updateNavBadges();
+        if (shouldRing) soundNew.play().catch(e => {});
         
         allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         setupTabs(); 
         renderOrders();
-        updateBadges();
+        updateBadges(); // Badge Tab Internal (Kasir/Dapur)
     });
 
     function getDailyQueueNumber(orderId) {
@@ -366,58 +421,34 @@
     function printDirect(orderId, type) {
         const order = allOrders.find(o => o.id === orderId);
         if (!order) return;
-
         let tableNum = order.tableNumber || "Take Away";
         let realQueue = getDailyQueueNumber(order.id);
         const dateObj = new Date(order.timestamp);
         const dateStr = dateObj.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
         const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', hour12: false});
         const displayID = "2SA" + order.id.slice(-4).toUpperCase();
-
         const ESC = "\x1B"; const GS = "\x1D"; const INIT = ESC + "@";
         const ALIGN_CENTER = ESC + "a" + "\x01"; const ALIGN_LEFT = ESC + "a" + "\x00";
         const BOLD_ON = ESC + "E" + "\x01"; const BOLD_OFF = ESC + "E" + "\x00";
         const TEXT_DOUBLE = GS + "!" + "\x11"; const TEXT_NORMAL = GS + "!" + "\x00";
-
         let data = INIT;
-
         if (type === 'invoice') {
-            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF;
-            data += "Jl. Mundu 8, Kota Malang\n";
-            data += "085159039877\n";
-            data += "--------------------------------\n";
-            data += ALIGN_LEFT;
-            data += BOLD_ON + "TABLE: " + tableNum + BOLD_OFF + "\n";
-            data += "Queue Order: #" + realQueue + "\n"; 
-            data += "Date : " + dateStr + " " + timeStr + "\n";
-            data += "ID   : " + displayID + "\n";
-            data += "--------------------------------\n";
+            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF + "Jl. Mundu 8, Kota Malang\n085159039877\n--------------------------------\n" + ALIGN_LEFT + BOLD_ON + "TABLE: " + tableNum + BOLD_OFF + "\nQueue Order: #" + realQueue + "\nDate : " + dateStr + " " + timeStr + "\nID   : " + displayID + "\n--------------------------------\n";
             order.items.forEach(item => {
-                let price = parseInt(item.price);
-                let sub = item.qty * price;
+                let price = parseInt(item.price); let sub = item.qty * price;
                 data += item.name + "\n";
                 let line = item.qty + "x @" + price.toLocaleString('id-ID');
                 let priceStr = sub.toLocaleString('id-ID');
-                let spaces = 32 - line.length - priceStr.length;
-                if(spaces < 1) spaces = 1;
+                let spaces = 32 - line.length - priceStr.length; if(spaces < 1) spaces = 1;
                 data += line + " ".repeat(spaces) + priceStr + "\n";
                 if(item.note) data += "  (Note: " + item.note + ")\n";
             });
             data += "--------------------------------\n";
-            let totalStr = parseInt(order.total).toLocaleString('id-ID');
-            let totalLabel = "TOTAL";
+            let totalStr = parseInt(order.total).toLocaleString('id-ID'), totalLabel = "TOTAL";
             let totalSpaces = 32 - totalLabel.length - totalStr.length;
-            data += BOLD_ON + totalLabel + " ".repeat(totalSpaces > 0 ? totalSpaces : 1) + totalStr + "\n" + BOLD_OFF;
-            data += "--------------------------------\n";
-            data += ALIGN_CENTER + "Wifi: SBSkopi8\nTerima Kasih!\n\n\n\n";
+            data += BOLD_ON + totalLabel + " ".repeat(totalSpaces > 0 ? totalSpaces : 1) + totalStr + "\n" + BOLD_OFF + "--------------------------------\n" + ALIGN_CENTER + "Wifi: SBSkopi8\nTerima Kasih!\n\n\n\n";
         } else {
-            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF;
-            data += "\n" + ALIGN_LEFT;
-            data += "TABLE: " + BOLD_ON + tableNum + BOLD_OFF + "\n";
-            data += "QUEUE: #" + realQueue + "\n";
-            data += "TIME : " + timeStr + "\n";
-            data += "ID   : " + displayID + "\n";
-            data += "--------------------------------\n";
+            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF + "\n" + ALIGN_LEFT + "TABLE: " + BOLD_ON + tableNum + BOLD_OFF + "\nQUEUE: #" + realQueue + "\nTIME : " + timeStr + "\nID   : " + displayID + "\n--------------------------------\n";
             order.items.forEach(item => {
                 data += BOLD_ON + item.qty + " x " + item.name + BOLD_OFF + "\n";
                 if(item.note) data += "   [ " + item.note + " ]\n";
@@ -425,26 +456,19 @@
             });
             data += "\n\n\n\n"; 
         }
-
         const buffer = new Uint8Array(data.length);
         for (let i = 0; i < data.length; i++) { buffer[i] = data.charCodeAt(i); }
         let binary = '';
         for (let i = 0; i < buffer.byteLength; i++) { binary += String.fromCharCode(buffer[i]); }
-        const base64Data = btoa(binary);
-        window.location.href = "rawbt:base64," + base64Data;
+        window.location.href = "rawbt:base64," + btoa(binary);
     }
 
     function verifyAndPrint(key) {
         printDirect(key, 'checker');
-        setTimeout(() => {
-            updateStatus(key, 'processing');
-        }, 500);
+        setTimeout(() => { updateStatus(key, 'processing'); }, 500);
     }
 
-    setInterval(() => {
-        updateLiveTimers();
-        checkNaggingAlarm();
-    }, 1000);
+    setInterval(() => { updateLiveTimers(); checkNaggingAlarm(); }, 1000);
 
     function checkNaggingAlarm() {
         if (!audioUnlocked) return;
@@ -465,8 +489,7 @@
             if (!startTime || isNaN(startTime)) { el.innerText = "--:--"; return; }
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
             if (elapsed > 86400) { el.innerText = "> 24h"; return; }
-            const min = Math.floor(elapsed / 60);
-            const sec = elapsed % 60;
+            const min = Math.floor(elapsed / 60); const sec = elapsed % 60;
             el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
         });
     }
@@ -483,18 +506,11 @@
             const orderDate = new Date(order.completedAt || order.timestamp).toDateString();
             
             if (['completed', 'rejected', 'done'].includes(order.status)) {
-                if (orderDate === today) {
-                    historyGrid.appendChild(card);
-                }
+                if (orderDate === today) historyGrid.appendChild(card);
             } else {
                 if (currentTab === 'kasir') {
-                    if (['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(order.status)) {
-                        grid.appendChild(card);
-                    }
-                }
-                else if (currentTab === 'dapur' && order.status === 'processing') {
-                    grid.appendChild(card);
-                }
+                    if (['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(order.status)) grid.appendChild(card);
+                } else if (currentTab === 'dapur' && order.status === 'processing') grid.appendChild(card);
             }
         });
         updateLiveTimers();
@@ -524,24 +540,10 @@
         if(order.status === 'unpaid') div.style.borderLeftColor = '#FF6600'; 
         
         let itemsHtml = (order.items || []).map((item, idx) => {
-            const qty = parseInt(item.qty);
-            const price = parseInt(item.price);
-            const subtotal = qty * price;
+            const qty = parseInt(item.qty); const price = parseInt(item.price); const subtotal = qty * price;
             const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-            // Tombol hapus item masih ada, tapi fitur tambah item (edit) sudah dihapus
             const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
-            return `
-            <div class="item-row">
-                <div style="flex:1;">
-                    <span class="item-name">${qty}x ${item.name}</span>
-                    ${unitPriceHtml}
-                    ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
-                </div>
-                <div style="text-align:right;">
-                    <span class="item-price">${subtotal.toLocaleString()}</span>
-                    ${trashBtn}
-                </div>
-            </div>`;
+            return `<div class="item-row"><div style="flex:1;"><span class="item-name">${qty}x ${item.name}</span>${unitPriceHtml}${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}</div><div style="text-align:right;"><span class="item-price">${subtotal.toLocaleString()}</span>${trashBtn}</div></div>`;
         }).join('');
 
         const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
@@ -551,143 +553,55 @@
             ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">QRIS</span>' 
             : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">TUNAI</span>';
 
-        let headerRight = '';
-        let kpiHtml = '';
+        let headerRight = '', kpiHtml = '';
         
         if(order.status === 'completed' || order.status === 'rejected') {
             let timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
-            headerRight = `
-                <div class="header-right">
-                    <span class="meta-date">${dateStr}</span>
-                    <div class="meta-time-block">
-                        <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br>
-                        <span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span>
-                    </div>
-                </div>`;
+            headerRight = `<div class="header-right"><span class="meta-date">${dateStr}</span><div class="meta-time-block"><span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br><span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span></div></div>`;
             
             if (order.status === 'completed') {
                 let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
                 if (order.paymentMethod === 'qris') {
-                    if(t2 && t1) durPesan = t2 - t1;
-                    if(t3 && t2) durRespon = t3 - t2;
-                    if(t4 && t3) durMasak = t4 - t3;
+                    durPesan = (t2 && t1) ? t2 - t1 : 0; durRespon = (t3 && t2) ? t3 - t2 : 0; durMasak = (t4 && t3) ? t4 - t3 : 0;
                 } else {
-                    if(t3 && t1) durPesan = t3 - t1;
-                    durRespon = 0; 
-                    if(t4 && t3) durMasak = t4 - t3;
+                    durPesan = (t3 && t1) ? t3 - t1 : 0; durRespon = 0; durMasak = (t4 && t3) ? t4 - t3 : 0;
                 }
-                if(t4 && t1) durTotal = t4 - t1;
-
+                durTotal = (t4 && t1) ? t4 - t1 : 0;
                 const responColor = durRespon > 180000 ? '#e74c3c' : '#fff';
-                kpiHtml = `
-                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555; font-size:11px;">
-                    <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Pesan - Bayar (Cust):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durPesan)}</span>
-                    </div>
-                    <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor}; font-weight:600;">${fmtDur(durRespon)}</span>
-                    </div>
-                    <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Masak (Dapur):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durMasak)}</span>
-                    </div>
-                    <div class="dur-total-row" style="margin-top:6px; padding-top:6px; border-top:1px solid #444; display:flex; justify-content:space-between; font-size:12px; font-weight:700;">
-                        <span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:var(--accent);">${fmtDur(durTotal)}</span>
-                    </div>
-                </div>`;
+                kpiHtml = `<div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555; font-size:11px;"><div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;"><span style="color:#777;">Pesan - Bayar (Cust):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durPesan)}</span></div><div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;"><span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor}; font-weight:600;">${fmtDur(durRespon)}</span></div><div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;"><span style="color:#777;">Masak (Dapur):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durMasak)}</span></div><div class="dur-total-row" style="margin-top:6px; padding-top:6px; border-top:1px solid #444; display:flex; justify-content:space-between; font-size:12px; font-weight:700;"><span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:var(--accent);">${fmtDur(durTotal)}</span></div></div>`;
             }
-
         } else {
-            headerRight = `
-                <div class="header-right">
-                    <span class="meta-date">${dateStr}</span>
-                    <div class="meta-time-block">
-                        <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span>
-                    </div>
-                    <div class="timer-badge live-timer" data-start="${timerStart}">--:--</div>
-                </div>`;
+            headerRight = `<div class="header-right"><span class="meta-date">${dateStr}</span><div class="meta-time-block"><span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span></div><div class="timer-badge live-timer" data-start="${timerStart}">--:--</div></div>`;
         }
 
         let printButtons = '';
         if(order.status !== 'rejected') {
-            printButtons = `
-            <div class="btn-print-group">
-                <button class="btn-print" onclick="printDirect('${order.id}', 'checker')">
-                    <span style="font-size:16px;">🖨</span> CHECKER
-                </button>
-                <button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">
-                    <span style="font-size:16px;">🧾</span> INVOICE
-                </button>
-            </div>`;
+            printButtons = `<div class="btn-print-group"><button class="btn-print" onclick="printDirect('${order.id}', 'checker')"><span style="font-size:16px;">🖨</span> CHECKER</button><button class="btn-print" onclick="printDirect('${order.id}', 'invoice')"><span style="font-size:16px;">🧾</span> INVOICE</button></div>`;
         }
 
-        // --- BUTTON LOGIC UPDATE: HAPUS +ITEM, KEMBALI KE SIDE-BY-SIDE ---
         let buttonsHtml = '';
         const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>`;
 
         if (order.status === 'new') { 
-            // Tunai Baru: [Tolak] [Terima]
-            buttonsHtml = `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    ${btnTolak}
-                    <button class="btn btn-green" onclick="updateStatus('${order.id}', 'unpaid')">TERIMA</button>
-                </div>
-            `;
+            buttonsHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnTolak}<button class="btn btn-green" onclick="updateStatus('${order.id}', 'unpaid')">TERIMA</button></div>`;
         } 
         else if (order.status === 'qris_unpaid') {
-            // QRIS Belum Bayar: [Tolak] [Menunggu]
-            buttonsHtml = `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    ${btnTolak}
-                    <button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGGU...</button>
-                </div>
-                <div style="text-align:center; font-size:10px; color:#aaa; margin-top:5px;">Customer belum klik bayar</div>
-            `;
+            // REVISI TEKS DI SINI (Title Case & Teks Helper Baru)
+            buttonsHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnTolak}<button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">Menunggu Pembayaran</button></div><div style="text-align:center; font-size:10px; color:#aaa; margin-top:5px;">customer belum melakukan pembayaran</div>`;
         }
         else if (order.status === 'pending_payment') {
-            // QRIS Verifikasi: [Tolak] [Verifikasi & Proses]
-            buttonsHtml = `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    ${btnTolak}
-                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}')">VERIFIKASI & PROSES</button>
-                </div>
-                <div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">⚠ CEK MUTASI!</div>
-            `;
+            buttonsHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnTolak}<button class="btn btn-blue" onclick="verifyAndPrint('${order.id}')">VERIFIKASI & PROSES</button></div><div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">⚠ CEK MUTASI!</div>`;
         }
         else if (order.status === 'unpaid') { 
-            // Tunai Lunas: [Kembali] [Lunas & Masak]
-            buttonsHtml = `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button>
-                    <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">LUNAS & MASAK</button>
-                </div>
-            `;
+            buttonsHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button><button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">LUNAS & MASAK</button></div>`;
         } 
         else if (order.status === 'processing') {
-            // Processing: [Selesai & Antar] (Tetap Full Width)
             buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">SELESAI & ANTAR</button>`;
         }
 
-        let statusFooter = '';
-        if(order.status === 'rejected') statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
-        else if (order.status === 'completed') statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
+        let statusFooter = (order.status === 'rejected') ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : (order.status === 'completed') ? `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>` : '';
 
-        div.innerHTML = `
-            <div class="card-header">
-                <div class="header-left">
-                    <span class="cust-name">${displayName}</span>
-                    <div style="margin-top:2px;">${paymentBadge} <span class="order-id">ID: ...${order.id.slice(-4)}</span></div>
-                </div>
-                ${headerRight}
-            </div>
-            <div class="item-list">${itemsHtml}</div>
-            <div class="total-display" style="margin-bottom:5px;">Total: Rp ${Number(String(order.total).replace(/[^0-9]/g, '')).toLocaleString()}</div>
-            
-            ${kpiHtml}
-
-            ${statusFooter}
-            ${printButtons}
-            <div class="actions" style="display:block;">${buttonsHtml}</div>
-        `;
+        div.innerHTML = `<div class="card-header"><div class="header-left"><span class="cust-name">${displayName}</span><div style="margin-top:2px;">${paymentBadge} <span class="order-id">ID: ...${order.id.slice(-4)}</span></div></div>${headerRight}</div><div class="item-list">${itemsHtml}</div><div class="total-display" style="margin-bottom:5px;">Total: Rp ${Number(String(order.total).replace(/[^0-9]/g, '')).toLocaleString()}</div>${kpiHtml}${statusFooter}${printButtons}<div class="actions" style="display:block;">${buttonsHtml}</div>`;
         return div;
     }
 
@@ -701,18 +615,16 @@
     }
 
     function confirmReject(key) { showConfirm("Yakin tolak pesanan ini?", () => updateStatus(key, 'rejected')); }
-
-    function deleteOrderItem(orderKey, itemIndex) {
-        showConfirm("Hapus item ini?", () => {
-            const order = allOrders.find(o => o.id === orderKey);
-            const newItems = [...order.items];
-            const removed = newItems.splice(itemIndex, 1)[0];
-            let currentTotal = parseInt(String(order.total).replace(/[^0-9]/g, '')) || 0;
-            db.ref('orders/' + orderKey).update({ items: newItems, total: currentTotal - (removed.price * removed.qty) });
-        });
-    }
+    function deleteOrderItem(orderKey, itemIndex) { showConfirm("Hapus item ini?", () => { const order = allOrders.find(o => o.id === orderKey); const newItems = [...order.items]; const removed = newItems.splice(itemIndex, 1)[0]; let currentTotal = parseInt(String(order.total).replace(/[^0-9]/g, '')) || 0; db.ref('orders/' + orderKey).update({ items: newItems, total: currentTotal - (removed.price * removed.qty) }); }); }
 
     function showPage(pageId) {
+        activePage = pageId; // Update halaman aktif
+        
+        // Reset counter saat masuk ke halaman tsb
+        if (pageId === 'orders') unreadOrdersCount = 0;
+        if (pageId === 'history') unreadHistoryCount = 0;
+        updateNavBadges();
+
         document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
         document.getElementById(pageId + '-page').style.display = 'block';
         document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
@@ -720,25 +632,14 @@
         if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
     }
 
-    function filterTab(status) {
-        currentTab = status;
-        localStorage.setItem('sbs_active_tab', status);
-        setupTabs(); 
-        renderOrders();
-    }
-
-    function updateBadges() {
-        const countKasir = allOrders.filter(o => ['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(o.status)).length;
-        const countDapur = allOrders.filter(o => o.status === 'processing').length;
-        document.getElementById('badge-kasir').innerText = countKasir;
-        document.getElementById('badge-dapur').innerText = countDapur;
-    }
-
+    function filterTab(status) { currentTab = status; localStorage.setItem('sbs_active_tab', status); setupTabs(); renderOrders(); }
+    function updateBadges() { const countKasir = allOrders.filter(o => ['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(o.status)).length; const countDapur = allOrders.filter(o => o.status === 'processing').length; document.getElementById('badge-kasir').innerText = countKasir; document.getElementById('badge-dapur').innerText = countDapur; }
     function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
     function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
     document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
-
-    // Fitur +Item dan Edit Modal telah dihapus sepenuhnya.
+    function openEditModal(k) { editingOrderKey = k; document.getElementById('edit-modal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
+    function saveExtraItem() { const n = document.getElementById('extra-name').value; const p = parseInt(document.getElementById('extra-price').value); if(!n || !p) return; const o = allOrders.find(x => x.id === editingOrderKey); const items = [...(o.items||[]), { name: n, price: p, qty: 1, note: 'Manual' }]; const tot = (Number(String(o.total).replace(/[^0-9]/g, '')) || 0) + p; db.ref('orders/' + editingOrderKey).update({ items: items, total: tot }).then(() => closeModal()); }
     
     setupTabs();
 </script>
