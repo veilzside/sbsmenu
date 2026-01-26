@@ -701,7 +701,7 @@
 
         // --- BUTTON LOGIC ---
         let buttonsHtml = '';
-        const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>`;
+        const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">TOLAK</button>`;
 
         if (order.status === 'new') { 
             buttonsHtml = `
@@ -719,7 +719,7 @@
                     <button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGGU PEMBAYARAN</button>
                 </div>
                 <div style="text-align:center; font-size:10px; color:#FF6600; font-weight:bold; margin-top:5px;">
-                    ⚠ CUSTOMER BELUM MELAKUKAN PEMBAYARAN
+                    ⚠ Customer Belum Bayar
                 </div>
             `;
         }
