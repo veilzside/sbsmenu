@@ -30,21 +30,45 @@
         .menu-icon { font-size: 20px; }
 
         /* Style Badge Notifikasi Merah */
+        /* --- POSISI BADGE SIDEBAR (DESKTOP) --- */
         .nav-badge {
             position: absolute;
             top: 5px;
-            right: 10px;
+            right: 15px;
             background-color: var(--red);
             color: #fff;
             font-size: 10px;
-            font-weight: bold;
+            font-weight: 800;
             padding: 2px 6px;
             border-radius: 50%;
             min-width: 18px;
-            text-align: center;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            z-index: 10;
+            border: 1px solid #fff;
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+
+        @media (max-width: 768px) {
+            /* ... (kode sidebar lainnya tetap) ... */
+            .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; background: #1a1a1a; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 9999; }
+            .menu-item { flex-direction: column; gap: 3px; font-size: 10px; padding: 5px; margin: 0; background: transparent !important; border-radius: 0; justify-content: center; flex: 1; text-align: center; color: #666; position: relative; }
+            
+            /* POSISI BADGE DI MOBILE (DITENGAHKAN DI ATAS ICON) */
+            .nav-badge {
+                top: 2px;
+                right: auto;
+                left: 50%;
+                transform: translateX(8px); /* Geser sedikit ke kanan dari titik tengah icon */
+                min-width: 16px;
+                height: 16px;
+                font-size: 9px;
+            }
+        }
+        
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
         /* --- UPDATE LAYOUT TOMBOL --- */
@@ -316,7 +340,7 @@
         localStorage.setItem('sbs_active_tab', status);
         setupTabs(); 
         renderOrders();
-        updateBadges(); // <--- INI PERBAIKANNYA: Hitung ulang badge setelah tab dirender
+        updateBadges(); // <--- Menambahkan ini agar angka badge di tab atas langsung muncul kembali
     }
 
     function updateBadges() {
@@ -354,17 +378,24 @@
     }
 
     // --- LOGIKA UPDATE BADGE SIDEBAR (Kardus & Jam) ---
-    function updateNavBadges() {
+   function updateNavBadges() {
         const badgeOrd = document.getElementById('badge-nav-orders');
         const badgeHis = document.getElementById('badge-nav-history');
 
-        // Badge Pesanan: Muncul jika ada pesan baru dan user TIDAK sedang di halaman pesanan
         if(unreadOrdersCount > 0 && activePage !== 'orders') {
             badgeOrd.innerText = unreadOrdersCount;
-            badgeOrd.style.display = 'flex'; // Pakai flex agar centered sesuai CSS
+            badgeOrd.style.display = 'flex';
         } else {
             badgeOrd.style.display = 'none';
         }
+
+        if(unreadHistoryCount > 0 && activePage !== 'history') {
+            badgeHis.innerText = unreadHistoryCount;
+            badgeHis.style.display = 'flex';
+        } else {
+            badgeHis.style.display = 'none';
+        }
+    }
 
         // Badge Riwayat: Muncul jika ada pesanan selesai dan user TIDAK sedang di halaman riwayat
         if(unreadHistoryCount > 0 && activePage !== 'history') {
@@ -712,13 +743,12 @@
             `;
         } 
         else if (order.status === 'qris_unpaid') {
-            // REVISI TEKS SESUAI PERMINTAAN
             buttonsHtml = `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     ${btnTolak}
                     <button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGGU PEMBAYARAN</button>
                 </div>
-                <div style="text-align:center; font-size:10px; color:#FF6600; font-weight:bold; margin-top:5px;">
+                <div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">
                     ⚠ Customer Belum Bayar
                 </div>
             `;
