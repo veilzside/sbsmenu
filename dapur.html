@@ -58,17 +58,45 @@
             .menu-item { flex-direction: column; gap: 3px; font-size: 10px; padding: 5px; margin: 0; background: transparent !important; border-radius: 0; justify-content: center; flex: 1; text-align: center; color: #666; position: relative; }
             
             /* POSISI BADGE DI MOBILE (DITENGAHKAN DI ATAS ICON) */
+            /* --- STYLE BADGE NOTIFIKASI (FIXED) --- */
+        .nav-badge {
+            position: absolute;
+            top: 5px;
+            right: 15px; /* Posisi default Desktop */
+            background-color: var(--red);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 5px;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            z-index: 999;
+            border: 2px solid #1a1a1a; /* Border biar kontras dengan background gelap */
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @media (max-width: 768px) {
+            /* ... kode sidebar mobile lainnya ... */
+            
+            /* POSISI BADGE KHUSUS HP (CENTERED) */
             .nav-badge {
                 top: 2px;
                 right: auto;
-                left: 50%;
-                transform: translateX(8px); /* Geser sedikit ke kanan dari titik tengah icon */
+                left: 50%; /* Mulai dari tengah */
+                margin-left: 5px; /* Geser ke kanan sedikit dari tengah icon */
+                transform: none; 
                 min-width: 16px;
                 height: 16px;
                 font-size: 9px;
+                padding: 0;
             }
         }
-        
+            
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
         /* --- UPDATE LAYOUT TOMBOL --- */
@@ -232,9 +260,8 @@
         </div>
 
         <div class="status-tabs">
-            <div class="tab" onclick="filterTab('new')" id="tab-new">BARU <span class="badge" id="badge-new">0</span></div>
-            <div class="tab" onclick="filterTab('unpaid')" id="tab-unpaid">BAYAR <span class="badge" id="badge-unpaid">0</span></div>
-            <div class="tab" onclick="filterTab('processing')" id="tab-processing">PROSES <span class="badge" id="badge-processing">0</span></div>
+            <div class="tab" onclick="filterTab('kasir')" id="tab-kasir">KASIR <span class="badge" id="badge-kasir">0</span></div>
+            <div class="tab" onclick="filterTab('dapur')" id="tab-dapur">DAPUR <span class="badge" id="badge-dapur">0</span></div>
         </div>
         <div id="orders-grid" class="orders-grid"></div>
     </div>
@@ -285,18 +312,14 @@
         appId: "1:530098727952:web:1bb3072d93be9564fbee95"
     };
 
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
     
     let allOrders = [];
     let currentTab = localStorage.getItem('sbs_active_tab') || 'kasir'; 
-    let activePage = 'orders'; // Default page
+    let activePage = 'orders'; 
     let audioUnlocked = false;
     let confirmCallback = null;
-    
-    // Variabel untuk Notifikasi Badge Sidebar
     let previousOrderStatuses = {}; 
     let isFirstLoad = true;
     let unreadOrdersCount = 0;
@@ -308,77 +331,47 @@
 
     function fmtDur(ms) {
         if (!ms || ms < 0) return "-";
-        const s = Math.floor(ms / 1000);
-        const m = Math.floor(s / 60);
-        const rs = s % 60;
+        const s = Math.floor(ms / 1000); const m = Math.floor(s / 60); const rs = s % 60;
         return `${m}m ${rs}s`;
     }
 
-    // --- SETUP TABS (KASIR vs DAPUR) ---
+    // --- LOGIKA TAB & NAVIGASI ---
     function setupTabs() {
-        const t1 = document.getElementById('tab-new');
-        const t2 = document.getElementById('tab-unpaid');
-        const t3 = document.getElementById('tab-processing');
-
-        // Note: Kita set innerHTML dengan angka 0 dulu, nanti updateBadges akan mengisinya
-        t1.innerHTML = 'KASIR <span class="badge" id="badge-kasir">0</span>';
-        t1.setAttribute('onclick', "filterTab('kasir')");
-        
-        t2.innerHTML = 'DAPUR <span class="badge" id="badge-dapur">0</span>';
-        t2.setAttribute('onclick', "filterTab('dapur')");
-
-        t3.style.display = 'none';
-
+        // Set kelas active berdasarkan currentTab
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-        if(currentTab === 'kasir') t1.classList.add('active');
-        else t2.classList.add('active');
+        const activeTab = document.getElementById('tab-' + currentTab);
+        if(activeTab) activeTab.classList.add('active');
+        
+        // Hide tab processing jika html lama masih nyangkut (safety)
+        const oldTab = document.getElementById('tab-processing');
+        if(oldTab) oldTab.style.display = 'none';
     }
 
-    // --- FUNGSI GANTI TAB (FIXED: Update Badge setelah ganti tab) ---
     function filterTab(status) {
         currentTab = status;
         localStorage.setItem('sbs_active_tab', status);
         setupTabs(); 
         renderOrders();
-        updateBadges(); // <--- Menambahkan ini agar angka badge di tab atas langsung muncul kembali
+        updateBadges(); 
     }
 
-    function updateBadges() {
-        const countKasir = allOrders.filter(o => ['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(o.status)).length;
-        const countDapur = allOrders.filter(o => o.status === 'processing').length;
+    function showPage(pageId) {
+        activePage = pageId; 
+        if (pageId === 'orders') unreadOrdersCount = 0;
+        if (pageId === 'history') unreadHistoryCount = 0;
+        updateNavBadges();
+
+        document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
+        document.getElementById(pageId + '-page').style.display = 'block';
+        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
         
-        const elKasir = document.getElementById('badge-kasir');
-        const elDapur = document.getElementById('badge-dapur');
-        
-        if(elKasir) elKasir.innerText = countKasir;
-        if(elDapur) elDapur.innerText = countDapur;
+        const items = document.querySelectorAll('.menu-item');
+        if(pageId === 'orders') items[0].classList.add('active');
+        if(pageId === 'history') items[1].classList.add('active');
     }
 
-    function toggleAudio() {
-        if (!audioUnlocked) {
-            soundNew.play().then(() => {
-                soundNew.pause(); soundNew.currentTime = 0;
-                audioUnlocked = true;
-                btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
-            }).catch(e => console.log(e));
-        } else {
-            audioUnlocked = false;
-            btnAudio.className = 'inactive'; btnAudio.innerHTML = "🔕";
-        }
-    }
-
-    function unlockAudio() {
-        if (!audioUnlocked) {
-            soundNew.play().then(() => {
-                soundNew.pause(); soundNew.currentTime = 0;
-                audioUnlocked = true;
-                btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
-            }).catch(e => {});
-        }
-    }
-
-    // --- LOGIKA UPDATE BADGE SIDEBAR (Kardus & Jam) ---
-   function updateNavBadges() {
+    // --- LOGIKA BADGE MERAH (Sidebar) ---
+    function updateNavBadges() {
         const badgeOrd = document.getElementById('badge-nav-orders');
         const badgeHis = document.getElementById('badge-nav-history');
 
@@ -397,64 +390,43 @@
         }
     }
 
-        // Badge Riwayat: Muncul jika ada pesanan selesai dan user TIDAK sedang di halaman riwayat
-        if(unreadHistoryCount > 0 && activePage !== 'history') {
-            badgeHis.innerText = unreadHistoryCount;
-            badgeHis.style.display = 'flex';
-        } else {
-            badgeHis.style.display = 'none';
-        }
-    }
-
     // --- FIREBASE LISTENER ---
     db.ref('orders').on('value', (snapshot) => {
         const data = snapshot.val();
         let shouldRing = false;
-        const currentStatuses = {};
-
+        
         allOrders = [];
         if (data) {
             Object.keys(data).forEach(key => {
                 const order = { id: key, ...data[key] };
                 allOrders.push(order);
-                currentStatuses[key] = order.status;
-
-                // --- DETEKSI PERUBAHAN STATUS UNTUK NOTIFIKASI ---
+                
+                // Cek Notifikasi
                 if (!isFirstLoad) {
                     const currentStat = order.status;
                     const prevStat = previousOrderStatuses[key];
 
-                    // 1. Cek Pesanan Masuk (Tunai Baru atau QRIS Pending)
-                    const isActive = ['new', 'qris_unpaid', 'pending_payment'].includes(currentStat);
-                    // Jika ini pesanan baru (belum ada di prev) ATAU statusnya berubah jadi aktif
-                    if (isActive && (!prevStat || prevStat !== currentStat)) {
-                        // Jika user TIDAK sedang di halaman orders, tambah notifikasi
-                        if (activePage !== 'orders') {
-                            unreadOrdersCount++;
-                        }
+                    // 1. Pesanan Masuk (Tunai Baru / QRIS Pending)
+                    if (['new', 'qris_unpaid', 'pending_payment'].includes(currentStat) && (!prevStat || prevStat !== currentStat)) {
+                        if (activePage !== 'orders') unreadOrdersCount++;
+                    }
+                    
+                    // 2. Pesanan Selesai (Masuk Riwayat)
+                    if (['completed', 'rejected'].includes(currentStat) && prevStat && !['completed', 'rejected'].includes(prevStat)) {
+                        if (activePage !== 'history') unreadHistoryCount++;
                     }
 
-                    // 2. Cek Alarm Bunyi (Hanya Tunai Baru & QRIS Sudah Bayar/Pending)
+                    // 3. Alarm
                     if (audioUnlocked) {
                         if (currentStat === 'new' && prevStat !== 'new') shouldRing = true;
                         if (currentStat === 'pending_payment' && prevStat === 'qris_unpaid') shouldRing = true;
                     }
-
-                    // 3. Cek Pesanan Selesai (Masuk Riwayat)
-                    const isDone = ['completed', 'rejected'].includes(currentStat);
-                    const wasActive = prevStat && !['completed', 'rejected'].includes(prevStat);
-                    
-                    if (isDone && wasActive) {
-                        if (activePage !== 'history') {
-                            unreadHistoryCount++;
-                        }
-                    }
                 }
+                previousOrderStatuses[key] = order.status;
             });
         }
         
-        previousOrderStatuses = currentStatuses;
-        if (isFirstLoad) isFirstLoad = false; 
+        if (isFirstLoad) isFirstLoad = false;
         
         updateNavBadges();
         if (shouldRing) soundNew.play().catch(e => {});
@@ -462,149 +434,30 @@
         allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         setupTabs(); 
         renderOrders();
-        updateBadges(); // Update angka badge Kasir/Dapur
+        updateBadges(); 
     });
 
-    function getDailyQueueNumber(orderId) {
-        const targetOrder = allOrders.find(o => o.id === orderId);
-        if(!targetOrder) return "00";
-        const targetDate = new Date(targetOrder.timestamp).toDateString();
-        const dailyOrders = allOrders.filter(o => new Date(o.timestamp).toDateString() === targetDate).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
-        const index = dailyOrders.findIndex(o => o.id === orderId);
-        return index + 1;
-    }
-
-    function printDirect(orderId, type) {
-        const order = allOrders.find(o => o.id === orderId);
-        if (!order) return;
-
-        let tableNum = order.tableNumber || "Take Away";
-        let realQueue = getDailyQueueNumber(order.id);
-        const dateObj = new Date(order.timestamp);
-        const dateStr = dateObj.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
-        const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', hour12: false});
-        const displayID = "2SA" + order.id.slice(-4).toUpperCase();
-
-        const ESC = "\x1B"; const GS = "\x1D"; const INIT = ESC + "@";
-        const ALIGN_CENTER = ESC + "a" + "\x01"; const ALIGN_LEFT = ESC + "a" + "\x00";
-        const BOLD_ON = ESC + "E" + "\x01"; const BOLD_OFF = ESC + "E" + "\x00";
-        const TEXT_DOUBLE = GS + "!" + "\x11"; const TEXT_NORMAL = GS + "!" + "\x00";
-
-        let data = INIT;
-
-        if (type === 'invoice') {
-            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF;
-            data += "Jl. Mundu 8, Kota Malang\n";
-            data += "085159039877\n";
-            data += "--------------------------------\n";
-            data += ALIGN_LEFT;
-            data += BOLD_ON + "TABLE: " + tableNum + BOLD_OFF + "\n";
-            data += "Queue Order: #" + realQueue + "\n"; 
-            data += "Date : " + dateStr + " " + timeStr + "\n";
-            data += "ID   : " + displayID + "\n";
-            data += "--------------------------------\n";
-            order.items.forEach(item => {
-                let price = parseInt(item.price);
-                let sub = item.qty * price;
-                data += item.name + "\n";
-                let line = item.qty + "x @" + price.toLocaleString('id-ID');
-                let priceStr = sub.toLocaleString('id-ID');
-                let spaces = 32 - line.length - priceStr.length;
-                if(spaces < 1) spaces = 1;
-                data += line + " ".repeat(spaces) + priceStr + "\n";
-                if(item.note) data += "  (Note: " + item.note + ")\n";
-            });
-            data += "--------------------------------\n";
-            let totalStr = parseInt(order.total).toLocaleString('id-ID');
-            let totalLabel = "TOTAL";
-            let totalSpaces = 32 - totalLabel.length - totalStr.length;
-            data += BOLD_ON + totalLabel + " ".repeat(totalSpaces > 0 ? totalSpaces : 1) + totalStr + "\n" + BOLD_OFF;
-            data += "--------------------------------\n";
-            data += ALIGN_CENTER + "Wifi: SBSkopi8\nTerima Kasih!\n\n\n\n";
-        } else {
-            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF;
-            data += "\n" + ALIGN_LEFT;
-            data += "TABLE: " + BOLD_ON + tableNum + BOLD_OFF + "\n";
-            data += "QUEUE: #" + realQueue + "\n";
-            data += "TIME : " + timeStr + "\n";
-            data += "ID   : " + displayID + "\n";
-            data += "--------------------------------\n";
-            order.items.forEach(item => {
-                data += BOLD_ON + item.qty + " x " + item.name + BOLD_OFF + "\n";
-                if(item.note) data += "   [ " + item.note + " ]\n";
-                data += "\n"; 
-            });
-            data += "\n\n\n\n"; 
-        }
-
-        const buffer = new Uint8Array(data.length);
-        for (let i = 0; i < data.length; i++) { buffer[i] = data.charCodeAt(i); }
-        let binary = '';
-        for (let i = 0; i < buffer.byteLength; i++) { binary += String.fromCharCode(buffer[i]); }
-        const base64Data = btoa(binary);
-        window.location.href = "rawbt:base64," + base64Data;
-    }
-
-    function verifyAndPrint(key) {
-        printDirect(key, 'checker');
-        setTimeout(() => {
-            updateStatus(key, 'processing');
-        }, 500);
-    }
-
-    setInterval(() => {
-        updateLiveTimers();
-        checkNaggingAlarm();
-    }, 1000);
-
-    function checkNaggingAlarm() {
-        if (!audioUnlocked) return;
-        const now = Date.now();
-        if (allOrders.some(order => {
-            if (order.status !== 'new' && order.status !== 'pending_payment') return false;
-            const diff = (now - new Date(order.timestamp).getTime()) / 1000;
-            return diff > 120 && (diff % 120) < 1.5;
-        })) {
-            soundNag.currentTime = 0;
-            soundNag.play().catch(e => {});
-        }
-    }
-
-    function updateLiveTimers() {
-        document.querySelectorAll('.live-timer').forEach(el => {
-            const startTime = parseInt(el.getAttribute('data-start'));
-            if (!startTime || isNaN(startTime)) { el.innerText = "--:--"; return; }
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            if (elapsed > 86400) { el.innerText = "> 24h"; return; }
-            const min = Math.floor(elapsed / 60);
-            const sec = elapsed % 60;
-            el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
-        });
-    }
-
+    // --- RENDER UI ---
     function renderOrders() {
         const grid = document.getElementById('orders-grid');
-        const historyGrid = document.getElementById('history-grid');
-        grid.innerHTML = '';
-        historyGrid.innerHTML = '';
+        const hGrid = document.getElementById('history-grid');
+        grid.innerHTML = ''; hGrid.innerHTML = '';
         const today = new Date().toDateString();
 
         allOrders.forEach(order => {
             const card = createCard(order);
-            const orderDate = new Date(order.completedAt || order.timestamp).toDateString();
+            const isDone = ['completed', 'rejected', 'done'].includes(order.status);
             
-            if (['completed', 'rejected', 'done'].includes(order.status)) {
-                if (orderDate === today) {
-                    historyGrid.appendChild(card);
-                }
+            if (isDone) {
+                if (new Date(order.completedAt || order.timestamp).toDateString() === today) hGrid.appendChild(card);
             } else {
+                // LOGIKA 2 TAB (KASIR vs DAPUR)
                 if (currentTab === 'kasir') {
-                    if (['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(order.status)) {
-                        grid.appendChild(card);
-                    }
-                }
-                else if (currentTab === 'dapur' && order.status === 'processing') {
-                    grid.appendChild(card);
+                    // Kasir melihat: Baru, Belum Lunas, QRIS Belum Bayar, QRIS Pending
+                    if (['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(order.status)) grid.appendChild(card);
+                } else if (currentTab === 'dapur') {
+                    // Dapur melihat: Sedang Proses
+                    if (order.status === 'processing') grid.appendChild(card);
                 }
             }
         });
@@ -612,243 +465,94 @@
     }
 
     function createCard(order) {
-        let displayName = "Pelanggan";
-        if (order.tableNumber) {
-            displayName = "MEJA " + order.tableNumber;
-            if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
-        } else if (order.customer) displayName = order.customer;
-
-        const t1 = new Date(order.timestamp).getTime(); 
-        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; 
-        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; 
+        let displayName = order.tableNumber ? `MEJA ${order.tableNumber} - ${(order.customerName||'').toUpperCase()}` : 'PELANGGAN';
+        
+        const t1 = new Date(order.timestamp).getTime();
+        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0;
+        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0;
         const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
-
-        let timerStart = 0;
-        if(['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(order.status)) timerStart = t1;
-        else if (order.status === 'processing') timerStart = t3;
-
+        
+        let timerStart = (['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(order.status)) ? t1 : t3;
+        
         const div = document.createElement('div');
         div.className = `order-card status-${order.status}`;
-        
         if(order.status === 'qris_unpaid') div.style.borderLeftColor = '#888';
-        if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; 
-        if(order.status === 'unpaid') div.style.borderLeftColor = '#FF6600'; 
-        
+        if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22';
+        if(order.status === 'unpaid') div.style.borderLeftColor = '#FF6600';
+
         let itemsHtml = (order.items || []).map((item, idx) => {
-            const qty = parseInt(item.qty);
-            const price = parseInt(item.price);
-            const subtotal = qty * price;
-            const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-            const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
-            return `
-            <div class="item-row">
-                <div style="flex:1;">
-                    <span class="item-name">${qty}x ${item.name}</span>
-                    ${unitPriceHtml}
-                    ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
-                </div>
-                <div style="text-align:right;">
-                    <span class="item-price">${subtotal.toLocaleString()}</span>
-                    ${trashBtn}
-                </div>
-            </div>`;
+            const uPrice = parseInt(item.qty) > 1 ? `<span class="item-unit-price">(${item.qty} x ${parseInt(item.price).toLocaleString()})</span>` : '';
+            const tBtn = !['completed', 'rejected'].includes(order.status) ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
+            return `<div class="item-row"><div style="flex:1;"><span class="item-name">${item.qty}x ${item.name}</span>${uPrice}${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}</div><div style="text-align:right;"><span class="item-price">${(item.qty * item.price).toLocaleString()}</span>${tBtn}</div></div>`;
         }).join('');
 
-        const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
-        const timeIn = new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
-        
-        let paymentBadge = order.paymentMethod === 'qris' 
-            ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">QRIS</span>' 
-            : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">TUNAI</span>';
-
-        let headerRight = '';
-        let kpiHtml = '';
-        
-        if(order.status === 'completed' || order.status === 'rejected') {
-            let timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
-            headerRight = `
-                <div class="header-right">
-                    <span class="meta-date">${dateStr}</span>
-                    <div class="meta-time-block">
-                        <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br>
-                        <span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span>
-                    </div>
-                </div>`;
-            
-            if (order.status === 'completed') {
-                let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
-                if (order.paymentMethod === 'qris') {
-                    if(t2 && t1) durPesan = t2 - t1;
-                    if(t3 && t2) durRespon = t3 - t2;
-                    if(t4 && t3) durMasak = t4 - t3;
-                } else {
-                    if(t3 && t1) durPesan = t3 - t1;
-                    durRespon = 0; 
-                    if(t4 && t3) durMasak = t4 - t3;
-                }
-                if(t4 && t1) durTotal = t4 - t1;
-
-                const responColor = durRespon > 180000 ? '#e74c3c' : '#fff';
-                kpiHtml = `
-                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555; font-size:11px;">
-                    <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Pesan - Bayar (Cust):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durPesan)}</span>
-                    </div>
-                    <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor}; font-weight:600;">${fmtDur(durRespon)}</span>
-                    </div>
-                    <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Masak (Dapur):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durMasak)}</span>
-                    </div>
-                    <div class="dur-total-row" style="margin-top:6px; padding-top:6px; border-top:1px solid #444; display:flex; justify-content:space-between; font-size:12px; font-weight:700;">
-                        <span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:var(--accent);">${fmtDur(durTotal)}</span>
-                    </div>
-                </div>`;
-            }
-
-        } else {
-            headerRight = `
-                <div class="header-right">
-                    <span class="meta-date">${dateStr}</span>
-                    <div class="meta-time-block">
-                        <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span>
-                    </div>
-                    <div class="timer-badge live-timer" data-start="${timerStart}">--:--</div>
-                </div>`;
+        let kHtml = '';
+        if (order.status === 'completed') {
+            let dP = (t2&&t1)?t2-t1:0, dR = (t3&&t2)?t3-t2:0, dM = (t4&&t3)?t4-t3:0;
+            if(order.paymentMethod === 'tunai' && t3 && t1) { dP = t3-t1; dR = 0; }
+            kHtml = `<div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555; font-size:11px;"><div class="dur-row"><span>Pesan - Bayar:</span> <b>${fmtDur(dP)}</b></div><div class="dur-row"><span>Respon Kasir:</span> <b style="color:${dR>180000?'#e74c3c':'#fff'}">${fmtDur(dR)}</b></div><div class="dur-row"><span>Masak:</span> <b>${fmtDur(dM)}</b></div><div class="dur-total-row"><span>TOTAL:</span> <b style="color:var(--accent)">${fmtDur((t4&&t1)?t4-t1:0)}</b></div></div>`;
         }
 
-        let printButtons = '';
-        if(order.status !== 'rejected') {
-            printButtons = `
-            <div class="btn-print-group">
-                <button class="btn-print" onclick="printDirect('${order.id}', 'checker')">
-                    <span style="font-size:16px;">🖨</span> CHECKER
-                </button>
-                <button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">
-                    <span style="font-size:16px;">🧾</span> INVOICE
-                </button>
-            </div>`;
-        }
-
-        // --- BUTTON LOGIC ---
-        let buttonsHtml = '';
-        const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">TOLAK</button>`;
-
+        let bHtml = '';
+        const btnT = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>`;
+        
+        // --- BUTTON LOGIC BARU ---
         if (order.status === 'new') { 
-            buttonsHtml = `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    ${btnTolak}
-                    <button class="btn btn-green" onclick="updateStatus('${order.id}', 'unpaid')">TERIMA</button>
-                </div>
-            `;
+            bHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnT}<button class="btn btn-green" onclick="updateStatus('${order.id}', 'unpaid')">TERIMA</button></div>`;
         } 
         else if (order.status === 'qris_unpaid') {
-            buttonsHtml = `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    ${btnTolak}
-                    <button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGGU PEMBAYARAN</button>
-                </div>
-                <div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">
-                    ⚠ Customer Belum Bayar
-                </div>
-            `;
+            bHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnT}<button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGGU PEMBAYARAN</button></div><div style="text-align:center; font-size:10px; color:#FF6600; font-weight:bold; margin-top:5px;">! CUSTOMER BELUM MELAKUKAN PEMBAYARAN</div>`;
         }
         else if (order.status === 'pending_payment') {
-            buttonsHtml = `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    ${btnTolak}
-                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}')">VERIFIKASI & PROSES</button>
-                </div>
-                <div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">⚠ CEK MUTASI!</div>
-            `;
+            bHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnT}<button class="btn btn-blue" onclick="verifyAndPrint('${order.id}')">VERIFIKASI & PROSES</button></div><div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">⚠ CEK MUTASI!</div>`;
         }
         else if (order.status === 'unpaid') { 
-            buttonsHtml = `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button>
-                    <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">LUNAS & MASAK</button>
-                </div>
-            `;
+            bHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button><button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">LUNAS & MASAK</button></div>`;
         } 
         else if (order.status === 'processing') {
-            buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">SELESAI & ANTAR</button>`;
+            bHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">SELESAI & ANTAR</button>`;
         }
 
-        let statusFooter = '';
-        if(order.status === 'rejected') statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
-        else if (order.status === 'completed') statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
+        let printBtns = !['rejected'].includes(order.status) ? `<div class="btn-print-group" style="margin-top:10px;"><button class="btn-print" onclick="printDirect('${order.id}', 'checker')">🖨 CHECKER</button><button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">🧾 INVOICE</button></div>` : '';
+        let footer = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : (order.status==='completed' ? `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>` : '');
 
-        div.innerHTML = `
-            <div class="card-header">
-                <div class="header-left">
-                    <span class="cust-name">${displayName}</span>
-                    <div style="margin-top:2px;">${paymentBadge} <span class="order-id">ID: ...${order.id.slice(-4)}</span></div>
-                </div>
-                ${headerRight}
-            </div>
-            <div class="item-list">${itemsHtml}</div>
-            <div class="total-display" style="margin-bottom:5px;">Total: Rp ${Number(String(order.total).replace(/[^0-9]/g, '')).toLocaleString()}</div>
-            
-            ${kpiHtml}
-
-            ${statusFooter}
-            ${printButtons}
-            <div class="actions" style="display:block;">${buttonsHtml}</div>
-        `;
+        div.innerHTML = `<div class="card-header"><div class="header-left"><span class="cust-name">${displayName}</span><div style="margin-top:2px;"><span style="background:${order.paymentMethod==='qris'?'#000':'#ddd'}; color:${order.paymentMethod==='qris'?'#fff':'#000'}; padding:2px 6px; border-radius:4px; font-size:10px;">${order.paymentMethod.toUpperCase()}</span></div></div><div class="header-right"><span class="meta-date">${new Date(t1).toLocaleDateString('id-ID', {weekday:'short', day:'numeric', month:'short'})}</span><div class="meta-time-block">In: ${new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}</div>${!['completed','rejected'].includes(order.status)?`<div class="timer-badge live-timer" data-start="${timerStart}">--:--</div>`:''}</div></div><div class="item-list">${itemsHtml}</div><div class="total-display">Total: Rp ${parseInt(order.total).toLocaleString()}</div>${kHtml}${footer}${printBtns}<div class="actions" style="display:block;">${bHtml}</div>`;
         return div;
     }
 
+    function updateBadges() { 
+        const cK = allOrders.filter(o => ['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(o.status)).length; 
+        const cD = allOrders.filter(o => o.status === 'processing').length; 
+        
+        const elKasir = document.getElementById('badge-kasir');
+        const elDapur = document.getElementById('badge-dapur');
+        if(elKasir) elKasir.innerText = cK;
+        if(elDapur) elDapur.innerText = cD;
+    }
+
     function updateStatus(key, status) {
-        const updates = { status: status };
-        const now = new Date().toISOString(); 
-        if(status === 'unpaid') updates.acceptedAt = now; 
-        if(status === 'processing') updates.paidAt = now; 
-        if(status === 'completed' || status === 'rejected') updates.completedAt = now; 
-        db.ref('orders/' + key).update(updates);
+        const u = { status: status }, n = new Date().toISOString(); 
+        if(status === 'unpaid') u.acceptedAt = n; 
+        if(status === 'processing') u.paidAt = n; 
+        if(status === 'completed' || status === 'rejected') u.completedAt = n; 
+        db.ref('orders/' + key).update(u);
     }
-
     function confirmReject(key) { showConfirm("Yakin tolak pesanan ini?", () => updateStatus(key, 'rejected')); }
-
-    function deleteOrderItem(orderKey, itemIndex) {
-        showConfirm("Hapus item ini?", () => {
-            const order = allOrders.find(o => o.id === orderKey);
-            const newItems = [...order.items];
-            const removed = newItems.splice(itemIndex, 1)[0];
-            let currentTotal = parseInt(String(order.total).replace(/[^0-9]/g, '')) || 0;
-            db.ref('orders/' + orderKey).update({ items: newItems, total: currentTotal - (removed.price * removed.qty) });
-        });
-    }
-
-    function showPage(pageId) {
-        activePage = pageId; 
-        // Reset counter saat masuk ke halaman tsb
-        if (pageId === 'orders') unreadOrdersCount = 0;
-        if (pageId === 'history') unreadHistoryCount = 0;
-        updateNavBadges();
-
-        document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
-        document.getElementById(pageId + '-page').style.display = 'block';
-        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-        if(pageId === 'orders') document.querySelectorAll('.menu-item')[0].classList.add('active');
-        if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
-    }
-
+    function deleteOrderItem(oK, iI) { showConfirm("Hapus item ini?", () => { const o = allOrders.find(x => x.id === oK), nI = [...o.items], r = nI.splice(iI, 1)[0], cT = parseInt(o.total) || 0; db.ref('orders/' + oK).update({ items: nI, total: cT - (r.price * r.qty) }); }); }
+    function toggleAudio() { audioUnlocked = !audioUnlocked; btnAudio.className = audioUnlocked ? 'active' : 'inactive'; btnAudio.innerHTML = audioUnlocked ? '🔔' : '🔕'; }
+    function unlockAudio() { if(!audioUnlocked) { audioUnlocked = true; btnAudio.className = 'active'; btnAudio.innerHTML = '🔔'; } }
+    function getDailyQueueNumber(id) { const today = new Date().toDateString(); const daily = allOrders.filter(o => new Date(o.timestamp).toDateString() === today).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)); return daily.findIndex(o => o.id === id) + 1; }
+    function printDirect(id, type) { const o = allOrders.find(x=>x.id===id); if(!o)return; const d=new Date(o.timestamp); const s=d.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'2-digit'}); const t=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); const q=getDailyQueueNumber(id); const ESC="\x1B",GS="\x1D"; let txt=ESC+"@"; if(type==='invoice'){ txt+=ESC+"a\x01"+GS+"!\x11SBS CAFE\n"+GS+"!\x00"+ESC+"E\x00Jl. Mundu 8, Kota Malang\n--------------------------------\n"+ESC+"a\x00"+ESC+"E\x01TABLE: "+(o.tableNumber||'TA')+ESC+"E\x00\nQueue: #"+q+"\nDate: "+s+" "+t+"\nID: 2SA"+id.slice(-4).toUpperCase()+"\n--------------------------------\n"; o.items.forEach(i=>{ txt+=i.name+"\n"+i.qty+"x @"+parseInt(i.price).toLocaleString()+"     "+(i.qty*i.price).toLocaleString()+"\n"; }); txt+="--------------------------------\n"+ESC+"E\x01TOTAL          "+parseInt(o.total).toLocaleString()+"\n"+ESC+"E\x00\n\n\n\n"; } else { txt+=ESC+"a\x01"+ESC+"E\x01CHECKER\n"+ESC+"E\x00\n"+ESC+"a\x00TABLE: "+ESC+"E\x01"+(o.tableNumber||'TA')+ESC+"E\x00\nQUEUE: #"+q+"\nTIME : "+t+"\n--------------------------------\n"; o.items.forEach(i=>{ txt+=ESC+"E\x01"+i.qty+" x "+i.name+ESC+"E\x00\n"+(i.note?"[ "+i.note+" ]\n":"")+"\n"; }); txt+="\n\n\n\n"; } window.location.href="rawbt:base64,"+btoa(txt); }
+    function verifyAndPrint(k) { printDirect(k, 'checker'); setTimeout(() => updateStatus(k, 'processing'), 500); }
+    function updateLiveTimers() { document.querySelectorAll('.live-timer').forEach(el => { const s = parseInt(el.getAttribute('data-start')); if(!s) return; const d = Math.floor((Date.now() - s)/1000); el.innerText = `⏱ ${Math.floor(d/60)}:${(d%60).toString().padStart(2,'0')}`; }); }
+    setInterval(() => { updateLiveTimers(); checkNaggingAlarm(); }, 1000);
+    function checkNaggingAlarm() { if(!audioUnlocked)return; const n=Date.now(); if(allOrders.some(o=>['new','pending_payment'].includes(o.status) && (n-new Date(o.timestamp).getTime())/1000 > 120)) soundNag.play().catch(()=>{}); }
+    
     function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
     function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
     document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
-
-    function openEditModal(k) { editingOrderKey = k; document.getElementById('edit-modal').style.display = 'flex'; }
+    function openEditModal(k) { /* Disabled */ }
     function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
-    
-    function saveExtraItem() {
-        const n = document.getElementById('extra-name').value;
-        const p = parseInt(document.getElementById('extra-price').value);
-        if(!n || !p) return;
-        const o = allOrders.find(x => x.id === editingOrderKey);
-        const items = [...(o.items||[]), { name: n, price: p, qty: 1, note: 'Manual' }];
-        const tot = (Number(String(o.total).replace(/[^0-9]/g, '')) || 0) + p;
-        db.ref('orders/' + editingOrderKey).update({ items: items, total: tot }).then(() => closeModal());
-    }
 
     setupTabs();
 </script>
