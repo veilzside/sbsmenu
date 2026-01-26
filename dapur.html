@@ -21,6 +21,19 @@
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .menu-icon { font-size: 20px; }
 
+        /* --- ANIMASI KARTU HILANG --- */
+        .fade-out {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transform: scale(0.8);
+            max-height: 0 !important;
+            margin-bottom: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            border: none !important;
+            overflow: hidden;
+        }
+        
         /* BADGE NOTIFIKASI */
         .nav-badge {
             position: absolute; top: 5px; right: 15px;
@@ -398,15 +411,23 @@
         window.location.href = "rawbt:base64," + btoa(binary);
     }
 
-    function verifyAndPrint(key) {
-        // PERBAIKAN: Gunakan Try-Catch agar jika print gagal, status tetap terupdate
+    function verifyAndPrint(key, btn) {
+        // 1. Cari kartu pembungkus tombol ini
+        const card = btn.closest('.order-card');
+        
+        // 2. Jalankan animasi visual (Mengecil & Hilang)
+        if (card) {
+            card.classList.add('fade-out');
+        }
+
+        // 3. Print Checker (tetap jalan di background)
         try {
             printDirect(key, 'checker');
         } catch(e) {
             console.error("Print Error:", e);
         }
         
-        // Delay sedikit lalu update status ke Processing (Dapur)
+        // 4. Update status database SETELAH animasi selesai (500ms)
         setTimeout(() => { 
             updateStatus(key, 'processing'); 
         }, 500);
@@ -574,7 +595,7 @@
             buttonsHtml = `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     ${btnTolak}
-                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}')">LUNAS & PROSES</button>
+                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">LUNAS & PROSES</button>
                 </div>
             `;
         } 
@@ -593,7 +614,7 @@
             buttonsHtml = `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     ${btnTolak}
-                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}')">VERIFIKASI & PROSES</button>
+                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">VERIFIKASI & PROSES</button>
                 </div>
                 <div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">⚠ CEK MUTASI!</div>
             `;
@@ -602,7 +623,7 @@
             buttonsHtml = `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     ${btnTolak}
-                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}')">LUNAS & PROSES</button>
+                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">LUNAS & PROSES</button>
                 </div>
             `;
         } 
