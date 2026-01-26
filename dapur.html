@@ -100,17 +100,39 @@
         .btn-print { flex: 1; background: #3c3c45; border: 1px solid #555; color: #fff; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 700; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-print:active { background: #555; transform: scale(0.98); }
 
-        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .actions { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+            width: 100%;
+        }
         .btn { border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; color: #fff; font-size: 14px; }
         .btn-green { background: var(--green); } .btn-red { background: var(--red); }
         .btn-blue { background: var(--blue); } .btn-grey { background: #555; }
-        .btn-full { grid-column: span 2; }
+        .btn-full { 
+            grid-column: 1 / -1; /* Memaksa tombol mengambil seluruh lebar kolom */
+            width: 100%; 
+            display: block;
+            text-align: center;
+        }
 
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); padding: 25px; border-radius: 15px; width: 90%; max-width: 350px; border: 2px solid var(--accent); }
         .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
         #custom-confirm-modal .modal-content, #alert-modal .modal-content { text-align: center; }
 
+        /* Tambahan style untuk Select Menu di Modal +Item */
+        .form-select { 
+            width: 100%; 
+            padding: 12px; 
+            background: #15151a; 
+            border: 1px solid #444; 
+            color: #fff; 
+            border-radius: 8px; 
+            font-family: 'Poppins';
+            font-size: 16px;
+        }
+        
         @media (max-width: 768px) {
             body { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden; }
             .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 0; border-right: none; border-top: 1px solid #333; background: #1a1a1a; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 9999; }
@@ -183,7 +205,35 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
 <script>
-    // --- KONFIGURASI FIREBASE ---
+    // --- DATABASE MENU (Sinkron dengan Front End) ---
+    const MENU_DATABASE = [
+        {name: "Kalter", price: 20000}, {name: "Obama", price: 25000}, {name: "Mangku Koe", price: 28000},
+        {name: "Mangku Ayang", price: 25000}, {name: "Barudak", price: 20000}, {name: "Sekena Gomes", price: 22000},
+        {name: "Sekena Goput", price: 22000}, {name: "Sekena Keren", price: 25000}, {name: "Paket Sambat", price: 35000},
+        {name: "Cricket", price: 25000}, {name: "Potato Freak", price: 17000}, {name: "Uhat Lawik", price: 17000},
+        {name: "Gyozable", price: 18000}, {name: "Tahu Julit", price: 19000}, {name: "Fressa", price: 25000},
+        {name: "Americano", price: 16000}, {name: "Dark Freshly", price: 19000}, {name: "Darkberry", price: 19000},
+        {name: "Tubruk Syari", price: 13000}, {name: "Hanoi Tears", price: 15000}, {name: "Penkopi", price: 23000},
+        {name: "Macch Favorito", price: 20000}, {name: "Specta", price: 25000}, {name: "Comica", price: 22000},
+        {name: "Rhumpee", price: 20000}, {name: "Crush", price: 22000}, {name: "Mammy", price: 18000},
+        {name: "Deep Choc", price: 18000}, {name: "Schopea", price: 25000}, {name: "Creamberry", price: 23000},
+        {name: "Jandu", price: 18000}, {name: "Threepi", price: 15000}, {name: "Teh Gelies", price: 10000},
+        {name: "Red Bloom", price: 18000}, {name: "Yagustea", price: 15000}, {name: "Chenteal", price: 15000},
+        {name: "Trustey", price: 18000}, {name: "Rindu", price: 15000}, {name: "Literally Water", price: 5000},
+        // Alkohol / Beers
+        {name: "Bintang Small", price: 32000}, {name: "Bintang Radler", price: 32000}, {name: "Bintang Large", price: 50000},
+        {name: "Anker Lychee", price: 29000}, {name: "Anker Pineapple", price: 29000},
+        {name: "Smirnoff Raspberry", price: 33000}, {name: "Smirnoff Green Apple", price: 33000},
+        {name: "Smirnoff Lemon Lyc", price: 33000}, {name: "Smirnoff Pink Lem", price: 33000},
+        {name: "Mix Max Anggur", price: 34000}, {name: "Mix Max Blue", price: 34000},
+        {name: "Iceland Lychee", price: 34000}, {name: "Iceland L. Island", price: 34000},
+        {name: "Api Anggur Hijau", price: 106000}
+    ];
+    
+    // Sort Menu A-Z
+    MENU_DATABASE.sort((a,b) => a.name.localeCompare(b.name));
+
+    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
         authDomain: "sbs-menu-d1611.firebaseapp.com",
@@ -204,7 +254,6 @@
     let editingOrderKey = null;
     let audioUnlocked = false;
     let confirmCallback = null;
-    // Cache status pesanan sebelumnya untuk deteksi perubahan status QRIS
     let previousOrderStatuses = {}; 
 
     const soundNew = document.getElementById('sound-new');
@@ -262,7 +311,6 @@
 
     db.ref('orders').on('value', (snapshot) => {
         const data = snapshot.val();
-        
         let shouldRing = false;
         const currentStatuses = {};
 
@@ -273,16 +321,12 @@
                 allOrders.push(order);
                 currentStatuses[key] = order.status;
 
-                // LOGIKA ALARM BARU:
-                // Bunyi jika ada pesanan status 'new' (Tunai Baru)
-                // ATAU jika status QRIS berubah menjadi 'pending_payment' (Baru diklik bayar oleh user)
                 if (audioUnlocked) {
-                    // 1. Cek Pesanan Tunai Baru
+                    // Alarm Tunai Baru
                     if (order.status === 'new' && (!previousOrderStatuses[key] || previousOrderStatuses[key] !== 'new')) {
                         shouldRing = true;
                     }
-                    // 2. Cek QRIS Baru Terverifikasi (Berubah dari qris_unpaid -> pending_payment)
-                    // Atau pesanan pending_payment baru muncul
+                    // Alarm QRIS Terverifikasi (Pending Payment)
                     if (order.status === 'pending_payment') {
                          if (!previousOrderStatuses[key] || previousOrderStatuses[key] === 'qris_unpaid') {
                              shouldRing = true;
@@ -292,7 +336,6 @@
             });
         }
         
-        // Simpan state status untuk pengecekan berikutnya
         previousOrderStatuses = currentStatuses;
 
         if (shouldRing) {
@@ -385,13 +428,8 @@
         window.location.href = "rawbt:base64," + base64Data;
     }
 
-    // --- FUNGSI BARU: VERIFIKASI & PRINT OTOMATIS ---
     function verifyAndPrint(key) {
-        // 1. Print Checker Otomatis
         printDirect(key, 'checker');
-        
-        // 2. Update status ke processing (Dapur)
-        // Diberi delay sedikit agar request print terkirim dulu
         setTimeout(() => {
             updateStatus(key, 'processing');
         }, 500);
@@ -406,10 +444,8 @@
         if (!audioUnlocked) return;
         const now = Date.now();
         if (allOrders.some(order => {
-            // Alarm bunyi ulang (nagging) untuk NEW dan PENDING PAYMENT (QRIS yg sudah di-klik bayar)
             if (order.status !== 'new' && order.status !== 'pending_payment') return false;
             const diff = (now - new Date(order.timestamp).getTime()) / 1000;
-            // Bunyi setiap 2 menit jika belum diproses
             return diff > 120 && (diff % 120) < 1.5;
         })) {
             soundNag.currentTime = 0;
@@ -577,10 +613,11 @@
             </div>`;
         }
 
-        // --- BUTTON LOGIC UPDATE ---
+        // --- BUTTON LOGIC (Layout Diperbaiki dengan CSS Baru) ---
         let buttonsHtml = '';
         const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>`;
         const btnEdit = `<button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button>`;
+        // Baris Atas
         const btnRow1 = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">${btnTolak}${btnEdit}</div>`;
 
         if (order.status === 'new') { 
@@ -597,7 +634,7 @@
             `;
         }
         else if (order.status === 'pending_payment') {
-            // UPDATED: Tombol Verifikasi & Proses (Center/Full Width) & Auto Print
+            // VERIFIKASI SEKARANG FULL WIDTH
             buttonsHtml = `
                 ${btnRow1}
                 <button class="btn btn-blue btn-full" onclick="verifyAndPrint('${order.id}')">VERIFIKASI & PROSES</button>
@@ -688,16 +725,62 @@
     function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
     document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
 
-    function openEditModal(k) { editingOrderKey = k; document.getElementById('edit-modal').style.display = 'flex'; }
+    // --- LOGIKA MODAL +ITEM TERBARU (Dropdown) ---
+    function openEditModal(k) { 
+        editingOrderKey = k; 
+        const modalBody = document.querySelector('#edit-modal .modal-content');
+        
+        // Buat daftar opsi
+        let options = MENU_DATABASE.map(m => `<option value="${m.name}|${m.price}">${m.name}</option>`).join('');
+
+        modalBody.innerHTML = `
+            <h3 style="margin-top:0; color:var(--accent)">Tambah Item</h3>
+            <div class="form-group">
+                <label style="color:#888; font-size:12px;">Pilih Menu</label>
+                <select id="extra-menu-select" class="form-select" onchange="updateExtraPrice()">
+                    <option value="">-- Pilih --</option>
+                    ${options}
+                </select>
+            </div>
+            <div class="form-group">
+                <label style="color:#888; font-size:12px;">Harga Satuan</label>
+                <input type="text" id="extra-price-display" class="form-input" readonly style="background:#333; color:#aaa;">
+                <input type="hidden" id="extra-name">
+                <input type="hidden" id="extra-price">
+            </div>
+            <div class="actions" style="margin-top:20px;">
+                <button class="btn btn-grey" onclick="closeModal()">Batal</button>
+                <button class="btn btn-green" onclick="saveExtraItem()">Simpan</button>
+            </div>
+        `;
+        document.getElementById('edit-modal').style.display = 'flex'; 
+    }
+
+    function updateExtraPrice() {
+        const val = document.getElementById('extra-menu-select').value;
+        if(val) {
+            const [name, price] = val.split('|');
+            document.getElementById('extra-name').value = name;
+            document.getElementById('extra-price').value = price;
+            document.getElementById('extra-price-display').value = "Rp " + parseInt(price).toLocaleString('id-ID');
+        } else {
+            document.getElementById('extra-name').value = "";
+            document.getElementById('extra-price').value = "";
+            document.getElementById('extra-price-display').value = "";
+        }
+    }
+
     function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
     
     function saveExtraItem() {
         const n = document.getElementById('extra-name').value;
         const p = parseInt(document.getElementById('extra-price').value);
-        if(!n || !p) return;
+        if(!n || !p) return alert("Pilih menu dulu!");
+        
         const o = allOrders.find(x => x.id === editingOrderKey);
-        const items = [...(o.items||[]), { name: n, price: p, qty: 1, note: 'Manual' }];
+        const items = [...(o.items||[]), { name: n, price: p, qty: 1, note: 'Manual Add' }];
         const tot = (Number(String(o.total).replace(/[^0-9]/g, '')) || 0) + p;
+        
         db.ref('orders/' + editingOrderKey).update({ items: items, total: tot }).then(() => closeModal());
     }
 
