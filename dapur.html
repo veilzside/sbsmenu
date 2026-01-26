@@ -14,6 +14,7 @@
         .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
         
         /* MENU ITEM DENGAN POSISI RELATIF UNTUK BADGE */
+       /* --- PERBAIKAN POSISI MENU ITEM & BADGE --- */
         .menu-item { 
             padding: 15px; 
             cursor: pointer; 
@@ -25,7 +26,8 @@
             display: flex; 
             align-items: center; 
             gap: 10px;
-            position: relative; /* Penting untuk badge */
+            position: relative; /* Wajib relative agar badge menempel di sini */
+            overflow: visible;  /* Pastikan badge tidak terpotong */
         }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .menu-icon { font-size: 20px; }
@@ -33,20 +35,37 @@
         /* STYLE BADGE NOTIFIKASI MERAH */
         .nav-badge {
             position: absolute;
-            top: 10px;
-            right: 15px;
+            top: 5px;          /* Jarak dari atas */
+            right: 10px;       /* Jarak dari kanan */
             background-color: var(--red);
             color: #fff;
             font-size: 10px;
-            font-weight: bold;
-            padding: 2px 6px;
+            font-weight: 900;
+            padding: 3px 6px;
             border-radius: 50%;
             min-width: 18px;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            z-index: 999;      /* Pastikan selalu di paling atas */
+            border: 1px solid #fff;
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+
+        /* KHUSUS TAMPILAN HP (MOBILE) */
+        @media (max-width: 768px) {
+            .nav-badge { 
+                top: 5px; 
+                right: 20%; /* Geser sedikit ke tengah icon */
+                font-size: 9px; 
+                padding: 0;
+                width: 16px;
+                height: 16px;
+            }
+        }
 
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
         .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -680,7 +699,7 @@
 
         // --- BUTTON LOGIC (REVISI TEKS QRIS DI SINI) ---
         let buttonsHtml = '';
-        const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>`;
+        const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">TOLAK</button>`;
 
         if (order.status === 'new') { 
             buttonsHtml = `
@@ -695,9 +714,9 @@
             buttonsHtml = `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     ${btnTolak}
-                    <button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">Menunggu Pembayaran</button>
+                    <button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGU PEMBAYARAN</button>
                 </div>
-                <div style="text-align:center; font-size:10px; color:#aaa; margin-top:5px;">customer belum melakukan pembayaran</div>
+                <div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">⚠ Customer Belum Bayar</div>
             `;
         }
         else if (order.status === 'pending_payment') {
