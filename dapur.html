@@ -218,14 +218,6 @@
         firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.database();
-
-    // --- PENYEBAB LAYAR KOSONG: RESET TAB ---
-    // Kode ini memaksa browser melupakan tab lama yang bikin error
-    let currentTab = localStorage.getItem('sbs_active_tab');
-    if (currentTab !== 'kasir' && currentTab !== 'dapur') {
-        currentTab = 'kasir'; 
-        localStorage.setItem('sbs_active_tab', 'kasir');
-    }
     
     let allOrders = [];
     let currentTab = localStorage.getItem('sbs_active_tab') || 'kasir'; 
@@ -523,13 +515,11 @@
             if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
         } else if (order.customer) displayName = order.customer;
 
-        // WAKTU
-        const t1 = new Date(order.timestamp).getTime();
-        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0;
-        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0;
+        const t1 = new Date(order.timestamp).getTime(); 
+        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; 
+        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; 
         const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
 
-        // Timer berjalan mulai dari mana?
         let timerStart = 0;
         if(['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(order.status)) timerStart = t1;
         else if (order.status === 'processing') timerStart = t3;
@@ -537,12 +527,10 @@
         const div = document.createElement('div');
         div.className = `order-card status-${order.status}`;
         
-        // Warna Border Kiri
         if(order.status === 'qris_unpaid') div.style.borderLeftColor = '#888';
         if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; 
         if(order.status === 'unpaid') div.style.borderLeftColor = '#FF6600'; 
         
-        // RENDER ITEM
         let itemsHtml = (order.items || []).map((item, idx) => {
             const qty = parseInt(item.qty);
             const price = parseInt(item.price);
@@ -573,7 +561,6 @@
         let headerRight = '';
         let kpiHtml = '';
         
-        // --- LOGIKA TAMPILAN RIWAYAT (KPI DURASI) ---
         if(order.status === 'completed' || order.status === 'rejected') {
             let timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
             headerRight = `
@@ -585,41 +572,39 @@
                     </div>
                 </div>`;
             
+            // --- INI BAGIAN YANG DISAMAKAN PERSIS DENGAN DAPUR (7) ---
             if (order.status === 'completed') {
-                let dP = 0, dR = 0, dM = 0, dT = 0;
-                // Hitung Durasi
+                let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
                 if (order.paymentMethod === 'qris') {
-                    if(t2 && t1) dP = t2 - t1; // Pesan -> Bayar
-                    if(t3 && t2) dR = t3 - t2; // Bayar -> Verifikasi
-                    if(t4 && t3) dM = t4 - t3; // Verifikasi -> Selesai
+                    if(t2 && t1) durPesan = t2 - t1;
+                    if(t3 && t2) durRespon = t3 - t2;
+                    if(t4 && t3) durMasak = t4 - t3;
                 } else {
-                    if(t3 && t1) dP = t3 - t1; // Tunai: Pesan -> Lunas
-                    dR = 0; 
-                    if(t4 && t3) dM = t4 - t3; // Lunas -> Selesai
+                    if(t3 && t1) durPesan = t3 - t1;
+                    durRespon = 0; 
+                    if(t4 && t3) durMasak = t4 - t3;
                 }
-                if(t4 && t1) dT = t4 - t1;
+                if(t4 && t1) durTotal = t4 - t1;
 
-                const responColor = dR > 180000 ? '#e74c3c' : '#fff';
-                // HTML KPI (Structure from Dapur 7)
+                const responColor = durRespon > 180000 ? '#e74c3c' : '#fff';
                 kpiHtml = `
                 <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555; font-size:11px;">
                     <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Pesan - Bayar (Cust):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(dP)}</span>
+                        <span style="color:#777;">Pesan - Bayar (Cust):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durPesan)}</span>
                     </div>
                     <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor}; font-weight:600;">${fmtDur(dR)}</span>
+                        <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor}; font-weight:600;">${fmtDur(durRespon)}</span>
                     </div>
                     <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Masak (Dapur):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(dM)}</span>
+                        <span style="color:#777;">Masak (Dapur):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durMasak)}</span>
                     </div>
                     <div class="dur-total-row" style="margin-top:6px; padding-top:6px; border-top:1px solid #444; display:flex; justify-content:space-between; font-size:12px; font-weight:700;">
-                        <span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:var(--accent);">${fmtDur(dT)}</span>
+                        <span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:var(--accent);">${fmtDur(durTotal)}</span>
                     </div>
                 </div>`;
             }
 
         } else {
-            // Tampilan Aktif (Timer Berjalan)
             headerRight = `
                 <div class="header-right">
                     <span class="meta-date">${dateStr}</span>
@@ -643,16 +628,15 @@
             </div>`;
         }
 
-        // --- BUTTON LOGIC BARU (SESUAI REQUEST) ---
+        // --- BUTTON LOGIC ---
         let buttonsHtml = '';
-        const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">TOLAK</button>`;
+        const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>`;
 
         if (order.status === 'new') { 
-            // TUNAI BARU -> Langsung LUNAS & PROSES (Dapur + Print)
             buttonsHtml = `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     ${btnTolak}
-                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}')">LUNAS & PROSES</button>
+                    <button class="btn btn-green" onclick="updateStatus('${order.id}', 'unpaid')">TERIMA</button>
                 </div>
             `;
         } 
@@ -663,7 +647,7 @@
                     <button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGGU PEMBAYARAN</button>
                 </div>
                 <div style="text-align:center; font-size:10px; color:#FF6600; font-weight:bold; margin-top:5px;">
-                    ⚠ Customer Belum Melakukan Pembayaran
+                    ⚠ CUSTOMER BELUM MELAKUKAN PEMBAYARAN
                 </div>
             `;
         }
@@ -677,11 +661,10 @@
             `;
         }
         else if (order.status === 'unpaid') { 
-            // TUNAI (SISA STATUS LAMA) -> KEMBALI JADI TOLAK
             buttonsHtml = `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    ${btnTolak}
-                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}')">LUNAS & PROSES</button>
+                    <button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button>
+                    <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">LUNAS & MASAK</button>
                 </div>
             `;
         } 
