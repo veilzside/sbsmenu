@@ -225,7 +225,7 @@
     let audioUnlocked = false;
     let confirmCallback = null;
     
-    // Variabel Notifikasi
+    // VARIABEL NOTIFIKASI
     let previousOrderStatuses = {}; 
     let isFirstLoad = true;
     let unreadOrdersCount = 0;
@@ -243,16 +243,26 @@
         return `${m}m ${rs}s`;
     }
 
+    // --- SETUP TABS ---
     function setupTabs() {
-        const t1 = document.getElementById('tab-kasir'); // Menggunakan ID yang sudah ada di HTML
-        const t2 = document.getElementById('tab-dapur'); // Menggunakan ID yang sudah ada di HTML
+        const t1 = document.getElementById('tab-new');
+        const t2 = document.getElementById('tab-unpaid');
+        const t3 = document.getElementById('tab-processing');
+
+        // Paksa ubah teks dan fungsi tab agar sesuai sistem Kasir/Dapur
+        t1.innerHTML = 'KASIR <span class="badge" id="badge-kasir">0</span>';
+        t1.setAttribute('onclick', "filterTab('kasir')");
         
-        // Hapus class active dari semua
+        t2.innerHTML = 'DAPUR <span class="badge" id="badge-dapur">0</span>';
+        t2.setAttribute('onclick', "filterTab('dapur')");
+
+        // Sembunyikan tab ke-3
+        if(t3) t3.style.display = 'none';
+
+        // Set status aktif
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-        
-        // Set active berdasarkan currentTab
         if(currentTab === 'kasir') t1.classList.add('active');
-        else if (currentTab === 'dapur') t2.classList.add('active');
+        else t2.classList.add('active');
     }
 
     function filterTab(status) {
@@ -263,57 +273,31 @@
         updateBadges(); 
     }
 
-    function toggleAudio() {
-        const btnAudio = document.getElementById('btn-audio');
-        const soundNew = document.getElementById('sound-new');
-        const soundNag = document.getElementById('sound-nag');
-
-        if (!audioUnlocked) {
-            // --- LOGIKA MENYALAKAN ---
-            soundNew.play().then(() => {
-                soundNew.pause();
-                soundNew.currentTime = 0;
-                audioUnlocked = true;
-                btnAudio.classList.remove('inactive');
-                btnAudio.classList.add('active');
-                btnAudio.innerHTML = "🔔";
-            }).catch(e => console.error("Audio error:", e));
-        } else {
-            // --- LOGIKA MEMATIKAN (Termasuk Fix Mobil) ---
-            audioUnlocked = false;
-            
-            [soundNew, soundNag].forEach(audio => {
-                audio.pause();
-                audio.currentTime = 0;
-                // Baris ini kunci supaya volume musik mobil balik normal:
-                audio.src = audio.src; 
-            });
-
-            btnAudio.classList.remove('active');
-            btnAudio.classList.add('inactive');
-            btnAudio.innerHTML = "🔕";
-        }
-    }
-
+    // --- LOGIKA UPDATE NOTIFIKASI BADGE ---
     function updateNavBadges() {
         const badgeOrd = document.getElementById('badge-nav-orders');
         const badgeHis = document.getElementById('badge-nav-history');
 
-        if(unreadOrdersCount > 0 && activePage !== 'orders') {
-            badgeOrd.innerText = unreadOrdersCount;
-            badgeOrd.style.display = 'flex';
-        } else {
-            badgeOrd.style.display = 'none';
+        if(badgeOrd) {
+            if(unreadOrdersCount > 0 && activePage !== 'orders') {
+                badgeOrd.innerText = unreadOrdersCount;
+                badgeOrd.style.display = 'flex';
+            } else {
+                badgeOrd.style.display = 'none';
+            }
         }
 
-        if(unreadHistoryCount > 0 && activePage !== 'history') {
-            badgeHis.innerText = unreadHistoryCount;
-            badgeHis.style.display = 'flex';
-        } else {
-            badgeHis.style.display = 'none';
+        if(badgeHis) {
+            if(unreadHistoryCount > 0 && activePage !== 'history') {
+                badgeHis.innerText = unreadHistoryCount;
+                badgeHis.style.display = 'flex';
+            } else {
+                badgeHis.style.display = 'none';
+            }
         }
     }
 
+    // --- LISTENER UTAMA ---
     db.ref('orders').on('value', (snapshot) => {
         const data = snapshot.val();
         let shouldRing = false;
@@ -326,24 +310,25 @@
                 allOrders.push(order);
                 currentStatuses[key] = order.status;
 
+                // LOGIKA NOTIFIKASI
                 if (!isFirstLoad) {
                     const currentStat = order.status;
                     const prevStat = previousOrderStatuses[key];
 
-                    // Notifikasi Pesanan Baru
+                    // 1. Pesanan Baru Masuk
                     if (['new', 'qris_unpaid', 'pending_payment'].includes(currentStat) && (!prevStat || prevStat !== currentStat)) {
                         if (activePage !== 'orders') unreadOrdersCount++;
                     }
 
-                    // Notifikasi Riwayat Baru
-                    if (['completed', 'rejected'].includes(currentStat) && prevStat && !['completed', 'rejected'].includes(prevStat)) {
-                        if (activePage !== 'history') unreadHistoryCount++;
-                    }
-
-                    // Alarm
+                    // 2. Alarm
                     if (audioUnlocked) {
                         if (currentStat === 'new' && prevStat !== 'new') shouldRing = true;
                         if (currentStat === 'pending_payment' && prevStat === 'qris_unpaid') shouldRing = true;
+                    }
+
+                    // 3. Pesanan Selesai
+                    if (['completed', 'rejected'].includes(currentStat) && prevStat && !['completed', 'rejected'].includes(prevStat)) {
+                        if (activePage !== 'history') unreadHistoryCount++;
                     }
                 }
             });
@@ -358,7 +343,7 @@
         allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         setupTabs(); 
         renderOrders();
-        updateBadges();
+        updateBadges(); 
     });
 
     function getDailyQueueNumber(orderId) {
@@ -373,58 +358,34 @@
     function printDirect(orderId, type) {
         const order = allOrders.find(o => o.id === orderId);
         if (!order) return;
-
         let tableNum = order.tableNumber || "Take Away";
         let realQueue = getDailyQueueNumber(order.id);
         const dateObj = new Date(order.timestamp);
         const dateStr = dateObj.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
         const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', hour12: false});
         const displayID = "2SA" + order.id.slice(-4).toUpperCase();
-
         const ESC = "\x1B"; const GS = "\x1D"; const INIT = ESC + "@";
         const ALIGN_CENTER = ESC + "a" + "\x01"; const ALIGN_LEFT = ESC + "a" + "\x00";
         const BOLD_ON = ESC + "E" + "\x01"; const BOLD_OFF = ESC + "E" + "\x00";
         const TEXT_DOUBLE = GS + "!" + "\x11"; const TEXT_NORMAL = GS + "!" + "\x00";
-
         let data = INIT;
-
         if (type === 'invoice') {
-            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF;
-            data += "Jl. Mundu 8, Kota Malang\n";
-            data += "085159039877\n";
-            data += "--------------------------------\n";
-            data += ALIGN_LEFT;
-            data += BOLD_ON + "TABLE: " + tableNum + BOLD_OFF + "\n";
-            data += "Queue Order: #" + realQueue + "\n"; 
-            data += "Date : " + dateStr + " " + timeStr + "\n";
-            data += "ID   : " + displayID + "\n";
-            data += "--------------------------------\n";
+            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF + "Jl. Mundu 8, Kota Malang\n085159039877\n--------------------------------\n" + ALIGN_LEFT + BOLD_ON + "TABLE: " + tableNum + BOLD_OFF + "\nQueue Order: #" + realQueue + "\nDate : " + dateStr + " " + timeStr + "\nID   : " + displayID + "\n--------------------------------\n";
             order.items.forEach(item => {
-                let price = parseInt(item.price);
-                let sub = item.qty * price;
+                let price = parseInt(item.price); let sub = item.qty * price;
                 data += item.name + "\n";
                 let line = item.qty + "x @" + price.toLocaleString('id-ID');
                 let priceStr = sub.toLocaleString('id-ID');
-                let spaces = 32 - line.length - priceStr.length;
-                if(spaces < 1) spaces = 1;
+                let spaces = 32 - line.length - priceStr.length; if(spaces < 1) spaces = 1;
                 data += line + " ".repeat(spaces) + priceStr + "\n";
                 if(item.note) data += "  (Note: " + item.note + ")\n";
             });
             data += "--------------------------------\n";
-            let totalStr = parseInt(order.total).toLocaleString('id-ID');
-            let totalLabel = "TOTAL";
+            let totalStr = parseInt(order.total).toLocaleString('id-ID'), totalLabel = "TOTAL";
             let totalSpaces = 32 - totalLabel.length - totalStr.length;
-            data += BOLD_ON + totalLabel + " ".repeat(totalSpaces > 0 ? totalSpaces : 1) + totalStr + "\n" + BOLD_OFF;
-            data += "--------------------------------\n";
-            data += ALIGN_CENTER + "Wifi: SBSkopi8\nTerima Kasih!\n\n\n\n";
+            data += BOLD_ON + totalLabel + " ".repeat(totalSpaces > 0 ? totalSpaces : 1) + totalStr + "\n" + BOLD_OFF + "--------------------------------\n" + ALIGN_CENTER + "Wifi: SBSkopi8\nTerima Kasih!\n\n\n\n";
         } else {
-            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF;
-            data += "\n" + ALIGN_LEFT;
-            data += "TABLE: " + BOLD_ON + tableNum + BOLD_OFF + "\n";
-            data += "QUEUE: #" + realQueue + "\n";
-            data += "TIME : " + timeStr + "\n";
-            data += "ID   : " + displayID + "\n";
-            data += "--------------------------------\n";
+            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF + "\n" + ALIGN_LEFT + "TABLE: " + BOLD_ON + tableNum + BOLD_OFF + "\nQUEUE: #" + realQueue + "\nTIME : " + timeStr + "\nID   : " + displayID + "\n--------------------------------\n";
             order.items.forEach(item => {
                 data += BOLD_ON + item.qty + " x " + item.name + BOLD_OFF + "\n";
                 if(item.note) data += "   [ " + item.note + " ]\n";
@@ -432,7 +393,6 @@
             });
             data += "\n\n\n\n"; 
         }
-
         const buffer = new Uint8Array(data.length);
         for (let i = 0; i < data.length; i++) { buffer[i] = data.charCodeAt(i); }
         let binary = '';
@@ -440,11 +400,25 @@
         window.location.href = "rawbt:base64," + btoa(binary);
     }
 
+    // --- FUNGSI VERIFIKASI SEKALIGUS PRINT ---
     function verifyAndPrint(key) {
         printDirect(key, 'checker');
+        // Delay sedikit agar print command terkirim sebelum status berubah
         setTimeout(() => {
             updateStatus(key, 'processing');
         }, 500);
+    }
+
+    function updateLiveTimers() {
+        document.querySelectorAll('.live-timer').forEach(el => {
+            const startTime = parseInt(el.getAttribute('data-start'));
+            if (!startTime || isNaN(startTime)) { el.innerText = "--:--"; return; }
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            if (elapsed > 86400) { el.innerText = "> 24h"; return; }
+            const min = Math.floor(elapsed / 60);
+            const sec = elapsed % 60;
+            el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
+        });
     }
 
     setInterval(() => {
@@ -467,18 +441,7 @@
         }
     }
 
-    function updateLiveTimers() {
-        document.querySelectorAll('.live-timer').forEach(el => {
-            const startTime = parseInt(el.getAttribute('data-start'));
-            if (!startTime || isNaN(startTime)) { el.innerText = "--:--"; return; }
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            if (elapsed > 86400) { el.innerText = "> 24h"; return; }
-            const min = Math.floor(elapsed / 60);
-            const sec = elapsed % 60;
-            el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
-        });
-    }
-
+    // --- RENDER UI ---
     function renderOrders() {
         const grid = document.getElementById('orders-grid');
         const historyGrid = document.getElementById('history-grid');
@@ -488,10 +451,10 @@
 
         allOrders.forEach(order => {
             const card = createCard(order);
-            const orderDate = new Date(order.completedAt || order.timestamp).toDateString();
+            const isDone = ['completed', 'rejected', 'done'].includes(order.status);
             
-            if (['completed', 'rejected', 'done'].includes(order.status)) {
-                if (orderDate === today) {
+            if (isDone) {
+                if (new Date(order.completedAt || order.timestamp).toDateString() === today) {
                     historyGrid.appendChild(card);
                 }
             } else {
@@ -499,9 +462,10 @@
                     if (['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(order.status)) {
                         grid.appendChild(card);
                     }
-                }
-                else if (currentTab === 'dapur' && order.status === 'processing') {
-                    grid.appendChild(card);
+                } else if (currentTab === 'dapur') {
+                    if (order.status === 'processing') {
+                        grid.appendChild(card);
+                    }
                 }
             }
         });
@@ -515,9 +479,9 @@
             if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
         } else if (order.customer) displayName = order.customer;
 
-        const t1 = new Date(order.timestamp).getTime(); 
-        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; 
-        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; 
+        const t1 = new Date(order.timestamp).getTime();
+        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0;
+        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0;
         const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
 
         let timerStart = 0;
@@ -526,7 +490,6 @@
 
         const div = document.createElement('div');
         div.className = `order-card status-${order.status}`;
-        
         if(order.status === 'qris_unpaid') div.style.borderLeftColor = '#888';
         if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; 
         if(order.status === 'unpaid') div.style.borderLeftColor = '#FF6600'; 
@@ -536,7 +499,7 @@
             const price = parseInt(item.price);
             const subtotal = qty * price;
             const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-            const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
+            const trashBtn = !['completed', 'rejected'].includes(order.status) ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
             return `
             <div class="item-row">
                 <div style="flex:1;">
@@ -553,7 +516,6 @@
 
         const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
         const timeIn = new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
-        
         let paymentBadge = order.paymentMethod === 'qris' 
             ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">QRIS</span>' 
             : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">TUNAI</span>';
@@ -572,34 +534,33 @@
                     </div>
                 </div>`;
             
-            // --- INI BAGIAN YANG DISAMAKAN PERSIS DENGAN DAPUR (7) ---
             if (order.status === 'completed') {
-                let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
+                let dP = 0, dR = 0, dM = 0, dT = 0;
                 if (order.paymentMethod === 'qris') {
-                    if(t2 && t1) durPesan = t2 - t1;
-                    if(t3 && t2) durRespon = t3 - t2;
-                    if(t4 && t3) durMasak = t4 - t3;
+                    if(t2 && t1) dP = t2 - t1;
+                    if(t3 && t2) dR = t3 - t2;
+                    if(t4 && t3) dM = t4 - t3;
                 } else {
-                    if(t3 && t1) durPesan = t3 - t1;
-                    durRespon = 0; 
-                    if(t4 && t3) durMasak = t4 - t3;
+                    if(t3 && t1) dP = t3 - t1;
+                    dR = 0; 
+                    if(t4 && t3) dM = t4 - t3;
                 }
-                if(t4 && t1) durTotal = t4 - t1;
+                if(t4 && t1) dT = t4 - t1;
 
-                const responColor = durRespon > 180000 ? '#e74c3c' : '#fff';
+                const responColor = dR > 180000 ? '#e74c3c' : '#fff';
                 kpiHtml = `
                 <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555; font-size:11px;">
                     <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Pesan - Bayar (Cust):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durPesan)}</span>
+                        <span style="color:#777;">Pesan - Bayar (Cust):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(dP)}</span>
                     </div>
                     <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor}; font-weight:600;">${fmtDur(durRespon)}</span>
+                        <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor}; font-weight:600;">${fmtDur(dR)}</span>
                     </div>
                     <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Masak (Dapur):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durMasak)}</span>
+                        <span style="color:#777;">Masak (Dapur):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(dM)}</span>
                     </div>
                     <div class="dur-total-row" style="margin-top:6px; padding-top:6px; border-top:1px solid #444; display:flex; justify-content:space-between; font-size:12px; font-weight:700;">
-                        <span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:var(--accent);">${fmtDur(durTotal)}</span>
+                        <span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:var(--accent);">${fmtDur(dT)}</span>
                     </div>
                 </div>`;
             }
@@ -628,15 +589,16 @@
             </div>`;
         }
 
-        // --- BUTTON LOGIC ---
+        // --- BUTTON LOGIC UPDATE ---
         let buttonsHtml = '';
         const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>`;
 
         if (order.status === 'new') { 
+            // TUNAI BARU -> LUNAS & PROSES (Langsung Dapur & Print)
             buttonsHtml = `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     ${btnTolak}
-                    <button class="btn btn-green" onclick="updateStatus('${order.id}', 'unpaid')">TERIMA</button>
+                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}')">LUNAS & PROSES</button>
                 </div>
             `;
         } 
@@ -661,10 +623,12 @@
             `;
         }
         else if (order.status === 'unpaid') { 
+            // TUNAI (SISA LOGIKA LAMA / UNPAID MANUAL)
+            // KEMBALI -> TOLAK, PROSES -> LUNAS & PROSES
             buttonsHtml = `
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button>
-                    <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">LUNAS & MASAK</button>
+                    ${btnTolak}
+                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}')">LUNAS & PROSES</button>
                 </div>
             `;
         } 
@@ -685,7 +649,7 @@
                 ${headerRight}
             </div>
             <div class="item-list">${itemsHtml}</div>
-            <div class="total-display">Total: Rp ${Number(String(order.total).replace(/[^0-9]/g, '')).toLocaleString()}</div>
+            <div class="total-display" style="margin-bottom:5px;">Total: Rp ${Number(String(order.total).replace(/[^0-9]/g, '')).toLocaleString()}</div>
             
             ${kpiHtml}
 
@@ -735,18 +699,46 @@
         localStorage.setItem('sbs_active_tab', status);
         setupTabs(); 
         renderOrders();
-        updateBadges(); // Pastikan update badge saat pindah tab
+        updateBadges(); 
     }
 
     function updateBadges() {
         const countKasir = allOrders.filter(o => ['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(o.status)).length;
         const countDapur = allOrders.filter(o => o.status === 'processing').length;
-        
-        const elKasir = document.getElementById('badge-kasir');
-        const elDapur = document.getElementById('badge-dapur');
-        
-        if(elKasir) elKasir.innerText = countKasir;
-        if(elDapur) elDapur.innerText = countDapur;
+        document.getElementById('badge-kasir').innerText = countKasir;
+        document.getElementById('badge-dapur').innerText = countDapur;
+    }
+
+    // --- FIX TOGGLE AUDIO UNTUK MOBIL ---
+    function toggleAudio() {
+        const btnAudio = document.getElementById('btn-audio');
+        const soundNew = document.getElementById('sound-new');
+        const soundNag = document.getElementById('sound-nag');
+
+        if (!audioUnlocked) {
+            // Aktifkan
+            soundNew.play().then(() => {
+                soundNew.pause();
+                soundNew.currentTime = 0;
+                audioUnlocked = true;
+                btnAudio.classList.remove('inactive');
+                btnAudio.classList.add('active');
+                btnAudio.innerHTML = "🔔";
+            }).catch(e => console.error("Audio error:", e));
+        } else {
+            // Matikan & Lepas Saluran Audio (Fix Audio Ducking Mobil)
+            audioUnlocked = false;
+            
+            [soundNew, soundNag].forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+                audio.src = audio.src; // Reset source untuk melepas kendali bluetooth
+            });
+
+            btnAudio.classList.remove('active');
+            btnAudio.classList.add('inactive');
+            btnAudio.innerHTML = "🔕";
+        }
     }
 
     function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
@@ -755,8 +747,9 @@
 
     function openEditModal(k) { /* Disabled */ }
     function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
-    function saveExtraItem() { /* Disabled */ }
     
+    function saveExtraItem() { /* Disabled */ }
+
     setupTabs();
 </script>
 </body>
