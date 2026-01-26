@@ -135,187 +135,215 @@
         <div id="history-grid" class="orders-grid"></div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
-            authDomain: "sbs-menu-d1611.firebaseapp.com",
-            databaseURL: "https://sbs-menu-d1611-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "sbs-menu-d1611",
-            storageBucket: "sbs-menu-d1611.firebasestorage.app",
-            messagingSenderId: "530098727952",
-            appId: "1:530098727952:web:1bb3072d93be9564fbee95"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        let dbOrders = [];
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
+        authDomain: "sbs-menu-d1611.firebaseapp.com",
+        databaseURL: "https://sbs-menu-d1611-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "sbs-menu-d1611",
+        storageBucket: "sbs-menu-d1611.firebasestorage.app",
+        messagingSenderId: "530098727952",
+        appId: "1:530098727952:web:1bb3072d93be9564fbee95"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let dbOrders = [];
 
-        document.getElementById('finance-date').valueAsDate = new Date();
-        document.getElementById('history-date-picker').valueAsDate = new Date();
+    // Set Default Date Today
+    document.getElementById('finance-date').valueAsDate = new Date();
+    document.getElementById('history-date-picker').valueAsDate = new Date();
 
-        db.ref('orders').on('value', s => {
-            dbOrders = []; if(s.val()) Object.keys(s.val()).forEach(k=>dbOrders.push({id:k,...s.val()[k]}));
-            calculateFinance(); renderHistory();
+    db.ref('orders').on('value', s => {
+        dbOrders = []; if(s.val()) Object.keys(s.val()).forEach(k=>dbOrders.push({id:k,...s.val()[k]}));
+        calculateFinance(); renderHistory();
+    });
+
+    db.ref('activity_logs').limitToLast(50).on('value', snap => {
+        const tbody = document.getElementById('logs-tbody');
+        tbody.innerHTML = '';
+        const logs = [];
+        if(snap.val()) Object.keys(snap.val()).forEach(k => logs.push(snap.val()[k]));
+        logs.sort((a,b) => b.timestamp - a.timestamp);
+        logs.forEach(log => {
+            tbody.innerHTML += `<tr><td><div class="log-time">${log.timeString || '-'}</div></td><td><b>${log.action}</b><br><small>${log.details}</small></td></tr>`;
         });
+    });
 
-        db.ref('activity_logs').limitToLast(50).on('value', snap => {
-            const tbody = document.getElementById('logs-tbody');
-            tbody.innerHTML = '';
-            const logs = [];
-            if(snap.val()) Object.keys(snap.val()).forEach(k => logs.push(snap.val()[k]));
-            logs.sort((a,b) => b.timestamp - a.timestamp);
-            logs.forEach(log => {
-                tbody.innerHTML += `<tr><td><div class="log-time">${log.timeString || '-'}</div></td><td><b>${log.action}</b><br><small>${log.details}</small></td></tr>`;
-            });
-        });
+    // --- HELPER FORMAT DURASI (Menit Detik) ---
+    function fmtDur(ms) {
+        if (!ms || ms < 0) return "-";
+        const s = Math.floor(ms / 1000);
+        const m = Math.floor(s / 60);
+        const rs = s % 60;
+        return `${m}m ${rs}s`;
+    }
 
-        // --- FUNGSI CREATE CARD DETIL (IDENTIK DENGAN DAPUR.HTML) ---
-        function createHistoryCard(order) {
-            let displayName = "Pelanggan";
-            if (order.tableNumber) {
-                displayName = "MEJA " + order.tableNumber;
-                if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
-            } else if (order.customer) {
-                if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
-                else displayName = order.customer;
-            }
-            
-            const created = new Date(order.timestamp).getTime();
-            const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : 0;
-            const paid = order.paidAt ? new Date(order.paidAt).getTime() : 0;
-            const completed = order.completedAt ? new Date(order.completedAt).getTime() : 0;
+    function createHistoryCard(order) {
+        let displayName = "Pelanggan";
+        if (order.tableNumber) {
+            displayName = "MEJA " + order.tableNumber;
+            if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
+        } else if (order.customer) {
+            if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
+            else displayName = order.customer;
+        }
+        
+        // --- LOGIKA WAKTU (TIMESTAMPS) ---
+        const t1 = new Date(order.timestamp).getTime(); // Pesanan Dibuat
+        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; // Cust Klik 'Sudah Bayar'
+        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; // Staff Klik 'Verifikasi/Proses'
+        const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0; // Staff Klik 'Selesai'
 
-            const div = document.createElement('div');
-            div.className = `order-card status-${order.status}`;
-            
-            // Detail Items (Termasuk Harga Satuan & Notes)
-            let itemsHtml = (order.items || []).map(item => {
-                const qty = parseInt(item.qty);
-                const price = parseInt(item.price);
-                const subtotal = qty * price;
-                const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-                return `
-                <div class="item-row">
-                    <div style="flex:1;">
-                        <span class="item-name">${qty}x ${item.name}</span>
-                        ${unitPriceHtml}
-                        ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
-                    </div>
-                    <div style="text-align:right;">
-                        <span class="item-price">${subtotal.toLocaleString()}</span>
-                    </div>
-                </div>`;
-            }).join('');
+        const div = document.createElement('div');
+        div.className = `order-card status-${order.status}`;
+        
+        let itemsHtml = (order.items || []).map(item => {
+            const qty = parseInt(item.qty);
+            const price = parseInt(item.price);
+            const subtotal = qty * price;
+            const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
+            return `
+            <div class="item-row">
+                <div style="flex:1;">
+                    <span class="item-name">${qty}x ${item.name}</span>
+                    ${unitPriceHtml}
+                    ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
+                </div>
+                <div style="text-align:right;">
+                    <span class="item-price">${subtotal.toLocaleString()}</span>
+                </div>
+            </div>`;
+        }).join('');
 
-            // HEADER INFO
-            const dateStr = new Date(created).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
-            const timeIn = new Date(created).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
-            let timeOut = '-';
-            if(order.completedAt) {
-                timeOut = new Date(order.completedAt).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
-            }
+        const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
+        const timeIn = new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
+        let timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
 
-            // METRICS & FOOTER
-            let metricsHtml = '';
-            let statusFooter = '';
-            
-            if(order.status === 'rejected') {
-                statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
+        // --- HITUNG KPI DURASI ---
+        let durPesan = 0;   // Cust Order -> Cust Bayar
+        let durRespon = 0;  // Cust Bayar -> Admin Verifikasi
+        let durMasak = 0;   // Admin Verifikasi -> Selesai
+        let durTotal = 0;   // Total
+
+        if (order.status === 'completed') {
+            if (order.paymentMethod === 'qris') {
+                // QRIS: Hitung detail
+                if(t2 && t1) durPesan = t2 - t1;
+                if(t3 && t2) durRespon = t3 - t2; // Ini KPI Admin
+                if(t4 && t3) durMasak = t4 - t3;
             } else {
-                statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
-                const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
-                const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
-                const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
-                const durTotal = completed > 0 ? Math.floor((completed - created)/1000) : 0;
-                const fmt = (s) => { if (s <= 0) return "-"; const m = Math.floor(s/60); const sc = s%60; return m > 0 ? `${m}m ${sc}s` : `${sc}s`; };
-
-                metricsHtml = `
-                <div class="duration-box">
-                    <div class="dur-row"><span>Respon:</span> <span class="dur-val">${fmt(durRespon)}</span></div>
-                    <div class="dur-row"><span>Bayar:</span> <span class="dur-val">${fmt(durBayar)}</span></div>
-                    <div class="dur-row"><span>Masak:</span> <span class="dur-val">${fmt(durMasak)}</span></div>
-                    <div class="dur-total-row">
-                        <span>TOTAL DURASI:</span> <span class="dur-total-val">${fmt(durTotal)}</span>
-                    </div>
-                </div>`;
+                // TUNAI: Respon dianggap 0
+                // Pesan-Bayar adalah dari Order dibuat sampai Kasir terima uang (t3)
+                if(t3 && t1) durPesan = t3 - t1;
+                durRespon = 0; 
+                if(t4 && t3) durMasak = t4 - t3;
             }
+            if(t4 && t1) durTotal = t4 - t1;
+        }
 
-            let rawTotal = String(order.total).replace(/[^0-9]/g, '');
-            const safeTotal = Number(rawTotal) || 0;
+        let kpiHtml = '';
+        if (order.status === 'completed') {
+            // Indikator Warna untuk Respon Admin (Merah jika > 3 menit)
+            const responColor = durRespon > 180000 ? '#e74c3c' : '#fff';
+            
+            kpiHtml = `
+            <div style="margin-top:15px; padding-top:10px; border-top:1px dashed #555;">
+                <div class="dur-row"><span style="color:#aaa;">Pesan - Bayar (Cust):</span> <span class="dur-val">${fmtDur(durPesan)}</span></div>
+                <div class="dur-row"><span style="color:#aaa;">Respon Kasir:</span> <span class="dur-val" style="color:${responColor}">${fmtDur(durRespon)}</span></div>
+                <div class="dur-row"><span style="color:#aaa;">Masak (Dapur):</span> <span class="dur-val">${fmtDur(durMasak)}</span></div>
+                <div class="dur-total-row" style="margin-top:8px; padding-top:8px; border-top:1px solid #444;">
+                    <span>TOTAL DURASI:</span> <span class="dur-total-val" style="color:var(--accent);">${fmtDur(durTotal)}</span>
+                </div>
+            </div>`;
+        }
 
-            div.innerHTML = `
-                <div class="card-header">
-                    <div class="header-left">
-                        <span class="cust-name">${displayName}</span>
-                        <span class="order-id">ID: ...${order.id.slice(-4)}</span>
-                    </div>
-                    <div class="header-right">
-                        <span class="meta-date">${dateStr}</span>
-                        <div class="meta-time-block">
-                            <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br>
-                            <span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span>
-                        </div>
+        let statusFooter = '';
+        if(order.status === 'rejected') {
+            statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
+        } else {
+            statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
+        }
+
+        let rawTotal = String(order.total).replace(/[^0-9]/g, '');
+        const safeTotal = Number(rawTotal) || 0;
+
+        div.innerHTML = `
+            <div class="card-header">
+                <div class="header-left">
+                    <span class="cust-name">${displayName}</span>
+                    <span class="order-id">ID: ...${order.id.slice(-4)}</span>
+                </div>
+                <div class="header-right">
+                    <span class="meta-date">${dateStr}</span>
+                    <div class="meta-time-block">
+                        <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br>
+                        <span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span>
                     </div>
                 </div>
-                <div class="item-list">${itemsHtml}</div>
-                ${metricsHtml}
-                <div class="total-display">Total: Rp ${safeTotal.toLocaleString()}</div>
-                ${statusFooter}
-            `;
-            return div;
-        }
+            </div>
+            <div class="item-list">${itemsHtml}</div>
+            
+            <div class="total-display" style="margin-bottom:5px;">Total: Rp ${safeTotal.toLocaleString()}</div>
+            
+            ${kpiHtml}
+            
+            ${statusFooter}
+        `;
+        return div;
+    }
 
-        function showPage(p) {
-            document.querySelectorAll('.main').forEach(e=>e.style.display='none');
-            document.getElementById(p+'-page').style.display='block';
-            document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active'));
-            const idx = p === 'finance' ? 0 : (p === 'logs' ? 1 : 2);
-            document.querySelectorAll('.menu-item')[idx].classList.add('active');
-            if(p==='finance') calculateFinance();
-        }
+    function showPage(p) {
+        document.querySelectorAll('.main').forEach(e=>e.style.display='none');
+        document.getElementById(p+'-page').style.display='block';
+        document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active'));
+        const idx = p === 'finance' ? 0 : (p === 'logs' ? 1 : 2);
+        document.querySelectorAll('.menu-item')[idx].classList.add('active');
+        if(p==='finance') calculateFinance();
+    }
 
-        function calculateFinance() {
-            const mode = document.getElementById('finance-mode').value;
-            let totalRev = 0;
-            let targetDate, targetMonth;
-            if (mode === 'daily') targetDate = new Date(document.getElementById('finance-date').value);
-            else { const val = document.getElementById('finance-month').value; if(val) targetMonth = val; }
+    function calculateFinance() {
+        const mode = document.getElementById('finance-mode').value;
+        let totalRev = 0;
+        let targetDate, targetMonth;
+        if (mode === 'daily') targetDate = new Date(document.getElementById('finance-date').value);
+        else { const val = document.getElementById('finance-month').value; if(val) targetMonth = val; }
 
-            dbOrders.forEach(o => {
-                if (o.status !== 'completed' && o.status !== 'done') return;
-                const oDate = new Date(o.completedAt || o.timestamp);
-                let raw = String(o.total).replace(/[^0-9]/g, '');
-                let total = Number(raw) || 0;
-                let match = false;
-                if (mode === 'daily' && targetDate && oDate.toDateString() === targetDate.toDateString()) match = true;
-                if (mode === 'monthly' && targetMonth && oDate.toISOString().slice(0,7) === targetMonth) match = true;
-                if(match) totalRev += total;
-            });
-            document.getElementById('main-stat-rev').innerText = "Rp " + totalRev.toLocaleString('id-ID');
-        }
+        dbOrders.forEach(o => {
+            if (o.status !== 'completed' && o.status !== 'done') return;
+            const oDate = new Date(o.completedAt || o.timestamp);
+            let raw = String(o.total).replace(/[^0-9]/g, '');
+            let total = Number(raw) || 0;
+            let match = false;
+            if (mode === 'daily' && targetDate && oDate.toDateString() === targetDate.toDateString()) match = true;
+            if (mode === 'monthly' && targetMonth && oDate.toISOString().slice(0,7) === targetMonth) match = true;
+            if(match) totalRev += total;
+        });
+        document.getElementById('main-stat-rev').innerText = "Rp " + totalRev.toLocaleString('id-ID');
+    }
 
-        function toggleFinanceFilter() {
-            const m = document.getElementById('finance-mode').value;
-            document.getElementById('finance-date').style.display = m === 'daily' ? 'block' : 'none';
-            document.getElementById('finance-month').style.display = m === 'monthly' ? 'block' : 'none';
-            calculateFinance();
-        }
+    function toggleFinanceFilter() {
+        const m = document.getElementById('finance-mode').value;
+        document.getElementById('finance-date').style.display = m === 'daily' ? 'block' : 'none';
+        document.getElementById('finance-month').style.display = m === 'monthly' ? 'block' : 'none';
+        calculateFinance();
+    }
 
-        function renderHistory() {
-            const grid = document.getElementById('history-grid');
-            grid.innerHTML = '';
-            const filterDate = new Date(document.getElementById('history-date-picker').value).toDateString();
-            const sorted = [...dbOrders].sort((a,b) => (b.completedAt ? new Date(b.completedAt) : 0) - (a.completedAt ? new Date(a.completedAt) : 0));
-            sorted.forEach(order => {
-                if (['completed', 'rejected', 'done'].includes(order.status)) {
-                    if (new Date(order.completedAt || order.timestamp).toDateString() === filterDate) {
-                        grid.appendChild(createHistoryCard(order));
-                    }
+    function renderHistory() {
+        const grid = document.getElementById('history-grid');
+        grid.innerHTML = '';
+        const filterDate = new Date(document.getElementById('history-date-picker').value).toDateString();
+        const sorted = [...dbOrders].sort((a,b) => (b.completedAt ? new Date(b.completedAt) : 0) - (a.completedAt ? new Date(a.completedAt) : 0));
+        sorted.forEach(order => {
+            if (['completed', 'rejected', 'done'].includes(order.status)) {
+                if (new Date(order.completedAt || order.timestamp).toDateString() === filterDate) {
+                    grid.appendChild(createHistoryCard(order));
                 }
-            });
-        }
-    </script>
+            }
+        });
+    }
+</script>
 </body>
 </html>
