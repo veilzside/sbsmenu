@@ -303,21 +303,17 @@
     }
 
     function updateNavBadges() {
-        const badgeOrd = document.getElementById('badge-nav-orders');
+        // Badge Pesanan sudah dihandle otomatis oleh updateBadges() di atas
+        
+        // Badge Riwayat
         const badgeHis = document.getElementById('badge-nav-history');
-
-        if(unreadOrdersCount > 0 && activePage !== 'orders') {
-            badgeOrd.innerText = unreadOrdersCount;
-            badgeOrd.style.display = 'flex';
-        } else {
-            badgeOrd.style.display = 'none';
-        }
-
-        if(unreadHistoryCount > 0 && activePage !== 'history') {
-            badgeHis.innerText = unreadHistoryCount;
-            badgeHis.style.display = 'flex';
-        } else {
-            badgeHis.style.display = 'none';
+        if(badgeHis) {
+            if(unreadHistoryCount > 0 && activePage !== 'history') {
+                badgeHis.innerText = unreadHistoryCount;
+                badgeHis.style.display = 'flex';
+            } else {
+                badgeHis.style.display = 'none';
+            }
         }
     }
 
@@ -337,17 +333,20 @@
                     const currentStat = order.status;
                     const prevStat = previousOrderStatuses[key];
 
-                    // Notifikasi Pesanan Baru
-                    if (['new', 'qris_unpaid', 'pending_payment'].includes(currentStat) && (!prevStat || prevStat !== currentStat)) {
+                    // --- 1. Notifikasi Pesanan Baru ---
+                    // FIX: Hanya hitung jika ID ini benar-benar baru (!prevStat).
+                    // Mencegah double hitung saat status berubah.
+                    const isActive = ['new', 'qris_unpaid', 'pending_payment'].includes(currentStat);
+                    if (isActive && !prevStat) {
                         if (activePage !== 'orders') unreadOrdersCount++;
                     }
 
-                    // Notifikasi Riwayat Baru
-                    if (['completed', 'rejected'].includes(currentStat) && prevStat && !['completed', 'rejected'].includes(prevStat)) {
-                        if (activePage !== 'history') unreadHistoryCount++;
-                    }
+                    // --- 2. Notifikasi Riwayat (DIHAPUS) ---
+                    // Bagian ini sudah dihapus karena perhitungan badge riwayat 
+                    // sekarang sudah otomatis ditangani oleh fungsi updateBadges() 
+                    // di bagian bawah script.
 
-                    // Alarm
+                    // --- 3. Alarm ---
                     if (audioUnlocked) {
                         if (currentStat === 'new' && prevStat !== 'new') shouldRing = true;
                         if (currentStat === 'pending_payment' && prevStat === 'qris_unpaid') shouldRing = true;
@@ -365,7 +364,7 @@
         allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         setupTabs(); 
         renderOrders();
-        updateBadges();
+        updateBadges(); // Fungsi ini yang akan menormalkan semua angka badge
     });
 
     function getDailyQueueNumber(orderId) {
@@ -752,14 +751,27 @@
     }
 
     function updateBadges() {
+        // Hitung jumlah pesanan untuk masing-masing tab
         const countKasir = allOrders.filter(o => ['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(o.status)).length;
         const countDapur = allOrders.filter(o => o.status === 'processing').length;
         
+        // Update angka di Tab atas (KASIR & DAPUR)
         const elKasir = document.getElementById('badge-kasir');
         const elDapur = document.getElementById('badge-dapur');
-        
         if(elKasir) elKasir.innerText = countKasir;
         if(elDapur) elDapur.innerText = countDapur;
+
+        // --- FIX: SINKRONKAN BADGE ICON PESANAN DENGAN TAB KASIR ---
+        const badgeOrd = document.getElementById('badge-nav-orders');
+        if(badgeOrd) {
+            // Munculkan angka jika ada pesanan di Kasir dan user sedang tidak di halaman Pesanan
+            if(countKasir > 0 && activePage !== 'orders') {
+                badgeOrd.innerText = countKasir;
+                badgeOrd.style.display = 'flex';
+            } else {
+                badgeOrd.style.display = 'none';
+            }
+        }
     }
 
     function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
