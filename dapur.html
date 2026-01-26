@@ -337,8 +337,8 @@
                     const currentStat = order.status;
                     const prevStat = previousOrderStatuses[key];
 
-                    // Notifikasi Pesanan Baru
-                    if (['new', 'qris_unpaid', 'pending_payment'].includes(currentStat) && (!prevStat || prevStat !== currentStat)) {
+                   // Notifikasi Pesanan Baru (FIX: Hanya tambah jika pesanan benar-benar baru masuk ke sistem)
+                    if (['new', 'qris_unpaid', 'pending_payment'].includes(currentStat) && !prevStat) {
                         if (activePage !== 'orders') unreadOrdersCount++;
                     }
 
