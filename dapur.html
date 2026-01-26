@@ -333,20 +333,24 @@
                     const currentStat = order.status;
                     const prevStat = previousOrderStatuses[key];
 
-                    // --- 1. Notifikasi Pesanan Baru ---
-                    // FIX: Hanya hitung jika ID ini benar-benar baru (!prevStat).
-                    // Mencegah double hitung saat status berubah.
+                    // --- 1. BADGE PESANAN (REVISI) ---
+                    // Syarat: Status Aktif DAN ID-nya benar-benar baru (!prevStat).
+                    // Efek: Saat QRIS berubah dari unpaid -> pending, badge TIDAK nambah (karena prevStat ada).
                     const isActive = ['new', 'qris_unpaid', 'pending_payment'].includes(currentStat);
                     if (isActive && !prevStat) {
                         if (activePage !== 'orders') unreadOrdersCount++;
                     }
 
-                    // --- 2. Notifikasi Riwayat (DIHAPUS) ---
-                    // Bagian ini sudah dihapus karena perhitungan badge riwayat 
-                    // sekarang sudah otomatis ditangani oleh fungsi updateBadges() 
-                    // di bagian bawah script.
+                    // --- 2. BADGE RIWAYAT (DIKEMBALIKAN) ---
+                    // Bertambah jika status berubah dari aktif menjadi selesai/ditolak
+                    const isDone = ['completed', 'rejected'].includes(currentStat);
+                    const wasActive = prevStat && !['completed', 'rejected'].includes(prevStat);
+                    
+                    if (isDone && wasActive) {
+                        if (activePage !== 'history') unreadHistoryCount++;
+                    }
 
-                    // --- 3. Alarm ---
+                    // --- 3. ALARM ---
                     if (audioUnlocked) {
                         if (currentStat === 'new' && prevStat !== 'new') shouldRing = true;
                         if (currentStat === 'pending_payment' && prevStat === 'qris_unpaid') shouldRing = true;
@@ -354,6 +358,18 @@
                 }
             });
         }
+        
+        previousOrderStatuses = currentStatuses;
+        if (isFirstLoad) isFirstLoad = false;
+        
+        updateNavBadges(); // Update ikon notifikasi (Kardus & Jam)
+        if (shouldRing) soundNew.play().catch(e => {});
+        
+        allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        setupTabs(); 
+        renderOrders();
+        updateBadges(); // Update badge Tab (Kasir & Dapur)
+    });
         
         previousOrderStatuses = currentStatuses;
         if (isFirstLoad) isFirstLoad = false;
@@ -751,29 +767,20 @@
     }
 
     function updateBadges() {
-        // Hitung jumlah pesanan untuk masing-masing tab
+        // Hitung jumlah untuk masing-masing tab internal
         const countKasir = allOrders.filter(o => ['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(o.status)).length;
         const countDapur = allOrders.filter(o => o.status === 'processing').length;
         
-        // Update angka di Tab atas (KASIR & DAPUR)
         const elKasir = document.getElementById('badge-kasir');
         const elDapur = document.getElementById('badge-dapur');
+        
         if(elKasir) elKasir.innerText = countKasir;
         if(elDapur) elDapur.innerText = countDapur;
-
-        // --- FIX: SINKRONKAN BADGE ICON PESANAN DENGAN TAB KASIR ---
-        const badgeOrd = document.getElementById('badge-nav-orders');
-        if(badgeOrd) {
-            // Munculkan angka jika ada pesanan di Kasir dan user sedang tidak di halaman Pesanan
-            if(countKasir > 0 && activePage !== 'orders') {
-                badgeOrd.innerText = countKasir;
-                badgeOrd.style.display = 'flex';
-            } else {
-                badgeOrd.style.display = 'none';
-            }
-        }
+        
+        // SAYA HAPUS BAGIAN SINKRONISASI KE 'badge-nav-orders'
+        // Supaya badge ikon kembali bekerja sebagai counter notifikasi (unreadOrdersCount)
+        // dan bisa hilang saat diklik.
     }
-
     function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
     function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
     document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
