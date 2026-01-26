@@ -1,210 +1,321 @@
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SBS Admin & Finance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        .sidebar { width: 260px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
+        .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
+        .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
+        .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
+        .menu-icon { font-size: 20px; }
 
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
-        authDomain: "sbs-menu-d1611.firebaseapp.com",
-        databaseURL: "https://sbs-menu-d1611-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "sbs-menu-d1611",
-        storageBucket: "sbs-menu-d1611.firebasestorage.app",
-        messagingSenderId: "530098727952",
-        appId: "1:530098727952:web:1bb3072d93be9564fbee95"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    let dbOrders = [];
+        .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; }
+        .page-title { margin:0 0 20px 0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
 
-    // Set Default Date Today
-    document.getElementById('finance-date').valueAsDate = new Date();
-    document.getElementById('history-date-picker').valueAsDate = new Date();
+        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 50px; }
+        
+        /* CARD STYLE (SAMA DENGAN DAPUR) */
+        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 6px solid #555; position: relative; }
+        .order-card.status-completed { border-left-color: var(--green); opacity: 1; }
+        .order-card.status-rejected { border-left-color: #444; background: #222; opacity: 0.8; }
 
-    db.ref('orders').on('value', s => {
-        dbOrders = []; if(s.val()) Object.keys(s.val()).forEach(k=>dbOrders.push({id:k,...s.val()[k]}));
-        calculateFinance(); renderHistory();
-    });
+        /* HEADER LAYOUT */
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .header-left { display: flex; flex-direction: column; }
+        .cust-name { font-size: 16px; font-weight: 700; color: #fff; text-transform: uppercase; margin-bottom: 2px; }
+        .order-id { font-size: 11px; color: #666; font-family: monospace; }
+        
+        .header-right { text-align: right; }
+        .meta-date { font-size: 13px; color: #ccc; margin-bottom: 2px; display: block; font-weight: 500; }
+        .meta-time-block { font-size: 11px; color: #aaa; line-height: 1.4; }
+        .time-label { color: #777; margin-right: 3px; }
+        .time-val { color: #ddd; font-weight: 600; }
+        .time-highlight { color: var(--green); font-weight: 700; }
 
-    db.ref('activity_logs').limitToLast(50).on('value', snap => {
-        const tbody = document.getElementById('logs-tbody');
-        tbody.innerHTML = '';
-        const logs = [];
-        if(snap.val()) Object.keys(snap.val()).forEach(k => logs.push(snap.val()[k]));
-        logs.sort((a,b) => b.timestamp - a.timestamp);
-        logs.forEach(log => {
-            tbody.innerHTML += `<tr><td><div class="log-time">${log.timeString || '-'}</div></td><td><b>${log.action}</b><br><small>${log.details}</small></td></tr>`;
+        /* ITEMS */
+        .item-list { margin-bottom: 15px; max-height: 300px; overflow-y: auto; padding-right: 5px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
+        .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; align-items: flex-start; }
+        .item-name { font-weight: 600; color: #eee; }
+        .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: 2px; }
+        .item-price { font-weight: 700; color: #fff; }
+        .item-unit-price { font-size: 10px; color: #888; display: block; }
+
+        /* METRICS (SAMA DENGAN DAPUR) */
+        .duration-box { margin-bottom: 15px; font-size: 12px; color: #aaa; padding: 0 5px; }
+        .dur-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .dur-val { color: #fff; font-weight: 700; }
+        .dur-total-row { border-top: 1px dashed #666; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-size: 13px; }
+        .dur-total-val { color: var(--accent); font-weight: 900; }
+
+        /* TOTAL */
+        .total-display { text-align: right; font-size: 18px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
+
+        /* STATUS / STAMP */
+        .status-footer { text-align: center; margin-top: 10px; }
+        .status-text-done { color: var(--green); font-weight: 700; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; }
+        .stamp-rejected {
+            border: 2px solid var(--red);
+            color: var(--red);
+            font-size: 20px;
+            font-weight: 700;
+            display: inline-block;
+            padding: 8px 20px;
+            transform: rotate(-5deg);
+            letter-spacing: 1px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        /* FINANCE & OTHERS */
+        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; margin-bottom: 20px; }
+        .stat-val { font-size: 32px; font-weight: 700; color: var(--green); }
+        .filters { margin-bottom: 20px; display: flex; gap: 10px; }
+        .form-input, .form-select { background: #15151a; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; font-family: 'Poppins'; }
+
+        .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .log-table th { text-align: left; padding: 10px; background: #111; color: #888; }
+        .log-table td { padding: 10px; border-bottom: 1px solid #333; }
+        .log-time { color: var(--accent); font-weight: 700; font-size: 11px; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 5px; border-right: none; border-top: 1px solid #333; }
+            .brand { display: none; }
+            .menu-item { flex-direction: column; font-size: 10px; gap: 2px; padding: 5px; background: transparent !important; flex: 1; justify-content: center; }
+            .main { padding-bottom: 80px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">SBS OWNER</div>
+        <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Keuangan</span></div>
+        <div class="menu-item" onclick="showPage('logs')"><span class="menu-icon">📋</span><span>Audit Log Stok</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat Pesanan</span></div>
+    </div>
+
+    <div class="main" id="finance-page">
+        <h2 class="page-title">LAPORAN OMZET</h2>
+        <div class="filters">
+            <select id="finance-mode" class="form-select" onchange="toggleFinanceFilter()">
+                <option value="daily">Harian</option>
+                <option value="monthly">Bulanan</option>
+            </select>
+            <input type="date" id="finance-date" class="form-input" onchange="calculateFinance()">
+            <input type="month" id="finance-month" class="form-input" style="display:none;" onchange="calculateFinance()">
+        </div>
+        <div class="stat-card">
+            <div style="font-size:12px; color:#aaa; margin-bottom:5px;">TOTAL PENDAPATAN</div>
+            <div class="stat-val" id="main-stat-rev">Rp 0</div>
+        </div>
+    </div>
+
+    <div class="main" id="logs-page" style="display: none;">
+        <h2 class="page-title">LOG AKTIVITAS STOK</h2>
+        <table class="log-table">
+            <thead><tr><th width="120">Waktu</th><th>Aktivitas</th></tr></thead>
+            <tbody id="logs-tbody"></tbody>
+        </table>
+    </div>
+
+    <div class="main" id="history-page" style="display: none;">
+        <h2 class="page-title">RIWAYAT PESANAN</h2>
+        <div class="filters">
+            <input type="date" id="history-date-picker" class="form-input" onchange="renderHistory()">
+        </div>
+        <div id="history-grid" class="orders-grid"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
+            authDomain: "sbs-menu-d1611.firebaseapp.com",
+            databaseURL: "https://sbs-menu-d1611-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "sbs-menu-d1611",
+            storageBucket: "sbs-menu-d1611.firebasestorage.app",
+            messagingSenderId: "530098727952",
+            appId: "1:530098727952:web:1bb3072d93be9564fbee95"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        let dbOrders = [];
+
+        document.getElementById('finance-date').valueAsDate = new Date();
+        document.getElementById('history-date-picker').valueAsDate = new Date();
+
+        db.ref('orders').on('value', s => {
+            dbOrders = []; if(s.val()) Object.keys(s.val()).forEach(k=>dbOrders.push({id:k,...s.val()[k]}));
+            calculateFinance(); renderHistory();
         });
-    });
 
-    // --- HELPER FORMAT DURASI (Menit Detik) ---
-    function fmtDur(ms) {
-        if (!ms || ms < 0) return "-";
-        const s = Math.floor(ms / 1000);
-        const m = Math.floor(s / 60);
-        const rs = s % 60;
-        return `${m}m ${rs}s`;
-    }
+        db.ref('activity_logs').limitToLast(50).on('value', snap => {
+            const tbody = document.getElementById('logs-tbody');
+            tbody.innerHTML = '';
+            const logs = [];
+            if(snap.val()) Object.keys(snap.val()).forEach(k => logs.push(snap.val()[k]));
+            logs.sort((a,b) => b.timestamp - a.timestamp);
+            logs.forEach(log => {
+                tbody.innerHTML += `<tr><td><div class="log-time">${log.timeString || '-'}</div></td><td><b>${log.action}</b><br><small>${log.details}</small></td></tr>`;
+            });
+        });
 
-    function createHistoryCard(order) {
-        let displayName = "Pelanggan";
-        if (order.tableNumber) {
-            displayName = "MEJA " + order.tableNumber;
-            if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
-        } else if (order.customer) {
-            if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
-            else displayName = order.customer;
-        }
-        
-        // --- LOGIKA WAKTU (TIMESTAMPS) ---
-        const t1 = new Date(order.timestamp).getTime(); // Pesanan Dibuat
-        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; // Cust Klik 'Sudah Bayar'
-        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; // Staff Klik 'Verifikasi/Proses'
-        const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0; // Staff Klik 'Selesai'
-
-        const div = document.createElement('div');
-        div.className = `order-card status-${order.status}`;
-        
-        let itemsHtml = (order.items || []).map(item => {
-            const qty = parseInt(item.qty);
-            const price = parseInt(item.price);
-            const subtotal = qty * price;
-            const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-            return `
-            <div class="item-row">
-                <div style="flex:1;">
-                    <span class="item-name">${qty}x ${item.name}</span>
-                    ${unitPriceHtml}
-                    ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
-                </div>
-                <div style="text-align:right;">
-                    <span class="item-price">${subtotal.toLocaleString()}</span>
-                </div>
-            </div>`;
-        }).join('');
-
-        const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
-        const timeIn = new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
-        let timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
-
-        // --- HITUNG KPI DURASI ---
-        let durPesan = 0;   // Cust Order -> Cust Bayar
-        let durRespon = 0;  // Cust Bayar -> Admin Verifikasi
-        let durMasak = 0;   // Admin Verifikasi -> Selesai
-        let durTotal = 0;   // Total
-
-        if (order.status === 'completed') {
-            if (order.paymentMethod === 'qris') {
-                // QRIS: Hitung detail
-                if(t2 && t1) durPesan = t2 - t1;
-                if(t3 && t2) durRespon = t3 - t2; // Ini KPI Admin
-                if(t4 && t3) durMasak = t4 - t3;
-            } else {
-                // TUNAI: Respon dianggap 0
-                // Pesan-Bayar adalah dari Order dibuat sampai Kasir terima uang (t3)
-                if(t3 && t1) durPesan = t3 - t1;
-                durRespon = 0; 
-                if(t4 && t3) durMasak = t4 - t3;
+        // --- FUNGSI CREATE CARD DETIL (IDENTIK DENGAN DAPUR.HTML) ---
+        function createHistoryCard(order) {
+            let displayName = "Pelanggan";
+            if (order.tableNumber) {
+                displayName = "MEJA " + order.tableNumber;
+                if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
+            } else if (order.customer) {
+                if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
+                else displayName = order.customer;
             }
-            if(t4 && t1) durTotal = t4 - t1;
-        }
-
-        let kpiHtml = '';
-        if (order.status === 'completed') {
-            // Indikator Warna untuk Respon Admin (Merah jika > 3 menit)
-            const responColor = durRespon > 180000 ? '#e74c3c' : '#fff';
             
-            kpiHtml = `
-            <div style="margin-top:15px; padding-top:10px; border-top:1px dashed #555;">
-                <div class="dur-row"><span style="color:#aaa;">Pesan - Bayar (Cust):</span> <span class="dur-val">${fmtDur(durPesan)}</span></div>
-                <div class="dur-row"><span style="color:#aaa;">Respon Kasir:</span> <span class="dur-val" style="color:${responColor}">${fmtDur(durRespon)}</span></div>
-                <div class="dur-row"><span style="color:#aaa;">Masak (Dapur):</span> <span class="dur-val">${fmtDur(durMasak)}</span></div>
-                <div class="dur-total-row" style="margin-top:8px; padding-top:8px; border-top:1px solid #444;">
-                    <span>TOTAL DURASI:</span> <span class="dur-total-val" style="color:var(--accent);">${fmtDur(durTotal)}</span>
-                </div>
-            </div>`;
-        }
+            const created = new Date(order.timestamp).getTime();
+            const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : 0;
+            const paid = order.paidAt ? new Date(order.paidAt).getTime() : 0;
+            const completed = order.completedAt ? new Date(order.completedAt).getTime() : 0;
 
-        let statusFooter = '';
-        if(order.status === 'rejected') {
-            statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
-        } else {
-            statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
-        }
+            const div = document.createElement('div');
+            div.className = `order-card status-${order.status}`;
+            
+            // Detail Items (Termasuk Harga Satuan & Notes)
+            let itemsHtml = (order.items || []).map(item => {
+                const qty = parseInt(item.qty);
+                const price = parseInt(item.price);
+                const subtotal = qty * price;
+                const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
+                return `
+                <div class="item-row">
+                    <div style="flex:1;">
+                        <span class="item-name">${qty}x ${item.name}</span>
+                        ${unitPriceHtml}
+                        ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
+                    </div>
+                    <div style="text-align:right;">
+                        <span class="item-price">${subtotal.toLocaleString()}</span>
+                    </div>
+                </div>`;
+            }).join('');
 
-        let rawTotal = String(order.total).replace(/[^0-9]/g, '');
-        const safeTotal = Number(rawTotal) || 0;
+            // HEADER INFO
+            const dateStr = new Date(created).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
+            const timeIn = new Date(created).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
+            let timeOut = '-';
+            if(order.completedAt) {
+                timeOut = new Date(order.completedAt).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
+            }
 
-        div.innerHTML = `
-            <div class="card-header">
-                <div class="header-left">
-                    <span class="cust-name">${displayName}</span>
-                    <span class="order-id">ID: ...${order.id.slice(-4)}</span>
-                </div>
-                <div class="header-right">
-                    <span class="meta-date">${dateStr}</span>
-                    <div class="meta-time-block">
-                        <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br>
-                        <span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span>
+            // METRICS & FOOTER
+            let metricsHtml = '';
+            let statusFooter = '';
+            
+            if(order.status === 'rejected') {
+                statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
+            } else {
+                statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
+                const durRespon = accepted > 0 ? Math.floor((accepted - created)/1000) : 0;
+                const durBayar = paid > 0 ? Math.floor((paid - accepted)/1000) : 0;
+                const durMasak = completed > 0 ? Math.floor((completed - paid)/1000) : 0;
+                const durTotal = completed > 0 ? Math.floor((completed - created)/1000) : 0;
+                const fmt = (s) => { if (s <= 0) return "-"; const m = Math.floor(s/60); const sc = s%60; return m > 0 ? `${m}m ${sc}s` : `${sc}s`; };
+
+                metricsHtml = `
+                <div class="duration-box">
+                    <div class="dur-row"><span>Respon:</span> <span class="dur-val">${fmt(durRespon)}</span></div>
+                    <div class="dur-row"><span>Bayar:</span> <span class="dur-val">${fmt(durBayar)}</span></div>
+                    <div class="dur-row"><span>Masak:</span> <span class="dur-val">${fmt(durMasak)}</span></div>
+                    <div class="dur-total-row">
+                        <span>TOTAL DURASI:</span> <span class="dur-total-val">${fmt(durTotal)}</span>
+                    </div>
+                </div>`;
+            }
+
+            let rawTotal = String(order.total).replace(/[^0-9]/g, '');
+            const safeTotal = Number(rawTotal) || 0;
+
+            div.innerHTML = `
+                <div class="card-header">
+                    <div class="header-left">
+                        <span class="cust-name">${displayName}</span>
+                        <span class="order-id">ID: ...${order.id.slice(-4)}</span>
+                    </div>
+                    <div class="header-right">
+                        <span class="meta-date">${dateStr}</span>
+                        <div class="meta-time-block">
+                            <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br>
+                            <span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="item-list">${itemsHtml}</div>
-            
-            <div class="total-display" style="margin-bottom:5px;">Total: Rp ${safeTotal.toLocaleString()}</div>
-            
-            ${kpiHtml}
-            
-            ${statusFooter}
-        `;
-        return div;
-    }
+                <div class="item-list">${itemsHtml}</div>
+                ${metricsHtml}
+                <div class="total-display">Total: Rp ${safeTotal.toLocaleString()}</div>
+                ${statusFooter}
+            `;
+            return div;
+        }
 
-    function showPage(p) {
-        document.querySelectorAll('.main').forEach(e=>e.style.display='none');
-        document.getElementById(p+'-page').style.display='block';
-        document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active'));
-        const idx = p === 'finance' ? 0 : (p === 'logs' ? 1 : 2);
-        document.querySelectorAll('.menu-item')[idx].classList.add('active');
-        if(p==='finance') calculateFinance();
-    }
+        function showPage(p) {
+            document.querySelectorAll('.main').forEach(e=>e.style.display='none');
+            document.getElementById(p+'-page').style.display='block';
+            document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active'));
+            const idx = p === 'finance' ? 0 : (p === 'logs' ? 1 : 2);
+            document.querySelectorAll('.menu-item')[idx].classList.add('active');
+            if(p==='finance') calculateFinance();
+        }
 
-    function calculateFinance() {
-        const mode = document.getElementById('finance-mode').value;
-        let totalRev = 0;
-        let targetDate, targetMonth;
-        if (mode === 'daily') targetDate = new Date(document.getElementById('finance-date').value);
-        else { const val = document.getElementById('finance-month').value; if(val) targetMonth = val; }
+        function calculateFinance() {
+            const mode = document.getElementById('finance-mode').value;
+            let totalRev = 0;
+            let targetDate, targetMonth;
+            if (mode === 'daily') targetDate = new Date(document.getElementById('finance-date').value);
+            else { const val = document.getElementById('finance-month').value; if(val) targetMonth = val; }
 
-        dbOrders.forEach(o => {
-            if (o.status !== 'completed' && o.status !== 'done') return;
-            const oDate = new Date(o.completedAt || o.timestamp);
-            let raw = String(o.total).replace(/[^0-9]/g, '');
-            let total = Number(raw) || 0;
-            let match = false;
-            if (mode === 'daily' && targetDate && oDate.toDateString() === targetDate.toDateString()) match = true;
-            if (mode === 'monthly' && targetMonth && oDate.toISOString().slice(0,7) === targetMonth) match = true;
-            if(match) totalRev += total;
-        });
-        document.getElementById('main-stat-rev').innerText = "Rp " + totalRev.toLocaleString('id-ID');
-    }
+            dbOrders.forEach(o => {
+                if (o.status !== 'completed' && o.status !== 'done') return;
+                const oDate = new Date(o.completedAt || o.timestamp);
+                let raw = String(o.total).replace(/[^0-9]/g, '');
+                let total = Number(raw) || 0;
+                let match = false;
+                if (mode === 'daily' && targetDate && oDate.toDateString() === targetDate.toDateString()) match = true;
+                if (mode === 'monthly' && targetMonth && oDate.toISOString().slice(0,7) === targetMonth) match = true;
+                if(match) totalRev += total;
+            });
+            document.getElementById('main-stat-rev').innerText = "Rp " + totalRev.toLocaleString('id-ID');
+        }
 
-    function toggleFinanceFilter() {
-        const m = document.getElementById('finance-mode').value;
-        document.getElementById('finance-date').style.display = m === 'daily' ? 'block' : 'none';
-        document.getElementById('finance-month').style.display = m === 'monthly' ? 'block' : 'none';
-        calculateFinance();
-    }
+        function toggleFinanceFilter() {
+            const m = document.getElementById('finance-mode').value;
+            document.getElementById('finance-date').style.display = m === 'daily' ? 'block' : 'none';
+            document.getElementById('finance-month').style.display = m === 'monthly' ? 'block' : 'none';
+            calculateFinance();
+        }
 
-    function renderHistory() {
-        const grid = document.getElementById('history-grid');
-        grid.innerHTML = '';
-        const filterDate = new Date(document.getElementById('history-date-picker').value).toDateString();
-        const sorted = [...dbOrders].sort((a,b) => (b.completedAt ? new Date(b.completedAt) : 0) - (a.completedAt ? new Date(a.completedAt) : 0));
-        sorted.forEach(order => {
-            if (['completed', 'rejected', 'done'].includes(order.status)) {
-                if (new Date(order.completedAt || order.timestamp).toDateString() === filterDate) {
-                    grid.appendChild(createHistoryCard(order));
+        function renderHistory() {
+            const grid = document.getElementById('history-grid');
+            grid.innerHTML = '';
+            const filterDate = new Date(document.getElementById('history-date-picker').value).toDateString();
+            const sorted = [...dbOrders].sort((a,b) => (b.completedAt ? new Date(b.completedAt) : 0) - (a.completedAt ? new Date(a.completedAt) : 0));
+            sorted.forEach(order => {
+                if (['completed', 'rejected', 'done'].includes(order.status)) {
+                    if (new Date(order.completedAt || order.timestamp).toDateString() === filterDate) {
+                        grid.appendChild(createHistoryCard(order));
+                    }
                 }
-            }
-        });
-    }
-</script>
+            });
+        }
+    </script>
+</body>
+</html>
