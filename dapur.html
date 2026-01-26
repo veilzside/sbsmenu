@@ -12,45 +12,10 @@
         
         .sidebar { width: 260px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
         .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
-        /* --- UPDATE CSS SIDEBAR & BADGE --- */
-        .menu-item { 
-            padding: 15px; 
-            cursor: pointer; 
-            border-radius: 10px; 
-            margin-bottom: 10px; 
-            font-weight: 600; 
-            transition: 0.2s; 
-            color: #888; 
-            display: flex; 
-            align-items: center; 
-            gap: 10px;
-            position: relative; /* Penting untuk posisi badge */
-        }
+        .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
         .menu-icon { font-size: 20px; }
 
-        /* Style Badge Notifikasi Merah */
-        .nav-badge {
-            position: absolute;
-            top: 5px;
-            right: 10px;
-            background-color: var(--red);
-            color: #fff;
-            font-size: 10px;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 50%;
-            min-width: 18px;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
-
-        /* --- UPDATE LAYOUT TOMBOL --- */
-        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
-        .btn-full { grid-column: 1 / -1; width: 100%; display: block; text-align: center; }
-        .form-select { width: 100%; padding: 12px; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 8px; font-family: 'Poppins'; font-size: 16px; }
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
         .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .page-title { margin:0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
@@ -185,18 +150,8 @@
 
     <div class="sidebar">
         <div class="brand">SBS KITCHEN</div>
-        
-        <div class="menu-item active" onclick="showPage('orders')">
-            <span class="menu-icon">📦</span>
-            <span>Pesanan</span>
-            <span id="badge-nav-orders" class="nav-badge" style="display:none;">0</span>
-        </div>
-        
-        <div class="menu-item" onclick="showPage('history')">
-            <span class="menu-icon">🕒</span>
-            <span>Riwayat (Hari Ini)</span>
-            <span id="badge-nav-history" class="nav-badge" style="display:none;">0</span>
-        </div>
+        <div class="menu-item active" onclick="showPage('orders')"><span class="menu-icon">📦</span><span>Pesanan</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">🕒</span><span>Riwayat (Hari Ini)</span></div>
     </div>
 
     <div class="main" id="orders-page">
@@ -268,15 +223,9 @@
     
     let allOrders = [];
     let currentTab = localStorage.getItem('sbs_active_tab') || 'kasir'; 
-    let activePage = 'orders'; 
     let audioUnlocked = false;
     let confirmCallback = null;
-    
-    // Variabel Notifikasi
     let previousOrderStatuses = {}; 
-    let isFirstLoad = true;
-    let unreadOrdersCount = 0;
-    let unreadHistoryCount = 0;
 
     const soundNew = document.getElementById('sound-new');
     const soundNag = document.getElementById('sound-nag');
@@ -290,16 +239,15 @@
         return `${m}m ${rs}s`;
     }
 
-    // --- FUNGSI NAVIGASI TAB (KASIR/DAPUR) ---
     function setupTabs() {
         const t1 = document.getElementById('tab-new');
         const t2 = document.getElementById('tab-unpaid');
         const t3 = document.getElementById('tab-processing');
 
-        t1.innerHTML = `KASIR <span class="badge" id="badge-kasir">0</span>`;
+        t1.innerHTML = 'KASIR <span class="badge" id="badge-kasir">0</span>';
         t1.setAttribute('onclick', "filterTab('kasir')");
         
-        t2.innerHTML = `DAPUR <span class="badge" id="badge-dapur">0</span>`;
+        t2.innerHTML = 'DAPUR <span class="badge" id="badge-dapur">0</span>';
         t2.setAttribute('onclick', "filterTab('dapur')");
 
         t3.style.display = 'none';
@@ -309,34 +257,29 @@
         else t2.classList.add('active');
     }
 
-    function filterTab(tabName) {
-        currentTab = tabName;
-        localStorage.setItem('sbs_active_tab', tabName);
-        setupTabs();
-        renderOrders();
-    }
-
-    // --- LOGIKA NOTIFIKASI MERAH (ICON SIDEBAR) ---
-    function updateNavBadges() {
-        const badgeOrd = document.getElementById('badge-nav-orders');
-        const badgeHis = document.getElementById('badge-nav-history');
-
-        if(unreadOrdersCount > 0 && activePage !== 'orders') {
-            badgeOrd.innerText = unreadOrdersCount;
-            badgeOrd.style.display = 'inline-block';
+    function toggleAudio() {
+        if (!audioUnlocked) {
+            soundNew.play().then(() => {
+                soundNew.pause(); soundNew.currentTime = 0;
+                audioUnlocked = true;
+                btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
+            }).catch(e => console.log(e));
         } else {
-            badgeOrd.style.display = 'none';
-        }
-
-        if(unreadHistoryCount > 0 && activePage !== 'history') {
-            badgeHis.innerText = unreadHistoryCount;
-            badgeHis.style.display = 'inline-block';
-        } else {
-            badgeHis.style.display = 'none';
+            audioUnlocked = false;
+            btnAudio.className = 'inactive'; btnAudio.innerHTML = "🔕";
         }
     }
 
-    // --- FIREBASE REALTIME LISTENER ---
+    function unlockAudio() {
+        if (!audioUnlocked) {
+            soundNew.play().then(() => {
+                soundNew.pause(); soundNew.currentTime = 0;
+                audioUnlocked = true;
+                btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
+            }).catch(e => {});
+        }
+    }
+
     db.ref('orders').on('value', (snapshot) => {
         const data = snapshot.val();
         let shouldRing = false;
@@ -349,171 +292,419 @@
                 allOrders.push(order);
                 currentStatuses[key] = order.status;
 
-                if (!isFirstLoad) {
-                    const currentStat = order.status;
-                    const prevStat = previousOrderStatuses[key];
-
-                    // 1. Notifikasi Pesanan Baru (Hanya jika belum pernah ada atau status berubah ke aktif)
-                    if (['new', 'qris_unpaid', 'pending_payment'].includes(currentStat) && (!prevStat || prevStat !== currentStat)) {
-                        if (activePage !== 'orders') unreadOrdersCount++;
+                if (audioUnlocked) {
+                    // Alarm Tunai Baru
+                    if (order.status === 'new' && (!previousOrderStatuses[key] || previousOrderStatuses[key] !== 'new')) {
+                        shouldRing = true;
                     }
-
-                    // 2. Alarm Bunyi (Tunai Baru & Konfirmasi QRIS)
-                    if (audioUnlocked) {
-                        if (currentStat === 'new' && prevStat !== 'new') shouldRing = true;
-                        if (currentStat === 'pending_payment' && prevStat === 'qris_unpaid') shouldRing = true;
-                    }
-
-                    // 3. Notifikasi Riwayat Baru (Pesanan Selesai)
-                    if (['completed', 'rejected'].includes(currentStat) && prevStat && !['completed', 'rejected'].includes(prevStat)) {
-                        if (activePage !== 'history') unreadHistoryCount++;
+                    // Alarm QRIS Terverifikasi (Pending Payment)
+                    if (order.status === 'pending_payment') {
+                         if (!previousOrderStatuses[key] || previousOrderStatuses[key] === 'qris_unpaid') {
+                             shouldRing = true;
+                         }
                     }
                 }
             });
         }
         
         previousOrderStatuses = currentStatuses;
-        if (isFirstLoad) isFirstLoad = false; 
-        
-        updateNavBadges();
-        if (shouldRing) soundNew.play().catch(e => {});
+
+        if (shouldRing) {
+            soundNew.play().catch(e => {});
+        }
         
         allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         setupTabs(); 
         renderOrders();
-        updateBadges(); 
+        updateBadges();
     });
 
-    // --- FUNGSI CETAK & PROSES ---
+    function getDailyQueueNumber(orderId) {
+        const targetOrder = allOrders.find(o => o.id === orderId);
+        if(!targetOrder) return "00";
+        const targetDate = new Date(targetOrder.timestamp).toDateString();
+        const dailyOrders = allOrders.filter(o => new Date(o.timestamp).toDateString() === targetDate).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+        const index = dailyOrders.findIndex(o => o.id === orderId);
+        return index + 1;
+    }
+
     function printDirect(orderId, type) {
         const order = allOrders.find(o => o.id === orderId);
         if (!order) return;
+
         let tableNum = order.tableNumber || "Take Away";
         let realQueue = getDailyQueueNumber(order.id);
         const dateObj = new Date(order.timestamp);
+        const dateStr = dateObj.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
         const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', hour12: false});
         const displayID = "2SA" + order.id.slice(-4).toUpperCase();
-        const ESC = "\x1B", GS = "\x1D", INIT = ESC + "@";
-        const BOLD_ON = ESC + "E" + "\x01", BOLD_OFF = ESC + "E" + "\x00";
+
+        const ESC = "\x1B"; const GS = "\x1D"; const INIT = ESC + "@";
+        const ALIGN_CENTER = ESC + "a" + "\x01"; const ALIGN_LEFT = ESC + "a" + "\x00";
+        const BOLD_ON = ESC + "E" + "\x01"; const BOLD_OFF = ESC + "E" + "\x00";
+        const TEXT_DOUBLE = GS + "!" + "\x11"; const TEXT_NORMAL = GS + "!" + "\x00";
+
         let data = INIT;
-        
+
         if (type === 'invoice') {
-            data += ESC + "a" + "\x01" + GS + "!" + "\x11" + "SBS CAFE\n" + GS + "!" + "\x00" + BOLD_OFF;
-            data += "Jl. Mundu 8, Kota Malang\n--------------------------------\n" + ESC + "a" + "\x00" + BOLD_ON + "TABLE: " + tableNum + BOLD_OFF + "\nQueue Order: #" + realQueue + "\nID   : " + displayID + "\n--------------------------------\n";
+            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF;
+            data += "Jl. Mundu 8, Kota Malang\n";
+            data += "085159039877\n";
+            data += "--------------------------------\n";
+            data += ALIGN_LEFT;
+            data += BOLD_ON + "TABLE: " + tableNum + BOLD_OFF + "\n";
+            data += "Queue Order: #" + realQueue + "\n"; 
+            data += "Date : " + dateStr + " " + timeStr + "\n";
+            data += "ID   : " + displayID + "\n";
+            data += "--------------------------------\n";
             order.items.forEach(item => {
-                data += item.name + "\n" + item.qty + "x @" + parseInt(item.price).toLocaleString('id-ID') + " ".repeat(5) + (item.qty * item.price).toLocaleString('id-ID') + "\n";
+                let price = parseInt(item.price);
+                let sub = item.qty * price;
+                data += item.name + "\n";
+                let line = item.qty + "x @" + price.toLocaleString('id-ID');
+                let priceStr = sub.toLocaleString('id-ID');
+                let spaces = 32 - line.length - priceStr.length;
+                if(spaces < 1) spaces = 1;
+                data += line + " ".repeat(spaces) + priceStr + "\n";
+                if(item.note) data += "  (Note: " + item.note + ")\n";
             });
-            data += "--------------------------------\n" + BOLD_ON + "TOTAL" + " ".repeat(10) + parseInt(order.total).toLocaleString('id-ID') + "\n" + BOLD_OFF + "\n\n\n\n";
+            data += "--------------------------------\n";
+            let totalStr = parseInt(order.total).toLocaleString('id-ID');
+            let totalLabel = "TOTAL";
+            let totalSpaces = 32 - totalLabel.length - totalStr.length;
+            data += BOLD_ON + totalLabel + " ".repeat(totalSpaces > 0 ? totalSpaces : 1) + totalStr + "\n" + BOLD_OFF;
+            data += "--------------------------------\n";
+            data += ALIGN_CENTER + "Wifi: SBSkopi8\nTerima Kasih!\n\n\n\n";
         } else {
-            data += ESC + "a" + "\x01" + GS + "!" + "\x11" + "CHECKER\n" + GS + "!" + "\x00" + "\n" + ESC + "a" + "\x00" + "TABLE: " + BOLD_ON + tableNum + BOLD_OFF + "\nQUEUE: #" + realQueue + "\nTIME : " + timeStr + "\n--------------------------------\n";
-            order.items.forEach(item => { data += BOLD_ON + item.qty + " x " + item.name + BOLD_OFF + "\n" + (item.note ? " [ " + item.note + " ]\n" : "") + "\n"; });
-            data += "\n\n\n\n";
+            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF;
+            data += "\n" + ALIGN_LEFT;
+            data += "TABLE: " + BOLD_ON + tableNum + BOLD_OFF + "\n";
+            data += "QUEUE: #" + realQueue + "\n";
+            data += "TIME : " + timeStr + "\n";
+            data += "ID   : " + displayID + "\n";
+            data += "--------------------------------\n";
+            order.items.forEach(item => {
+                data += BOLD_ON + item.qty + " x " + item.name + BOLD_OFF + "\n";
+                if(item.note) data += "   [ " + item.note + " ]\n";
+                data += "\n"; 
+            });
+            data += "\n\n\n\n"; 
         }
-        window.location.href = "rawbt:base64," + btoa(String.fromCharCode(...new Uint8Array(data.split("").map(c => c.charCodeAt(0)))));
+
+        const buffer = new Uint8Array(data.length);
+        for (let i = 0; i < data.length; i++) { buffer[i] = data.charCodeAt(i); }
+        let binary = '';
+        for (let i = 0; i < buffer.byteLength; i++) { binary += String.fromCharCode(buffer[i]); }
+        const base64Data = btoa(binary);
+        window.location.href = "rawbt:base64," + base64Data;
     }
 
     function verifyAndPrint(key) {
         printDirect(key, 'checker');
-        setTimeout(() => { updateStatus(key, 'processing'); }, 500);
+        setTimeout(() => {
+            updateStatus(key, 'processing');
+        }, 500);
     }
 
-    // --- RENDER UI ---
+    setInterval(() => {
+        updateLiveTimers();
+        checkNaggingAlarm();
+    }, 1000);
+
+    function checkNaggingAlarm() {
+        if (!audioUnlocked) return;
+        const now = Date.now();
+        if (allOrders.some(order => {
+            if (order.status !== 'new' && order.status !== 'pending_payment') return false;
+            const diff = (now - new Date(order.timestamp).getTime()) / 1000;
+            return diff > 120 && (diff % 120) < 1.5;
+        })) {
+            soundNag.currentTime = 0;
+            soundNag.play().catch(e => {});
+        }
+    }
+
+    function updateLiveTimers() {
+        document.querySelectorAll('.live-timer').forEach(el => {
+            const startTime = parseInt(el.getAttribute('data-start'));
+            if (!startTime || isNaN(startTime)) { el.innerText = "--:--"; return; }
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            if (elapsed > 86400) { el.innerText = "> 24h"; return; }
+            const min = Math.floor(elapsed / 60);
+            const sec = elapsed % 60;
+            el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
+        });
+    }
+
     function renderOrders() {
         const grid = document.getElementById('orders-grid');
-        const hGrid = document.getElementById('history-grid');
-        grid.innerHTML = ''; hGrid.innerHTML = '';
+        const historyGrid = document.getElementById('history-grid');
+        grid.innerHTML = '';
+        historyGrid.innerHTML = '';
         const today = new Date().toDateString();
 
         allOrders.forEach(order => {
             const card = createCard(order);
-            const isDone = ['completed', 'rejected'].includes(order.status);
-            if (isDone) {
-                if (new Date(order.completedAt || order.timestamp).toDateString() === today) hGrid.appendChild(card);
-            } else if (currentTab === 'kasir') {
-                if (['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(order.status)) grid.appendChild(card);
-            } else if (currentTab === 'dapur' && order.status === 'processing') {
-                grid.appendChild(card);
+            const orderDate = new Date(order.completedAt || order.timestamp).toDateString();
+            
+            if (['completed', 'rejected', 'done'].includes(order.status)) {
+                if (orderDate === today) {
+                    historyGrid.appendChild(card);
+                }
+            } else {
+                if (currentTab === 'kasir') {
+                    if (['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(order.status)) {
+                        grid.appendChild(card);
+                    }
+                }
+                else if (currentTab === 'dapur' && order.status === 'processing') {
+                    grid.appendChild(card);
+                }
             }
         });
         updateLiveTimers();
     }
 
     function createCard(order) {
-        const t1 = new Date(order.timestamp).getTime();
-        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0;
-        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0;
+        let displayName = "Pelanggan";
+        if (order.tableNumber) {
+            displayName = "MEJA " + order.tableNumber;
+            if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
+        } else if (order.customer) displayName = order.customer;
+
+        const t1 = new Date(order.timestamp).getTime(); 
+        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; 
+        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; 
         const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
-        
-        let timerStart = (['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(order.status)) ? t1 : t3;
+
+        let timerStart = 0;
+        if(['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(order.status)) timerStart = t1;
+        else if (order.status === 'processing') timerStart = t3;
+
         const div = document.createElement('div');
         div.className = `order-card status-${order.status}`;
         
+        if(order.status === 'qris_unpaid') div.style.borderLeftColor = '#888';
+        if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; 
+        if(order.status === 'unpaid') div.style.borderLeftColor = '#FF6600'; 
+        
         let itemsHtml = (order.items || []).map((item, idx) => {
-            const uPrice = parseInt(item.qty) > 1 ? `<span class="item-unit-price">(${item.qty} x ${parseInt(item.price).toLocaleString()})</span>` : '';
-            const tBtn = !['completed', 'rejected'].includes(order.status) ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
-            return `<div class="item-row"><div style="flex:1;"><span class="item-name">${item.qty}x ${item.name}</span>${uPrice}${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}</div><div style="text-align:right;"><span class="item-price">${(item.qty * item.price).toLocaleString()}</span>${tBtn}</div></div>`;
+            const qty = parseInt(item.qty);
+            const price = parseInt(item.price);
+            const subtotal = qty * price;
+            const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
+            // Tombol hapus item masih ada, tapi fitur tambah item (edit) sudah dihapus
+            const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
+            return `
+            <div class="item-row">
+                <div style="flex:1;">
+                    <span class="item-name">${qty}x ${item.name}</span>
+                    ${unitPriceHtml}
+                    ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
+                </div>
+                <div style="text-align:right;">
+                    <span class="item-price">${subtotal.toLocaleString()}</span>
+                    ${trashBtn}
+                </div>
+            </div>`;
         }).join('');
 
-        // KPI Logika
-        let kHtml = '';
-        if (order.status === 'completed') {
-            let dP = (t2 && t1) ? t2 - t1 : 0, dR = (t3 && t2) ? t3 - t2 : 0, dM = (t4 && t3) ? t4 - t3 : 0;
-            if(order.paymentMethod === 'tunai' && t3 && t1) dP = t3 - t1;
-            kHtml = `<div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555; font-size:11px;"><div class="dur-row"><span>Pesan - Bayar:</span> <b>${fmtDur(dP)}</b></div><div class="dur-row"><span>Respon Kasir:</span> <b style="color:${dR>180000?'#e74c3c':'#fff'}">${fmtDur(dR)}</b></div><div class="dur-row"><span>Masak:</span> <b>${fmtDur(dM)}</b></div><div class="dur-total-row"><span>TOTAL:</span> <b style="color:var(--accent)">${fmtDur((t4&&t1)?t4-t1:0)}</b></div></div>`;
+        const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
+        const timeIn = new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
+        
+        let paymentBadge = order.paymentMethod === 'qris' 
+            ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">QRIS</span>' 
+            : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">TUNAI</span>';
+
+        let headerRight = '';
+        let kpiHtml = '';
+        
+        if(order.status === 'completed' || order.status === 'rejected') {
+            let timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
+            headerRight = `
+                <div class="header-right">
+                    <span class="meta-date">${dateStr}</span>
+                    <div class="meta-time-block">
+                        <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br>
+                        <span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span>
+                    </div>
+                </div>`;
+            
+            if (order.status === 'completed') {
+                let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
+                if (order.paymentMethod === 'qris') {
+                    if(t2 && t1) durPesan = t2 - t1;
+                    if(t3 && t2) durRespon = t3 - t2;
+                    if(t4 && t3) durMasak = t4 - t3;
+                } else {
+                    if(t3 && t1) durPesan = t3 - t1;
+                    durRespon = 0; 
+                    if(t4 && t3) durMasak = t4 - t3;
+                }
+                if(t4 && t1) durTotal = t4 - t1;
+
+                const responColor = durRespon > 180000 ? '#e74c3c' : '#fff';
+                kpiHtml = `
+                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555; font-size:11px;">
+                    <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                        <span style="color:#777;">Pesan - Bayar (Cust):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durPesan)}</span>
+                    </div>
+                    <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                        <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor}; font-weight:600;">${fmtDur(durRespon)}</span>
+                    </div>
+                    <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                        <span style="color:#777;">Masak (Dapur):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durMasak)}</span>
+                    </div>
+                    <div class="dur-total-row" style="margin-top:6px; padding-top:6px; border-top:1px solid #444; display:flex; justify-content:space-between; font-size:12px; font-weight:700;">
+                        <span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:var(--accent);">${fmtDur(durTotal)}</span>
+                    </div>
+                </div>`;
+            }
+
+        } else {
+            headerRight = `
+                <div class="header-right">
+                    <span class="meta-date">${dateStr}</span>
+                    <div class="meta-time-block">
+                        <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span>
+                    </div>
+                    <div class="timer-badge live-timer" data-start="${timerStart}">--:--</div>
+                </div>`;
         }
 
-        // Tombol Logika
-        let bHtml = '';
-        const btnT = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>`;
-        if (order.status === 'new') bHtml = `<div class="actions">${btnT}<button class="btn btn-green" onclick="updateStatus('${order.id}', 'unpaid')">TERIMA</button></div>`;
-        else if (order.status === 'qris_unpaid') bHtml = `<div class="actions">${btnT}<button class="btn btn-grey" disabled style="opacity:0.5;">Menunggu Pembayaran</button></div><div style="text-align:center; font-size:10px; color:#aaa; margin-top:5px;">customer belum melakukan pembayaran</div>`;
-        else if (order.status === 'pending_payment') bHtml = `<div class="actions">${btnT}<button class="btn btn-blue" onclick="verifyAndPrint('${order.id}')">VERIFIKASI & PROSES</button></div><div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">⚠ CEK MUTASI!</div>`;
-        else if (order.status === 'unpaid') bHtml = `<div class="actions"><button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button><button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">LUNAS & MASAK</button></div>`;
-        else if (order.status === 'processing') bHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">SELESAI & ANTAR</button>`;
+        let printButtons = '';
+        if(order.status !== 'rejected') {
+            printButtons = `
+            <div class="btn-print-group">
+                <button class="btn-print" onclick="printDirect('${order.id}', 'checker')">
+                    <span style="font-size:16px;">🖨</span> CHECKER
+                </button>
+                <button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">
+                    <span style="font-size:16px;">🧾</span> INVOICE
+                </button>
+            </div>`;
+        }
 
-        div.innerHTML = `<div class="card-header"><div class="header-left"><span class="cust-name">${order.tableNumber ? 'MEJA ' + order.tableNumber + ' - ' + (order.customerName||'').toUpperCase() : 'PELANGGAN'}</span><div style="margin-top:2px;"><span style="background:${order.paymentMethod==='qris'?'#000':'#ddd'}; color:${order.paymentMethod==='qris'?'#fff':'#000'}; padding:2px 6px; border-radius:4px; font-size:10px;">${order.paymentMethod.toUpperCase()}</span></div></div><div class="header-right"><span class="meta-date">${new Date(t1).toLocaleDateString('id-ID', {weekday:'short', day:'numeric', month:'short'})}</span><div class="meta-time-block">In: ${new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}</div>${!['completed','rejected'].includes(order.status) ? `<div class="timer-badge live-timer" data-start="${timerStart}">--:--</div>` : ''}</div></div><div class="item-list">${itemsHtml}</div><div class="total-display">Total: Rp ${parseInt(order.total).toLocaleString()}</div>${kHtml}${bHtml}${!['completed','rejected'].includes(order.status) ? `<div class="btn-print-group" style="margin-top:10px;"><button class="btn-print" onclick="printDirect('${order.id}', 'checker')">🖨 CHECKER</button><button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">🧾 INVOICE</button></div>` : ''}`;
+        // --- BUTTON LOGIC UPDATE: HAPUS +ITEM, KEMBALI KE SIDE-BY-SIDE ---
+        let buttonsHtml = '';
+        const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>`;
+
+        if (order.status === 'new') { 
+            // Tunai Baru: [Tolak] [Terima]
+            buttonsHtml = `
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    ${btnTolak}
+                    <button class="btn btn-green" onclick="updateStatus('${order.id}', 'unpaid')">TERIMA</button>
+                </div>
+            `;
+        } 
+        else if (order.status === 'qris_unpaid') {
+            // QRIS Belum Bayar: [Tolak] [Menunggu]
+            buttonsHtml = `
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    ${btnTolak}
+                    <button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGGU...</button>
+                </div>
+                <div style="text-align:center; font-size:10px; color:#aaa; margin-top:5px;">Customer belum klik bayar</div>
+            `;
+        }
+        else if (order.status === 'pending_payment') {
+            // QRIS Verifikasi: [Tolak] [Verifikasi & Proses]
+            buttonsHtml = `
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    ${btnTolak}
+                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}')">VERIFIKASI & PROSES</button>
+                </div>
+                <div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">⚠ CEK MUTASI!</div>
+            `;
+        }
+        else if (order.status === 'unpaid') { 
+            // Tunai Lunas: [Kembali] [Lunas & Masak]
+            buttonsHtml = `
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button>
+                    <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">LUNAS & MASAK</button>
+                </div>
+            `;
+        } 
+        else if (order.status === 'processing') {
+            // Processing: [Selesai & Antar] (Tetap Full Width)
+            buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">SELESAI & ANTAR</button>`;
+        }
+
+        let statusFooter = '';
+        if(order.status === 'rejected') statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
+        else if (order.status === 'completed') statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
+
+        div.innerHTML = `
+            <div class="card-header">
+                <div class="header-left">
+                    <span class="cust-name">${displayName}</span>
+                    <div style="margin-top:2px;">${paymentBadge} <span class="order-id">ID: ...${order.id.slice(-4)}</span></div>
+                </div>
+                ${headerRight}
+            </div>
+            <div class="item-list">${itemsHtml}</div>
+            <div class="total-display" style="margin-bottom:5px;">Total: Rp ${Number(String(order.total).replace(/[^0-9]/g, '')).toLocaleString()}</div>
+            
+            ${kpiHtml}
+
+            ${statusFooter}
+            ${printButtons}
+            <div class="actions" style="display:block;">${buttonsHtml}</div>
+        `;
         return div;
     }
 
-    // --- CORE FUNCTIONS ---
     function updateStatus(key, status) {
-        const u = { status: status }, n = new Date().toISOString(); 
-        if(status === 'unpaid') u.acceptedAt = n; 
-        if(status === 'processing') u.paidAt = n; 
-        if(status === 'completed' || status === 'rejected') u.completedAt = n; 
-        db.ref('orders/' + key).update(u);
+        const updates = { status: status };
+        const now = new Date().toISOString(); 
+        if(status === 'unpaid') updates.acceptedAt = now; 
+        if(status === 'processing') updates.paidAt = now; 
+        if(status === 'completed' || status === 'rejected') updates.completedAt = now; 
+        db.ref('orders/' + key).update(updates);
     }
+
     function confirmReject(key) { showConfirm("Yakin tolak pesanan ini?", () => updateStatus(key, 'rejected')); }
-    function deleteOrderItem(oK, iI) { showConfirm("Hapus item ini?", () => { const o = allOrders.find(x => x.id === oK), nI = [...o.items], r = nI.splice(iI, 1)[0], cT = parseInt(o.total) || 0; db.ref('orders/' + oK).update({ items: nI, total: cT - (r.price * r.qty) }); }); }
-    
+
+    function deleteOrderItem(orderKey, itemIndex) {
+        showConfirm("Hapus item ini?", () => {
+            const order = allOrders.find(o => o.id === orderKey);
+            const newItems = [...order.items];
+            const removed = newItems.splice(itemIndex, 1)[0];
+            let currentTotal = parseInt(String(order.total).replace(/[^0-9]/g, '')) || 0;
+            db.ref('orders/' + orderKey).update({ items: newItems, total: currentTotal - (removed.price * removed.qty) });
+        });
+    }
+
     function showPage(pageId) {
-        activePage = pageId; 
-        if (pageId === 'orders') unreadOrdersCount = 0;
-        if (pageId === 'history') unreadHistoryCount = 0;
-        updateNavBadges();
         document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
         document.getElementById(pageId + '-page').style.display = 'block';
         document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-        const items = document.querySelectorAll('.menu-item');
-        if(pageId === 'orders') items[0].classList.add('active');
-        if(pageId === 'history') items[1].classList.add('active');
+        if(pageId === 'orders') document.querySelectorAll('.menu-item')[0].classList.add('active');
+        if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
     }
 
-    function updateBadges() { 
-        document.getElementById('badge-kasir').innerText = allOrders.filter(o => ['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(o.status)).length; 
-        document.getElementById('badge-dapur').innerText = allOrders.filter(o => o.status === 'processing').length; 
+    function filterTab(status) {
+        currentTab = status;
+        localStorage.setItem('sbs_active_tab', status);
+        setupTabs(); 
+        renderOrders();
     }
 
-    function toggleAudio() { audioUnlocked = !audioUnlocked; btnAudio.className = audioUnlocked ? 'active' : 'inactive'; btnAudio.innerHTML = audioUnlocked ? '🔔' : '🔕'; }
-    function unlockAudio() { if(!audioUnlocked) { audioUnlocked = true; btnAudio.className = 'active'; btnAudio.innerHTML = '🔔'; } }
-    function getDailyQueueNumber(id) { const today = new Date().toDateString(); const daily = allOrders.filter(o => new Date(o.timestamp).toDateString() === today).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)); return daily.findIndex(o => o.id === id) + 1; }
-    function updateLiveTimers() { document.querySelectorAll('.live-timer').forEach(el => { const start = parseInt(el.getAttribute('data-start')); if(!start) return; const diff = Math.floor((Date.now() - start)/1000); el.innerText = `⏱ ${Math.floor(diff/60)}:${(diff%60).toString().padStart(2,'0')}`; }); }
-    setInterval(updateLiveTimers, 1000);
+    function updateBadges() {
+        const countKasir = allOrders.filter(o => ['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(o.status)).length;
+        const countDapur = allOrders.filter(o => o.status === 'processing').length;
+        document.getElementById('badge-kasir').innerText = countKasir;
+        document.getElementById('badge-dapur').innerText = countDapur;
+    }
 
     function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
     function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
     document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
 
+    // Fitur +Item dan Edit Modal telah dihapus sepenuhnya.
+    
     setupTabs();
 </script>
 </body>
