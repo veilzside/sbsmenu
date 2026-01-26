@@ -433,6 +433,21 @@
         }, 500);
     }
 
+    function finishOrder(key, btn) {
+        // 1. Cari kartu pembungkus tombol ini
+        const card = btn.closest('.order-card');
+        
+        // 2. Jalankan animasi visual (Mengecil & Hilang)
+        if (card) {
+            card.classList.add('fade-out');
+        }
+        
+        // 3. Update status ke 'completed' setelah animasi selesai (500ms)
+        setTimeout(() => { 
+            updateStatus(key, 'completed'); 
+        }, 500);
+    }
+
     function updateLiveTimers() {
         document.querySelectorAll('.live-timer').forEach(el => {
             const startTime = parseInt(el.getAttribute('data-start'));
@@ -628,8 +643,9 @@
             `;
         } 
         else if (order.status === 'processing') {
-            buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">SELESAI & ANTAR</button>`;
-        }
+    // Menggunakan finishOrder(id, this) untuk efek animasi
+    buttonsHtml = `<button class="btn btn-green btn-full" onclick="finishOrder('${order.id}', this)">SELESAI & ANTAR</button>`;
+}
 
         let statusFooter = '';
         if(order.status === 'rejected') statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
