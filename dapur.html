@@ -264,25 +264,34 @@
     }
 
     function toggleAudio() {
-        if (!audioUnlocked) {
-            soundNew.play().then(() => {
-                soundNew.pause(); soundNew.currentTime = 0;
-                audioUnlocked = true;
-                btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
-            }).catch(e => console.log(e));
-        } else {
-            audioUnlocked = false;
-            btnAudio.className = 'inactive'; btnAudio.innerHTML = "🔕";
-        }
-    }
+        const btnAudio = document.getElementById('btn-audio');
+        const soundNew = document.getElementById('sound-new');
+        const soundNag = document.getElementById('sound-nag');
 
-    function unlockAudio() {
         if (!audioUnlocked) {
+            // --- LOGIKA MENYALAKAN ---
             soundNew.play().then(() => {
-                soundNew.pause(); soundNew.currentTime = 0;
+                soundNew.pause();
+                soundNew.currentTime = 0;
                 audioUnlocked = true;
-                btnAudio.className = 'active'; btnAudio.innerHTML = "🔔";
-            }).catch(e => {});
+                btnAudio.classList.remove('inactive');
+                btnAudio.classList.add('active');
+                btnAudio.innerHTML = "🔔";
+            }).catch(e => console.error("Audio error:", e));
+        } else {
+            // --- LOGIKA MEMATIKAN (Termasuk Fix Mobil) ---
+            audioUnlocked = false;
+            
+            [soundNew, soundNag].forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+                // Baris ini kunci supaya volume musik mobil balik normal:
+                audio.src = audio.src; 
+            });
+
+            btnAudio.classList.remove('active');
+            btnAudio.classList.add('inactive');
+            btnAudio.innerHTML = "🔕";
         }
     }
 
