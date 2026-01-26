@@ -193,7 +193,7 @@
     }
     const db = firebase.database();
     
-    // --- PEMBERSIH CACHE TAB LAMA (PENYEBAB LAYAR KOSONG) ---
+    // --- FIX LAYAR KOSONG: PEMBERSIH CACHE TAB LAMA ---
     let currentTab = localStorage.getItem('sbs_active_tab');
     if (currentTab !== 'kasir' && currentTab !== 'dapur') {
         currentTab = 'kasir';
@@ -237,7 +237,7 @@
         updateBadges(); 
     }
 
-    // --- AUDIO FIX ---
+    // --- AUDIO FIX (ANTI-DUCKING MOBIL) ---
     function toggleAudio() {
         const btnAudio = document.getElementById('btn-audio');
         if (!audioUnlocked) {
@@ -254,7 +254,7 @@
             [soundNew, soundNag].forEach(audio => {
                 audio.pause();
                 audio.currentTime = 0;
-                audio.src = audio.src; // Fix Audio Ducking Mobil
+                audio.src = audio.src; 
             });
             btnAudio.classList.remove('active');
             btnAudio.classList.add('inactive');
@@ -293,7 +293,7 @@
         }
     }
 
-    // --- LISTENER UTAMA (FIXED LOGIC) ---
+    // --- LISTENER UTAMA (LOGIKA BADGE SESUAI REQUEST) ---
     db.ref('orders').on('value', (snapshot) => {
         const data = snapshot.val();
         let shouldRing = false;
@@ -312,6 +312,7 @@
 
                     // 1. BADGE PESANAN (FIXED: ID BARU SAJA)
                     // Hanya bertambah jika pesanan BENAR-BENAR BARU (!prevStat).
+                    // QRIS bayar (prevStat ada) TIDAK menambah badge.
                     const isActive = ['new', 'qris_unpaid', 'pending_payment'].includes(currentStat);
                     if (isActive && !prevStat) {
                         if (activePage !== 'orders') unreadOrdersCount++;
@@ -355,6 +356,7 @@
         return index + 1;
     }
 
+    // --- FUNGSI PRINT & PROSES (FIXED: FAIL-SAFE) ---
     function printDirect(id, type) {
         const o = allOrders.find(x => x.id === id); 
         if (!o) return;
@@ -397,8 +399,17 @@
     }
 
     function verifyAndPrint(key) {
-        printDirect(key, 'checker');
-        setTimeout(() => { updateStatus(key, 'processing'); }, 500);
+        // PERBAIKAN: Gunakan Try-Catch agar jika print gagal, status tetap terupdate
+        try {
+            printDirect(key, 'checker');
+        } catch(e) {
+            console.error("Print Error:", e);
+        }
+        
+        // Delay sedikit lalu update status ke Processing (Dapur)
+        setTimeout(() => { 
+            updateStatus(key, 'processing'); 
+        }, 500);
     }
 
     function updateLiveTimers() {
@@ -612,7 +623,7 @@
                 ${headerRight}
             </div>
             <div class="item-list">${itemsHtml}</div>
-            <div class="total-display" style="margin-bottom:5px;">Total: Rp ${Number(String(order.total).replace(/[^0-9]/g, '')).toLocaleString()}</div>
+            <div class="total-display">Total: Rp ${Number(String(order.total).replace(/[^0-9]/g, '')).toLocaleString()}</div>
             ${kpiHtml}
             ${statusFooter}
             ${printButtons}
@@ -663,6 +674,7 @@
         updateBadges(); 
     }
 
+    // --- FUNGSI UPDATE BADGE (TIDAK SINKRON DENGAN ICON) ---
     function updateBadges() {
         const countKasir = allOrders.filter(o => ['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(o.status)).length;
         const countDapur = allOrders.filter(o => o.status === 'processing').length;
@@ -676,7 +688,6 @@
 
     function openEditModal(k) { /* Disabled */ }
     function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
-    
     function saveExtraItem() { /* Disabled */ }
 
     setupTabs();
