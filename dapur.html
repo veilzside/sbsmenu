@@ -205,35 +205,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
 <script>
-    // --- DATABASE MENU (Sinkron dengan Front End) ---
-    const MENU_DATABASE = [
-        {name: "Kalter", price: 20000}, {name: "Obama", price: 25000}, {name: "Mangku Koe", price: 28000},
-        {name: "Mangku Ayang", price: 25000}, {name: "Barudak", price: 20000}, {name: "Sekena Gomes", price: 22000},
-        {name: "Sekena Goput", price: 22000}, {name: "Sekena Keren", price: 25000}, {name: "Paket Sambat", price: 35000},
-        {name: "Cricket", price: 25000}, {name: "Potato Freak", price: 17000}, {name: "Uhat Lawik", price: 17000},
-        {name: "Gyozable", price: 18000}, {name: "Tahu Julit", price: 19000}, {name: "Fressa", price: 25000},
-        {name: "Americano", price: 16000}, {name: "Dark Freshly", price: 19000}, {name: "Darkberry", price: 19000},
-        {name: "Tubruk Syari", price: 13000}, {name: "Hanoi Tears", price: 15000}, {name: "Penkopi", price: 23000},
-        {name: "Macch Favorito", price: 20000}, {name: "Specta", price: 25000}, {name: "Comica", price: 22000},
-        {name: "Rhumpee", price: 20000}, {name: "Crush", price: 22000}, {name: "Mammy", price: 18000},
-        {name: "Deep Choc", price: 18000}, {name: "Schopea", price: 25000}, {name: "Creamberry", price: 23000},
-        {name: "Jandu", price: 18000}, {name: "Threepi", price: 15000}, {name: "Teh Gelies", price: 10000},
-        {name: "Red Bloom", price: 18000}, {name: "Yagustea", price: 15000}, {name: "Chenteal", price: 15000},
-        {name: "Trustey", price: 18000}, {name: "Rindu", price: 15000}, {name: "Literally Water", price: 5000},
-        // Alkohol / Beers
-        {name: "Bintang Small", price: 32000}, {name: "Bintang Radler", price: 32000}, {name: "Bintang Large", price: 50000},
-        {name: "Anker Lychee", price: 29000}, {name: "Anker Pineapple", price: 29000},
-        {name: "Smirnoff Raspberry", price: 33000}, {name: "Smirnoff Green Apple", price: 33000},
-        {name: "Smirnoff Lemon Lyc", price: 33000}, {name: "Smirnoff Pink Lem", price: 33000},
-        {name: "Mix Max Anggur", price: 34000}, {name: "Mix Max Blue", price: 34000},
-        {name: "Iceland Lychee", price: 34000}, {name: "Iceland L. Island", price: 34000},
-        {name: "Api Anggur Hijau", price: 106000}
-    ];
-    
-    // Sort Menu A-Z
-    MENU_DATABASE.sort((a,b) => a.name.localeCompare(b.name));
-
-    // --- FIREBASE CONFIG ---
+    // --- KONFIGURASI FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
         authDomain: "sbs-menu-d1611.firebaseapp.com",
@@ -251,7 +223,6 @@
     
     let allOrders = [];
     let currentTab = localStorage.getItem('sbs_active_tab') || 'kasir'; 
-    let editingOrderKey = null;
     let audioUnlocked = false;
     let confirmCallback = null;
     let previousOrderStatuses = {}; 
@@ -522,6 +493,7 @@
             const price = parseInt(item.price);
             const subtotal = qty * price;
             const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
+            // Tombol hapus item masih ada, tapi fitur tambah item (edit) sudah dihapus
             const trashBtn = (order.status !== 'completed' && order.status !== 'rejected') ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
             return `
             <div class="item-row">
@@ -613,44 +585,50 @@
             </div>`;
         }
 
-        // --- BUTTON LOGIC (Layout Diperbaiki dengan CSS Baru) ---
+        // --- BUTTON LOGIC UPDATE: HAPUS +ITEM, KEMBALI KE SIDE-BY-SIDE ---
         let buttonsHtml = '';
         const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">Tolak</button>`;
-        const btnEdit = `<button class="btn btn-grey" onclick="openEditModal('${order.id}')">+ Item</button>`;
-        // Baris Atas
-        const btnRow1 = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">${btnTolak}${btnEdit}</div>`;
 
         if (order.status === 'new') { 
+            // Tunai Baru: [Tolak] [Terima]
             buttonsHtml = `
-                ${btnRow1}
-                <button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'unpaid')">TERIMA (TUNAI)</button>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    ${btnTolak}
+                    <button class="btn btn-green" onclick="updateStatus('${order.id}', 'unpaid')">TERIMA</button>
+                </div>
             `;
         } 
         else if (order.status === 'qris_unpaid') {
+            // QRIS Belum Bayar: [Tolak] [Menunggu]
             buttonsHtml = `
-                ${btnRow1}
-                <button class="btn btn-grey btn-full" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGGU PEMBAYARAN...</button>
-                <div style="text-align:center; font-size:10px; color:#aaa; margin-top:5px;">Tombol aktif setelah pelanggan klik 'Sudah Bayar'</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    ${btnTolak}
+                    <button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGGU...</button>
+                </div>
+                <div style="text-align:center; font-size:10px; color:#aaa; margin-top:5px;">Customer belum klik bayar</div>
             `;
         }
         else if (order.status === 'pending_payment') {
-            // VERIFIKASI SEKARANG FULL WIDTH
+            // QRIS Verifikasi: [Tolak] [Verifikasi & Proses]
             buttonsHtml = `
-                ${btnRow1}
-                <button class="btn btn-blue btn-full" onclick="verifyAndPrint('${order.id}')">VERIFIKASI & PROSES</button>
-                <div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">⚠ CEK MUTASI REKENING!</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    ${btnTolak}
+                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}')">VERIFIKASI & PROSES</button>
+                </div>
+                <div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">⚠ CEK MUTASI!</div>
             `;
         }
         else if (order.status === 'unpaid') { 
+            // Tunai Lunas: [Kembali] [Lunas & Masak]
             buttonsHtml = `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     <button class="btn btn-grey" onclick="updateStatus('${order.id}', 'new')">Kembali</button>
-                    ${btnEdit}
+                    <button class="btn btn-blue" onclick="updateStatus('${order.id}', 'processing')">LUNAS & MASAK</button>
                 </div>
-                <button class="btn btn-blue btn-full" onclick="updateStatus('${order.id}', 'processing')">LUNAS & MASAK</button>
             `;
         } 
         else if (order.status === 'processing') {
+            // Processing: [Selesai & Antar] (Tetap Full Width)
             buttonsHtml = `<button class="btn btn-green btn-full" onclick="updateStatus('${order.id}', 'completed')">SELESAI & ANTAR</button>`;
         }
 
@@ -725,65 +703,8 @@
     function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
     document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
 
-    // --- LOGIKA MODAL +ITEM TERBARU (Dropdown) ---
-    function openEditModal(k) { 
-        editingOrderKey = k; 
-        const modalBody = document.querySelector('#edit-modal .modal-content');
-        
-        // Buat daftar opsi
-        let options = MENU_DATABASE.map(m => `<option value="${m.name}|${m.price}">${m.name}</option>`).join('');
-
-        modalBody.innerHTML = `
-            <h3 style="margin-top:0; color:var(--accent)">Tambah Item</h3>
-            <div class="form-group">
-                <label style="color:#888; font-size:12px;">Pilih Menu</label>
-                <select id="extra-menu-select" class="form-select" onchange="updateExtraPrice()">
-                    <option value="">-- Pilih --</option>
-                    ${options}
-                </select>
-            </div>
-            <div class="form-group">
-                <label style="color:#888; font-size:12px;">Harga Satuan</label>
-                <input type="text" id="extra-price-display" class="form-input" readonly style="background:#333; color:#aaa;">
-                <input type="hidden" id="extra-name">
-                <input type="hidden" id="extra-price">
-            </div>
-            <div class="actions" style="margin-top:20px;">
-                <button class="btn btn-grey" onclick="closeModal()">Batal</button>
-                <button class="btn btn-green" onclick="saveExtraItem()">Simpan</button>
-            </div>
-        `;
-        document.getElementById('edit-modal').style.display = 'flex'; 
-    }
-
-    function updateExtraPrice() {
-        const val = document.getElementById('extra-menu-select').value;
-        if(val) {
-            const [name, price] = val.split('|');
-            document.getElementById('extra-name').value = name;
-            document.getElementById('extra-price').value = price;
-            document.getElementById('extra-price-display').value = "Rp " + parseInt(price).toLocaleString('id-ID');
-        } else {
-            document.getElementById('extra-name').value = "";
-            document.getElementById('extra-price').value = "";
-            document.getElementById('extra-price-display').value = "";
-        }
-    }
-
-    function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
+    // Fitur +Item dan Edit Modal telah dihapus sepenuhnya.
     
-    function saveExtraItem() {
-        const n = document.getElementById('extra-name').value;
-        const p = parseInt(document.getElementById('extra-price').value);
-        if(!n || !p) return alert("Pilih menu dulu!");
-        
-        const o = allOrders.find(x => x.id === editingOrderKey);
-        const items = [...(o.items||[]), { name: n, price: p, qty: 1, note: 'Manual Add' }];
-        const tot = (Number(String(o.total).replace(/[^0-9]/g, '')) || 0) + p;
-        
-        db.ref('orders/' + editingOrderKey).update({ items: items, total: tot }).then(() => closeModal());
-    }
-
     setupTabs();
 </script>
 </body>
