@@ -370,18 +370,6 @@
         renderOrders();
         updateBadges(); // Update badge Tab (Kasir & Dapur)
     });
-        
-        previousOrderStatuses = currentStatuses;
-        if (isFirstLoad) isFirstLoad = false;
-        
-        updateNavBadges();
-        if (shouldRing) soundNew.play().catch(e => {});
-        
-        allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        setupTabs(); 
-        renderOrders();
-        updateBadges(); // Fungsi ini yang akan menormalkan semua angka badge
-    });
 
     function getDailyQueueNumber(orderId) {
         const targetOrder = allOrders.find(o => o.id === orderId);
