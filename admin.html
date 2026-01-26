@@ -1,141 +1,4 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SBS Admin & Finance</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <style>
-        :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
-        * { box-sizing: border-box; }
-        body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        .sidebar { width: 260px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
-        .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
-        .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
-        .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
-        .menu-icon { font-size: 20px; }
-
-        .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; }
-        .page-title { margin:0 0 20px 0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
-
-        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 50px; }
-        
-        /* CARD STYLE (SAMA DENGAN DAPUR) */
-        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 6px solid #555; position: relative; }
-        .order-card.status-completed { border-left-color: var(--green); opacity: 1; }
-        .order-card.status-rejected { border-left-color: #444; background: #222; opacity: 0.8; }
-
-        /* HEADER LAYOUT */
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        .header-left { display: flex; flex-direction: column; }
-        .cust-name { font-size: 16px; font-weight: 700; color: #fff; text-transform: uppercase; margin-bottom: 2px; }
-        .order-id { font-size: 11px; color: #666; font-family: monospace; }
-        
-        .header-right { text-align: right; }
-        .meta-date { font-size: 13px; color: #ccc; margin-bottom: 2px; display: block; font-weight: 500; }
-        .meta-time-block { font-size: 11px; color: #aaa; line-height: 1.4; }
-        .time-label { color: #777; margin-right: 3px; }
-        .time-val { color: #ddd; font-weight: 600; }
-        .time-highlight { color: var(--green); font-weight: 700; }
-
-        /* ITEMS */
-        .item-list { margin-bottom: 15px; max-height: 300px; overflow-y: auto; padding-right: 5px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
-        .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; align-items: flex-start; }
-        .item-name { font-weight: 600; color: #eee; }
-        .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: 2px; }
-        .item-price { font-weight: 700; color: #fff; }
-        .item-unit-price { font-size: 10px; color: #888; display: block; }
-
-        /* METRICS (SAMA DENGAN DAPUR) */
-        .duration-box { margin-bottom: 15px; font-size: 12px; color: #aaa; padding: 0 5px; }
-        .dur-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-        .dur-val { color: #fff; font-weight: 700; }
-        .dur-total-row { border-top: 1px dashed #666; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-size: 13px; }
-        .dur-total-val { color: var(--accent); font-weight: 900; }
-
-        /* TOTAL */
-        .total-display { text-align: right; font-size: 18px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
-
-        /* STATUS / STAMP */
-        .status-footer { text-align: center; margin-top: 10px; }
-        .status-text-done { color: var(--green); font-weight: 700; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; }
-        .stamp-rejected {
-            border: 2px solid var(--red);
-            color: var(--red);
-            font-size: 20px;
-            font-weight: 700;
-            display: inline-block;
-            padding: 8px 20px;
-            transform: rotate(-5deg);
-            letter-spacing: 1px;
-            opacity: 0.9;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-        }
-
-        /* FINANCE & OTHERS */
-        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; margin-bottom: 20px; }
-        .stat-val { font-size: 32px; font-weight: 700; color: var(--green); }
-        .filters { margin-bottom: 20px; display: flex; gap: 10px; }
-        .form-input, .form-select { background: #15151a; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; font-family: 'Poppins'; }
-
-        .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .log-table th { text-align: left; padding: 10px; background: #111; color: #888; }
-        .log-table td { padding: 10px; border-bottom: 1px solid #333; }
-        .log-time { color: var(--accent); font-weight: 700; font-size: 11px; }
-
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 5px; border-right: none; border-top: 1px solid #333; }
-            .brand { display: none; }
-            .menu-item { flex-direction: column; font-size: 10px; gap: 2px; padding: 5px; background: transparent !important; flex: 1; justify-content: center; }
-            .main { padding-bottom: 80px; }
-        }
-    </style>
-</head>
-<body>
-
-    <div class="sidebar">
-        <div class="brand">SBS OWNER</div>
-        <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Keuangan</span></div>
-        <div class="menu-item" onclick="showPage('logs')"><span class="menu-icon">📋</span><span>Audit Log Stok</span></div>
-        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat Pesanan</span></div>
-    </div>
-
-    <div class="main" id="finance-page">
-        <h2 class="page-title">LAPORAN OMZET</h2>
-        <div class="filters">
-            <select id="finance-mode" class="form-select" onchange="toggleFinanceFilter()">
-                <option value="daily">Harian</option>
-                <option value="monthly">Bulanan</option>
-            </select>
-            <input type="date" id="finance-date" class="form-input" onchange="calculateFinance()">
-            <input type="month" id="finance-month" class="form-input" style="display:none;" onchange="calculateFinance()">
-        </div>
-        <div class="stat-card">
-            <div style="font-size:12px; color:#aaa; margin-bottom:5px;">TOTAL PENDAPATAN</div>
-            <div class="stat-val" id="main-stat-rev">Rp 0</div>
-        </div>
-    </div>
-
-    <div class="main" id="logs-page" style="display: none;">
-        <h2 class="page-title">LOG AKTIVITAS STOK</h2>
-        <table class="log-table">
-            <thead><tr><th width="120">Waktu</th><th>Aktivitas</th></tr></thead>
-            <tbody id="logs-tbody"></tbody>
-        </table>
-    </div>
-
-    <div class="main" id="history-page" style="display: none;">
-        <h2 class="page-title">RIWAYAT PESANAN</h2>
-        <div class="filters">
-            <input type="date" id="history-date-picker" class="form-input" onchange="renderHistory()">
-        </div>
-        <div id="history-grid" class="orders-grid"></div>
-    </div>
-
-   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
 <script>
@@ -152,7 +15,6 @@
     const db = firebase.database();
     let dbOrders = [];
 
-    // Set Default Date Today
     document.getElementById('finance-date').valueAsDate = new Date();
     document.getElementById('history-date-picker').valueAsDate = new Date();
 
@@ -172,7 +34,6 @@
         });
     });
 
-    // --- HELPER FORMAT DURASI (Menit Detik) ---
     function fmtDur(ms) {
         if (!ms || ms < 0) return "-";
         const s = Math.floor(ms / 1000);
@@ -191,11 +52,10 @@
             else displayName = order.customer;
         }
         
-        // --- LOGIKA WAKTU (TIMESTAMPS) ---
-        const t1 = new Date(order.timestamp).getTime(); // Pesanan Dibuat
-        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; // Cust Klik 'Sudah Bayar'
-        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; // Staff Klik 'Verifikasi/Proses'
-        const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0; // Staff Klik 'Selesai'
+        const t1 = new Date(order.timestamp).getTime(); 
+        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; 
+        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; 
+        const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
 
         const div = document.createElement('div');
         div.className = `order-card status-${order.status}`;
@@ -222,21 +82,13 @@
         const timeIn = new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
         let timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
 
-        // --- HITUNG KPI DURASI ---
-        let durPesan = 0;   // Cust Order -> Cust Bayar
-        let durRespon = 0;  // Cust Bayar -> Admin Verifikasi
-        let durMasak = 0;   // Admin Verifikasi -> Selesai
-        let durTotal = 0;   // Total
-
+        let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
         if (order.status === 'completed') {
             if (order.paymentMethod === 'qris') {
-                // QRIS: Hitung detail
                 if(t2 && t1) durPesan = t2 - t1;
-                if(t3 && t2) durRespon = t3 - t2; // Ini KPI Admin
+                if(t3 && t2) durRespon = t3 - t2;
                 if(t4 && t3) durMasak = t4 - t3;
             } else {
-                // TUNAI: Respon dianggap 0
-                // Pesan-Bayar adalah dari Order dibuat sampai Kasir terima uang (t3)
                 if(t3 && t1) durPesan = t3 - t1;
                 durRespon = 0; 
                 if(t4 && t3) durMasak = t4 - t3;
@@ -246,27 +98,26 @@
 
         let kpiHtml = '';
         if (order.status === 'completed') {
-            // Indikator Warna untuk Respon Admin (Merah jika > 3 menit)
             const responColor = durRespon > 180000 ? '#e74c3c' : '#fff';
-            
+            // Font size diset ke 11px agar identik dengan meta-time-block (Masuk/Selesai)
             kpiHtml = `
-            <div style="margin-top:15px; padding-top:10px; border-top:1px dashed #555;">
-                <div class="dur-row"><span style="color:#aaa;">Pesan - Bayar (Cust):</span> <span class="dur-val">${fmtDur(durPesan)}</span></div>
-                <div class="dur-row"><span style="color:#aaa;">Respon Kasir:</span> <span class="dur-val" style="color:${responColor}">${fmtDur(durRespon)}</span></div>
-                <div class="dur-row"><span style="color:#aaa;">Masak (Dapur):</span> <span class="dur-val">${fmtDur(durMasak)}</span></div>
-                <div class="dur-total-row" style="margin-top:8px; padding-top:8px; border-top:1px solid #444;">
-                    <span>TOTAL DURASI:</span> <span class="dur-total-val" style="color:var(--accent);">${fmtDur(durTotal)}</span>
+            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555; font-size:11px;">
+                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Pesan - Bayar (Cust):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durPesan)}</span>
+                </div>
+                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor}; font-weight:600;">${fmtDur(durRespon)}</span>
+                </div>
+                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Masak (Dapur):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durMasak)}</span>
+                </div>
+                <div class="dur-total-row" style="margin-top:6px; padding-top:6px; border-top:1px solid #444; display:flex; justify-content:space-between; font-size:12px; font-weight:700;">
+                    <span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:var(--accent);">${fmtDur(durTotal)}</span>
                 </div>
             </div>`;
         }
 
-        let statusFooter = '';
-        if(order.status === 'rejected') {
-            statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
-        } else {
-            statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
-        }
-
+        let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
         let rawTotal = String(order.total).replace(/[^0-9]/g, '');
         const safeTotal = Number(rawTotal) || 0;
 
@@ -285,11 +136,8 @@
                 </div>
             </div>
             <div class="item-list">${itemsHtml}</div>
-            
             <div class="total-display" style="margin-bottom:5px;">Total: Rp ${safeTotal.toLocaleString()}</div>
-            
             ${kpiHtml}
-            
             ${statusFooter}
         `;
         return div;
@@ -345,5 +193,3 @@
         });
     }
 </script>
-</body>
-</html>
