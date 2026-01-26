@@ -377,49 +377,68 @@
         return index + 1;
     }
 
-    function printDirect(id, type) {
-        const o = allOrders.find(x => x.id === id); 
-        if (!o) return;
+    function printDirect(orderId, type) {
+        const order = allOrders.find(o => o.id === orderId);
+        if (!order) return;
 
-        // Ambil nomor antrian harian
-        const q = getDailyQueueNumber(id);
-        const d = new Date(o.timestamp);
-        const s = d.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
-        const t = d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
-        
+        let tableNum = order.tableNumber || "Take Away";
+        let realQueue = getDailyQueueNumber(order.id);
+        const dateObj = new Date(order.timestamp);
+        const dateStr = dateObj.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
+        const timeStr = dateObj.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', hour12: false});
+        const displayID = "2SA" + order.id.slice(-4).toUpperCase();
+
         const ESC = "\x1B"; const GS = "\x1D"; const INIT = ESC + "@";
         const ALIGN_CENTER = ESC + "a" + "\x01"; const ALIGN_LEFT = ESC + "a" + "\x00";
         const BOLD_ON = ESC + "E" + "\x01"; const BOLD_OFF = ESC + "E" + "\x00";
         const TEXT_DOUBLE = GS + "!" + "\x11"; const TEXT_NORMAL = GS + "!" + "\x00";
 
-        let txt = INIT;
-        if (type === 'invoice') {
-            txt += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF + "Jl. Mundu 8, Kota Malang\n085159039877\n--------------------------------\n" + ALIGN_LEFT + BOLD_ON + "TABLE: " + (o.tableNumber || "TA") + BOLD_OFF + "\nQueue: #" + q + "\nDate : " + s + " " + t + "\nID   : 2SA" + id.slice(-4).toUpperCase() + "\n--------------------------------\n";
-            o.items.forEach(i => {
-                let p = parseInt(String(i.price).replace(/[^0-9]/g, '')) || 0;
-                let sub = i.qty * p;
-                txt += i.name + "\n" + i.qty + "x @" + p.toLocaleString('id-ID') + "     " + sub.toLocaleString('id-ID') + "\n";
-                if(i.note) txt += "  (Note: " + i.note + ")\n";
-            });
-            txt += "--------------------------------\n" + BOLD_ON + "TOTAL          " + (parseInt(String(o.total).replace(/[^0-9]/g, '')) || 0).toLocaleString('id-ID') + BOLD_OFF + "\n--------------------------------\n" + ALIGN_CENTER + "Wifi: SBSkopi8\nTerima Kasih!\n\n\n\n";
-        } else {
-            txt += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF + "\n" + ALIGN_LEFT + "TABLE: " + BOLD_ON + (o.tableNumber || "TA") + BOLD_OFF + "\nQUEUE: #" + q + "\nTIME : " + t + "\nID   : 2SA" + id.slice(-4).toUpperCase() + "\n--------------------------------\n";
-            o.items.forEach(i => {
-                txt += BOLD_ON + i.qty + " x " + i.name + BOLD_OFF + "\n";
-                if(i.note) txt += "   [ " + i.note + " ]\n";
-                txt += "\n";
-            });
-            txt += "\n\n\n\n";
-        }
+        let data = INIT;
 
-        // Konversi string ke binary buffer yang aman untuk btoa
-        const buffer = new Uint8Array(txt.length);
-        for (let i = 0; i < txt.length; i++) { buffer[i] = txt.charCodeAt(i); }
-        let binary = '';
-        for (let i = 0; i < buffer.byteLength; i++) { binary += String.fromCharCode(buffer[i]); }
-        
-        window.location.href = "rawbt:base64," + btoa(binary);
-    }
+        if (type === 'invoice') {
+            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF;
+            data += "Jl. Mundu 8, Kota Malang\n";
+            data += "085159039877\n";
+            data += "--------------------------------\n";
+            data += ALIGN_LEFT;
+            data += BOLD_ON + "TABLE: " + tableNum + BOLD_OFF + "\n";
+            data += "Queue Order: #" + realQueue + "\n"; 
+            data += "Date : " + dateStr + " " + timeStr + "\n";
+            data += "ID   : " + displayID + "\n";
+            data += "--------------------------------\n";
+            order.items.forEach(item => {
+                let price = parseInt(item.price);
+                let sub = item.qty * price;
+                data += item.name + "\n";
+                let line = item.qty + "x @" + price.toLocaleString('id-ID');
+                let priceStr = sub.toLocaleString('id-ID');
+                let spaces = 32 - line.length - priceStr.length;
+                if(spaces < 1) spaces = 1;
+                data += line + " ".repeat(spaces) + priceStr + "\n";
+                if(item.note) data += "  (Note: " + item.note + ")\n";
+            });
+            data += "--------------------------------\n";
+            let totalStr = parseInt(order.total).toLocaleString('id-ID');
+            let totalLabel = "TOTAL";
+            let totalSpaces = 32 - totalLabel.length - totalStr.length;
+            data += BOLD_ON + totalLabel + " ".repeat(totalSpaces > 0 ? totalSpaces : 1) + totalStr + "\n" + BOLD_OFF;
+            data += "--------------------------------\n";
+            data += ALIGN_CENTER + "Wifi: SBSkopi8\nTerima Kasih!\n\n\n\n";
+        } else {
+            data += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF;
+            data += "\n" + ALIGN_LEFT;
+            data += "TABLE: " + BOLD_ON + tableNum + BOLD_OFF + "\n";
+            data += "QUEUE: #" + realQueue + "\n";
+            data += "TIME : " + timeStr + "\n";
+            data += "ID   : " + displayID + "\n";
+            data += "--------------------------------\n";
+            order.items.forEach(item => {
+                data += BOLD_ON + item.qty + " x " + item.name + BOLD_OFF + "\n";
+                if(item.note) data += "   [ " + item.note + " ]\n";
+                data += "\n"; 
+            });
+            data += "\n\n\n\n"; 
+        }
 
         const buffer = new Uint8Array(data.length);
         for (let i = 0; i < data.length; i++) { buffer[i] = data.charCodeAt(i); }
