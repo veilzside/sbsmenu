@@ -1010,80 +1010,139 @@
         document.getElementById('success-modal').style.display = 'none';
     }
 
-    // --- RIWAYAT & TRACKING ---
+    // --- RIWAYAT & TRACKING SISTEM BARU ---
+    const AUTO_CLEAR_TIME = 6 * 60 * 60 * 1000; // 6 Jam
+
     function saveOrderToHistory(orderId) {
         let history = JSON.parse(localStorage.getItem('sbs_order_history')) || [];
-        history.push(orderId);
-        localStorage.setItem('sbs_order_history', JSON.stringify(history));
+        if (!history.includes(orderId)) {
+            history.push(orderId);
+            localStorage.setItem('sbs_order_history', JSON.stringify(history));
+        }
         trackOrders();
     }
 
     function trackOrders() {
         let history = JSON.parse(localStorage.getItem('sbs_order_history')) || [];
-        const trackerUI = document.getElementById('status-tracker');
-        const trackerSummary = document.getElementById('tracker-summary');
-        const historyContainer = document.getElementById('history-container');
+        const fabHistory = document.getElementById('fab-history');
+        const badgeHistory = document.getElementById('badge-history');
+        const container = document.getElementById('history-container');
         
+        // 1. Jika tidak ada riwayat sama sekali, sembunyikan tombol hijau
         if (history.length === 0) {
-            trackerUI.style.display = 'none';
+            fabHistory.style.display = 'none';
             return;
         }
 
-        trackerUI.style.display = 'block';
-        historyContainer.innerHTML = ''; 
+        // 2. Jika ada, munculkan tombol
+        fabHistory.style.display = 'flex';
 
+        // 3. Siapkan wadah untuk "Aktif" dan "Selesai"
+        container.innerHTML = `
+            <div id="active-orders-section" style="display:none;">
+                <div class="history-section-title" style="color:var(--sbs-orange)">SEDANG BERJALAN</div>
+                <div id="list-active"></div>
+            </div>
+            <div id="past-orders-section" style="display:none;">
+                <div class="history-section-title" style="color:#888">RIWAYAT SELESAI</div>
+                <div id="list-past"></div>
+                <button class="btn-clear-history" onclick="manualClearHistory()">Hapus Semua Riwayat</button>
+            </div>
+        `;
+
+        const listActive = document.getElementById('list-active');
+        const listPast = document.getElementById('list-past');
         let activeCount = 0;
+        let pastCount = 0;
+        const now = Date.now();
 
         history.forEach(orderId => {
             db.ref('orders/' + orderId).on('value', (snapshot) => {
                 const data = snapshot.val();
-                if(data) {
-                    let statusText = 'MENUNGGU';
-                    let color = '#888';
+                
+                // Cek jika data sudah dihapus di database tapi masih ada di HP
+                if (!data) return;
 
-                    if(data.status === 'new') { statusText = 'MENUNGGU KONFIRMASI'; color = '#888'; activeCount++; }
-                    else if(data.status === 'qris_unpaid') { statusText = 'MENUNGGU PEMBAYARAN ANDA'; color = '#e67e22'; activeCount++; }
-                    else if(data.status === 'pending_payment') { statusText = 'VERIFIKASI PEMBAYARAN'; color = '#e67e22'; activeCount++; }
-                    else if(data.status === 'unpaid') { statusText = 'DITERIMA / BELUM LUNAS'; color = '#FF6600'; activeCount++; }
-                    else if(data.status === 'processing') { statusText = 'SEDANG DISIAPKAN'; color = '#3498db'; activeCount++; }
-                    else if(data.status === 'completed') { statusText = 'SELESAI / DIANTAR'; color = '#2ecc71'; }
-                    else if(data.status === 'rejected') { statusText = 'DITOLAK / KOSONG'; color = 'red'; }
-
-                    let card = document.getElementById('card-' + orderId);
-                    if(!card) {
-                        card = document.createElement('div');
-                        card.id = 'card-' + orderId;
-                        card.className = 'history-card';
-                        historyContainer.appendChild(card);
+                // LOGIKA AUTO-DELETE: Jika status selesai/tolak DAN sudah > 6 jam, jangan tampilkan
+                if (['completed', 'rejected'].includes(data.status)) {
+                    const orderTime = new Date(data.completedAt || data.timestamp).getTime();
+                    if (now - orderTime > AUTO_CLEAR_TIME) {
+                        return; // Skip (Hilang dari pandangan)
                     }
+                }
 
-                    const itemNames = (data.items || []).map(i => i.name).join(', ');
-                    card.innerHTML = `
+                // Tentukan Warna & Teks Status
+                let statusText = 'MENUNGGU';
+                let color = '#888';
+                let isActive = false;
+
+                if(data.status === 'new') { statusText = 'MENUNGGU KONFIRMASI'; color = '#888'; isActive = true; }
+                else if(data.status === 'qris_unpaid') { statusText = 'MENUNGGU PEMBAYARAN'; color = '#e67e22'; isActive = true; }
+                else if(data.status === 'pending_payment') { statusText = 'VERIFIKASI PEMBAYARAN'; color = '#e67e22'; isActive = true; }
+                else if(data.status === 'unpaid') { statusText = 'DIPROSES'; color = '#FF6600'; isActive = true; }
+                else if(data.status === 'processing') { statusText = 'SEDANG DISIAPKAN'; color = '#3498db'; isActive = true; }
+                else if(data.status === 'completed') { statusText = 'SELESAI'; color = '#2ecc71'; isActive = false; }
+                else if(data.status === 'rejected') { statusText = 'DITOLAK / BATAL'; color = 'red'; isActive = false; }
+
+                // Buat Kartu HTML
+                // Cek agar tidak duplikat
+                if(document.getElementById('card-'+orderId)) return;
+
+                const itemNames = (data.items || []).map(i => i.qty + 'x ' + i.name).join(', ');
+                const html = `
+                    <div id="card-${orderId}" class="history-card" style="border-left:4px solid ${color}">
                         <div class="history-header">
                             <span>Meja: ${data.tableNumber || '-'}</span>
                             <span>${data.paymentMethod === 'qris' ? 'QRIS' : 'TUNAI'}</span>
                         </div>
                         <div class="history-status" style="color:${color}">${statusText}</div>
                         <div class="history-items">${itemNames}</div>
-                        <div style="font-size:10px; color:#aaa; margin-top:5px;">ID: ...${orderId.slice(-4)}</div>
-                    `;
-                    
-                    if (activeCount > 0) {
-                        trackerSummary.innerText = activeCount + " PESANAN AKTIF";
-                        trackerUI.style.background = "#1A1A1A"; 
-                    } else {
-                        trackerSummary.innerText = "RIWAYAT PESANAN";
-                        trackerUI.style.background = "#2ecc71"; 
-                    }
+                        <div style="font-size:10px; color:#ccc; margin-top:5px; text-align:right;">ID: ...${orderId.slice(-4)}</div>
+                    </div>
+                `;
+
+                // Masukkan ke kategori yang benar
+                if (isActive) {
+                    listActive.insertAdjacentHTML('beforeend', html);
+                    activeCount++;
+                    document.getElementById('active-orders-section').style.display = 'block';
+                } else {
+                    listPast.insertAdjacentHTML('beforeend', html);
+                    pastCount++;
+                    document.getElementById('past-orders-section').style.display = 'block';
                 }
+
+                // Update Badge di Tombol Hijau
+                if (activeCount > 0) {
+                    fabHistory.classList.add('active-order');
+                    badgeHistory.innerText = activeCount;
+                    badgeHistory.classList.add('show');
+                } else {
+                    fabHistory.classList.remove('active-order');
+                    badgeHistory.classList.remove('show');
+                }
+                
+                // Jika semua pesanan expired/kosong
+                if(activeCount === 0 && pastCount === 0) fabHistory.style.display = 'none';
             });
         });
     }
 
-    function openHistory() { document.getElementById('history-modal').style.display = 'flex'; }
-    function closeHistory() { document.getElementById('history-modal').style.display = 'none'; }
+    function manualClearHistory() {
+        if(confirm("Hapus riwayat pesanan yang sudah selesai dari HP ini?")) {
+            localStorage.removeItem('sbs_order_history');
+            location.reload();
+        }
+    }
 
-    trackOrders();
+    function openHistory() { 
+        trackOrders();
+        document.getElementById('history-modal').style.display = 'flex'; 
+    }
+    
+    function closeHistory() { 
+        document.getElementById('history-modal').style.display = 'none'; 
+    }
 
     // --- TAB & SWIPE & SEARCH LOGIC ---
     function openT(e, n) {
