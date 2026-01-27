@@ -110,13 +110,18 @@
         .payment-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
         .p-option { cursor: pointer; position: relative; }
         .p-option input { display: none; } /* Sembunyikan radio asli */
+        /* UPDATE: Tombol Pembayaran Lebih Kecil */
         .p-label {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 15px 10px; border: 2px solid var(--sbs-black); border-radius: 10px;
-            font-weight: bold; font-size: 13px; color: #666; transition: 0.2s;
-            text-align: center; height: 100%; background: #fff;
+            display: flex; flex-direction: row; /* Icon sebelah teks (Horizontal) */
+            align-items: center; justify-content: center; gap: 8px;
+            padding: 10px; border: 2px solid var(--sbs-black); border-radius: 10px;
+            font-weight: bold; font-size: 12px; color: #666; transition: 0.2s;
+            text-align: center; height: auto; background: #fff;
         }
-        .p-label span { font-size: 20px; margin-bottom: 5px; display: block; }
+        .p-label span { font-size: 18px; margin: 0; display: block; } /* Icon ukurannya pas */
+        
+        /* Pastikan input HP tidak tertutup */
+        #cart-modal .modal-content { padding-bottom: 20px; }
         /* Efek saat dipilih */
         .p-option input:checked + .p-label {
             border-color: var(--sbs-orange);
@@ -593,7 +598,7 @@
     const db = firebase.database();
 
     // --- LOGIC CART ---
-    let cart = [];
+    let cart = JSON.parse(localStorage.getItem('sbs_cart')) || [];
 
     // FUNGSI CEK URL (?table=5)
     function getTableFromURL() {
@@ -619,6 +624,7 @@
 
         // AUTO-RESTORE QRIS POPUP (Anti-Refresh Loss)
         checkPendingQRIS();
+        updateCartUI();
     };
 
     function addToCart(name, price) {
@@ -629,6 +635,7 @@
             cart.push({ name: name, price: price, qty: 1, note: '' });
         }
         updateCartUI();
+        localStorage.setItem('sbs_cart', JSON.stringify(cart)); // SIMPAN KE MEMORI
         if (navigator.vibrate) navigator.vibrate(50);
     }
 
@@ -711,9 +718,11 @@
         }
         updateCartUI();
         renderCart();
+        localStorage.setItem('sbs_cart', JSON.stringify(cart)); // SIMPAN KE MEMORI
         if (cart.length === 0) closeCart();
     }
-    function changeQty(index, delta) {
+    }
+  /*  function changeQty(index, delta) {
         cart[index].qty += delta;
         if (cart[index].qty <= 0) {
             cart.splice(index, 1); // Hapus jika 0
@@ -721,7 +730,7 @@
         updateCartUI(); // Update badge merah
         renderCart();   // Update tampilan modal
         if (cart.length === 0) closeCart(); // Tutup jika kosong
-    }
+    } */
 
     function updateItemNote(index, value) {
         cart[index].note = value;
@@ -958,18 +967,32 @@
     }
 
     function confirmQRISPayment(orderId) {
-        // Update status agar masuk ke tab dapur sebagai "Pending Verification"
-        // Catat clientPaidAt untuk hitung KPI respon karyawan
+        // Update status ke pending_payment
         db.ref('orders/' + orderId).update({
             status: 'pending_payment',
             clientPaidAt: new Date().toISOString()
         }).then(() => {
             localStorage.removeItem('sbs_pending_qris');
-            alert("Terima kasih! Dapur sedang memverifikasi pembayaranmu.");
-            document.getElementById('success-modal').style.display = 'none';
-        }).catch(err => alert("Error: " + err.message));
-    }
+            
+            // GANTI ALERT DENGAN MODAL CANTIK
+            // Kita pinjam modal success yang sudah ada, tapi ubah teksnya
+            const modal = document.getElementById('success-modal');
+            modal.querySelector('.modal-content').innerHTML = `
+                <div class="success-icon">⏳</div>
+                <div class="modal-header" style="border:none; margin-bottom:5px; text-align:center;">PEMBAYARAN DITERIMA</div>
+                <div class="success-msg">
+                    Terima kasih! Bukti bayar sudah masuk.<br>
+                    Dapur sedang memverifikasi pesananmu.
+                </div>
+                <button class="btn-close-final" onclick="closeSuccess()">OK, MENGERTI</button>
+            `;
+            // Paksa modal tampil
+            modal.style.display = 'flex'; 
 
+        }).catch(err => {
+            alert("Error: " + err.message); // Kalau error teknis biarkan alert
+        });
+    }
     function showSuccessModal() {
         const modal = document.getElementById('success-modal');
         modal.querySelector('.modal-content').innerHTML = `
