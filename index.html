@@ -88,21 +88,22 @@
         .view-btn { font-size: 10px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; margin-top: 2px; display: inline-block; }
 
         /* --- MODAL ORDER & SUCCESS --- */
-        /* --- FIX SCROLL & POSISI MODAL (TARUH DI DALAM <style>) --- */
-body.noscroll { overflow: hidden; } /* Mencegah background bergerak */
+        /* --- TAMBAHAN FIX SCROLL & MODAL --- */
+body.noscroll { overflow: hidden; } /* Kunci layar belakang */
 
 .modal {
     display: none; 
     position: fixed; 
-    z-index: 9999 !important; /* Agar muncul di depan tombol floating */
+    z-index: 9999 !important; 
     left: 0; top: 0; 
     width: 100%; height: 100%; 
     background-color: rgba(0,0,0,0.85); 
     backdrop-filter: blur(4px);
-    display: flex; /* Memastikan window di tengah */
+    /* Pastikan window tetap di tengah */
+    display: flex; 
     align-items: center; 
     justify-content: center;
-    overscroll-behavior: contain; 
+    overscroll-behavior: contain; /* Cegah scroll tembus */
 }
 
 .modal-content {
@@ -110,16 +111,17 @@ body.noscroll { overflow: hidden; } /* Mencegah background bergerak */
     width: 90%; max-width: 400px; 
     border-radius: 20px; padding: 25px; 
     border: 4px solid var(--sbs-black); 
-    max-height: 80vh; /* Agar tidak meluber keluar layar */
-    overflow-y: auto; /* Konten di dalam window bisa di-scroll */
+    /* Agar kontennya saja yang scroll jika panjang, window tetap diam */
+    max-height: 80vh; 
+    overflow-y: auto; 
     position: relative;
     box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }
 
-/* --- CSS UNTUK PILIHAN PEMBAYARAN BARU --- */
+/* --- GANTI DROPDOWN JADI PILIHAN TOMBOL (Agar tidak buka window baru) --- */
 .payment-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
 .p-option { cursor: pointer; position: relative; }
-.p-option input { display: none; } /* Sembunyikan radio button asli */
+.p-option input { display: none; } /* Sembunyikan radio asli */
 .p-label {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: 15px 10px; border: 2px solid #ddd; border-radius: 10px;
@@ -127,6 +129,7 @@ body.noscroll { overflow: hidden; } /* Mencegah background bergerak */
     text-align: center; height: 100%;
 }
 .p-label span { font-size: 20px; margin-bottom: 5px; display: block; }
+/* Saat dipilih */
 .p-option input:checked + .p-label {
     border-color: var(--sbs-orange);
     background-color: #fff8f0;
@@ -664,17 +667,19 @@ body.noscroll { overflow: hidden; } /* Mencegah background bergerak */
     }
 
     // --- FUNGSI MEMBUKA & RENDER KERANJANG (YANG HILANG) ---
+    // --- UPDATE: BUKA KERANJANG & KUNCI SCROLL ---
     function openCart() {
-    renderCart();
-    document.getElementById('cart-modal').style.display = 'flex'; 
-    document.body.classList.add('noscroll'); // Mengaktifkan pengunci scroll
-}
+        renderCart();
+        document.getElementById('cart-modal').style.display = 'flex'; // Ganti jadi flex biar centering jalan
+        document.body.classList.add('noscroll'); // KUNCI SCROLL BACKGROUND
+    }
 
-function closeCart() {
-    document.getElementById('cart-modal').style.display = 'none';
-    document.body.classList.remove('noscroll'); // Mematikan pengunci scroll
-}
+    function closeCart() {
+        document.getElementById('cart-modal').style.display = 'none';
+        document.body.classList.remove('noscroll'); // BUKA KUNCI SCROLL
+    }
 
+    // --- UPDATE: RENDER CART DENGAN DETAIL HARGA ---
     function renderCart() {
         const container = document.getElementById('cart-items-container');
         container.innerHTML = '';
@@ -689,10 +694,18 @@ function closeCart() {
         cart.forEach((item, index) => {
             total += item.price * item.qty;
             
+            // Logika Detail Harga (Muncul jika qty > 1)
+            let priceDetail = '';
+            if (item.qty > 1) {
+                priceDetail = `<div style="font-size:10px; color:#888; margin-top:2px;">(${item.qty} x Rp ${item.price.toLocaleString('id-ID')})</div>`;
+            }
+
             container.innerHTML += `
                 <div class="cart-item">
                     <div class="item-main">
-                        <span>${item.qty}x ${item.name}</span>
+                        <div>
+                            <span>${item.qty}x ${item.name}</span>
+                            ${priceDetail} </div>
                         <span>Rp ${(item.price * item.qty).toLocaleString('id-ID')}</span>
                     </div>
                     <input type="text" class="item-note-input" placeholder="Catatan (cth: Pedas, Tanpa Es)..." 
@@ -706,18 +719,67 @@ function closeCart() {
         document.getElementById('modal-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
     }
 
-    function changeQty(index, delta) {
-        cart[index].qty += delta;
-        if (cart[index].qty <= 0) {
-            cart.splice(index, 1); // Hapus jika 0
-        }
-        updateCartUI(); // Update badge merah
-        renderCart();   // Update tampilan modal
-        if (cart.length === 0) closeCart(); // Tutup jika kosong
-    }
+    // --- UPDATE: SUBMIT ORDER (AMBIL VALUE DARI RADIO BUTTON) ---
+    function submitOrder() {
+        const tableNum = document.getElementById('table-number').value;
+        const custName = document.getElementById('customer-real-name').value;
+        const custPhone = document.getElementById('customer-phone').value;
+        
+        // Ambil nilai dari Radio Button yang terpilih
+        const paymentRadio = document.querySelector('input[name="payment_method"]:checked');
+        const paymentMethod = paymentRadio ? paymentRadio.value : 'tunai';
 
-    function updateItemNote(index, value) {
-        cart[index].note = value;
+        if (!tableNum) { alert("Mohon isi Nomor Meja!"); return; }
+        if (!custName) { alert("Mohon isi Nama Kakak!"); return; }
+        if (cart.length === 0) return;
+
+        let totalPrice = 0;
+        cart.forEach(item => totalPrice += (item.price * item.qty));
+
+        let initialStatus = (paymentMethod === 'tunai') ? 'new' : 'qris_unpaid';
+
+        const orderData = {
+            tableNumber: tableNum,
+            customerName: custName,
+            customerPhone: custPhone,
+            paymentMethod: paymentMethod,
+            items: cart,
+            total: totalPrice,
+            timestamp: new Date().toISOString(),
+            status: initialStatus,
+            clientPaidAt: null 
+        };
+
+        const newOrderRef = db.ref().child('orders').push();
+        newOrderRef.set(orderData)
+        .then(() => {
+            saveOrderToHistory(newOrderRef.key);
+            
+            if(paymentMethod === 'qris') {
+                localStorage.setItem('sbs_pending_qris', JSON.stringify({
+                    id: newOrderRef.key,
+                    amount: totalPrice
+                }));
+            }
+            
+            cart = []; 
+            updateCartUI();
+            closeCart();
+            
+            if(!document.getElementById('table-number').readOnly) {
+                document.getElementById('table-number').value = '';
+            }
+            document.getElementById('customer-real-name').value = '';
+            
+            if(paymentMethod === 'qris') {
+                showQRISModal(totalPrice, newOrderRef.key);
+            } else {
+                showSuccessModal();
+            }
+        })
+        .catch((error) => {
+            alert("Gagal mengirim: " + error.message);
+        });
     }
 
     // --- 2. UPDATE LOGIC RIWAYAT (Pemisahan & Auto Clear) ---
