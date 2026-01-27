@@ -609,6 +609,61 @@
         }
     }
 
+    // --- FUNGSI MEMBUKA & RENDER KERANJANG (YANG HILANG) ---
+    function openCart() {
+        renderCart();
+        document.getElementById('cart-modal').style.display = 'flex';
+    }
+
+    function closeCart() {
+        document.getElementById('cart-modal').style.display = 'none';
+    }
+
+    function renderCart() {
+        const container = document.getElementById('cart-items-container');
+        container.innerHTML = '';
+        let total = 0;
+
+        if (cart.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">Keranjang Masih Kosong</div>';
+            document.getElementById('modal-total').innerText = 'Rp 0';
+            return;
+        }
+
+        cart.forEach((item, index) => {
+            total += item.price * item.qty;
+            
+            container.innerHTML += `
+                <div class="cart-item">
+                    <div class="item-main">
+                        <span>${item.qty}x ${item.name}</span>
+                        <span>Rp ${(item.price * item.qty).toLocaleString('id-ID')}</span>
+                    </div>
+                    <input type="text" class="item-note-input" placeholder="Catatan (cth: Pedas, Tanpa Es)..." 
+                           value="${item.note || ''}" onchange="updateItemNote(${index}, this.value)">
+                    <div class="cart-actions" style="text-align:right; margin-top:5px;">
+                        <button onclick="changeQty(${index}, -1)" style="background:#ddd; width:30px; border:none; border-radius:5px;">-</button>
+                        <button onclick="changeQty(${index}, 1)" style="background:#FFD200; width:30px; border:none; border-radius:5px;">+</button>
+                    </div>
+                </div>`;
+        });
+        document.getElementById('modal-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+    }
+
+    function changeQty(index, delta) {
+        cart[index].qty += delta;
+        if (cart[index].qty <= 0) {
+            cart.splice(index, 1); // Hapus jika 0
+        }
+        updateCartUI(); // Update badge merah
+        renderCart();   // Update tampilan modal
+        if (cart.length === 0) closeCart(); // Tutup jika kosong
+    }
+
+    function updateItemNote(index, value) {
+        cart[index].note = value;
+    }
+
     // --- 2. UPDATE LOGIC RIWAYAT (Pemisahan & Auto Clear) ---
     
     // Konfigurasi Waktu Hapus (6 Jam dalam milidetik)
@@ -782,60 +837,6 @@
             
             cart = []; 
             updateCartUI();
-            // --- FUNGSI MEMBUKA & RENDER KERANJANG (YANG HILANG) ---
-    function openCart() {
-        renderCart();
-        document.getElementById('cart-modal').style.display = 'flex';
-    }
-
-    function closeCart() {
-        document.getElementById('cart-modal').style.display = 'none';
-    }
-
-    function renderCart() {
-        const container = document.getElementById('cart-items-container');
-        container.innerHTML = '';
-        let total = 0;
-
-        if (cart.length === 0) {
-            container.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">Keranjang Masih Kosong</div>';
-            document.getElementById('modal-total').innerText = 'Rp 0';
-            return;
-        }
-
-        cart.forEach((item, index) => {
-            total += item.price * item.qty;
-            
-            container.innerHTML += `
-                <div class="cart-item">
-                    <div class="item-main">
-                        <span>${item.qty}x ${item.name}</span>
-                        <span>Rp ${(item.price * item.qty).toLocaleString('id-ID')}</span>
-                    </div>
-                    <input type="text" class="item-note-input" placeholder="Catatan (cth: Pedas, Tanpa Es)..." 
-                           value="${item.note || ''}" onchange="updateItemNote(${index}, this.value)">
-                    <div class="cart-actions" style="text-align:right; margin-top:5px;">
-                        <button onclick="changeQty(${index}, -1)" style="background:#ddd; width:30px; border:none; border-radius:5px;">-</button>
-                        <button onclick="changeQty(${index}, 1)" style="background:#FFD200; width:30px; border:none; border-radius:5px;">+</button>
-                    </div>
-                </div>`;
-        });
-        document.getElementById('modal-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
-    }
-
-    function changeQty(index, delta) {
-        cart[index].qty += delta;
-        if (cart[index].qty <= 0) {
-            cart.splice(index, 1); // Hapus jika 0
-        }
-        updateCartUI(); // Update badge merah
-        renderCart();   // Update tampilan modal
-        if (cart.length === 0) closeCart(); // Tutup jika kosong
-    }
-
-    function updateItemNote(index, value) {
-        cart[index].note = value;
-    }
             closeCart();
             
             if(!document.getElementById('table-number').readOnly) {
