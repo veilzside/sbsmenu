@@ -124,80 +124,10 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUp { from { transform: translateY(100px); } to { transform: translateY(0); } }
-
-/* Container Tombol Melayang di Kanan Atas */
-.floating-container {
-    position: fixed; top: 20px; right: 20px; z-index: 2100;
-    display: flex; flex-direction: column; gap: 15px; align-items: flex-end;
-}
-
-/* Tombol Bulat (Cart & History) */
-.fab-btn {
-    width: 60px; height: 60px;
-    border-radius: 50%;
-    border: 3px solid var(--sbs-black);
-    background: #fff;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
-    cursor: pointer; position: relative;
-    transition: transform 0.1s;
-}
-.fab-btn:active { transform: scale(0.95); box-shadow: 2px 2px 0px rgba(0,0,0,0.2); }
-.fab-btn svg { width: 28px; height: 28px; fill: var(--sbs-black); }
-
-/* Tombol Keranjang (Utama) */
-.fab-cart { background: var(--sbs-yellow); }
-.fab-cart.has-items { animation: bounce 0.5s; background: var(--sbs-orange); border-color: #fff; }
-.fab-cart.has-items svg { fill: #fff; }
-
-/* Tombol Riwayat (Muncul jika ada pesanan) */
-.fab-history { background: #fff; display: none; } /* Default hidden */
-.fab-history.active-order { background: #2ecc71; border-color: #fff; } /* Hijau jika ada pesanan aktif */
-.fab-history.active-order svg { fill: #fff; }
-
-/* Badge Counter */
-.fab-badge {
-    position: absolute; top: -5px; right: -5px;
-    background: var(--red); color: #fff;
-    font-size: 11px; font-weight: 900;
-    min-width: 20px; height: 20px; padding: 2px;
-    border-radius: 50%; border: 2px solid #fff;
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; transform: scale(0); transition: 0.2s;
-}
-.fab-badge.show { opacity: 1; transform: scale(1); }
-
-/* --- UPDATE MODAL RIWAYAT --- */
-.history-section-title {
-    font-size: 14px; font-weight: 900; color: var(--sbs-black);
-    margin: 15px 0 10px 0; border-bottom: 2px solid var(--sbs-yellow);
-    display: inline-block; padding-bottom: 2px;
-}
-.btn-clear-history {
-    background: transparent; color: #888; border: 1px solid #ccc;
-    font-size: 11px; padding: 5px 10px; border-radius: 20px;
-    cursor: pointer; margin-top: 10px; width: 100%;
-}
-.btn-clear-history:hover { background: #eee; color: var(--red); border-color: var(--red); }
-
-@keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-        
     </style>
 </head>
 <body>
 
-    <div class="floating-container">
-    <div id="fab-history" class="fab-btn fab-history" onclick="openHistory()">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-        <div id="badge-history" class="fab-badge">0</div>
-    </div>
-
-    <div id="fab-cart" class="fab-btn fab-cart" onclick="openCart()">
-        <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11v-2H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
-        <div id="badge-cart" class="fab-badge">0</div>
-    </div>
-</div>
-    
 <div id="status-tracker" onclick="openHistory()">
     <span id="tracker-summary">Pesananmu Sedang Diproses</span> 
     <span class="status-badge" style="font-size:10px;">LIHAT DETAIL ></span>
@@ -579,151 +509,68 @@
         if (navigator.vibrate) navigator.vibrate(50);
     }
 
-    // --- 1. UPDATE LOGIC KERANJANG (FLOATING) ---
     function updateCartUI() {
+        const bar = document.getElementById('cart-bar');
         let totalQty = 0;
-        cart.forEach(item => totalQty += item.qty);
-
-        const fabCart = document.getElementById('fab-cart');
-        const badgeCart = document.getElementById('badge-cart');
+        let totalPrice = 0;
+        cart.forEach(item => {
+            totalQty += item.qty;
+            totalPrice += (item.price * item.qty);
+        });
 
         if (totalQty > 0) {
-            fabCart.classList.add('has-items');
-            badgeCart.innerText = totalQty;
-            badgeCart.classList.add('show');
-            // Efek getar HP saat nambah item
-            if (navigator.vibrate) navigator.vibrate(50); 
+            bar.style.display = 'flex';
+            document.getElementById('cart-info').innerText = totalQty + " ITEM";
+            document.getElementById('cart-total').innerText = "Rp " + totalPrice.toLocaleString('id-ID');
         } else {
-            fabCart.classList.remove('has-items');
-            badgeCart.classList.remove('show');
+            bar.style.display = 'none';
         }
     }
 
-    // --- 2. UPDATE LOGIC RIWAYAT (Pemisahan & Auto Clear) ---
-    
-    // Konfigurasi Waktu Hapus (6 Jam dalam milidetik)
-    const AUTO_CLEAR_TIME = 6 * 60 * 60 * 1000; 
-
-    function trackOrders() {
-        let history = JSON.parse(localStorage.getItem('sbs_order_history')) || [];
-        const fabHistory = document.getElementById('fab-history');
-        const badgeHistory = document.getElementById('badge-history');
-        const historyContainer = document.getElementById('history-container');
+    function openCart() {
+        const modal = document.getElementById('cart-modal');
+        const container = document.getElementById('cart-items-container');
+        const modalTotal = document.getElementById('modal-total');
         
-        // Bersihkan Order Lama (Auto-Delete Logic)
-        const now = Date.now();
-        let validHistory = [];
-        let hasChanges = false;
+        container.innerHTML = '';
+        let totalPrice = 0;
 
-        // Kita perlu cek satu-satu, tapi karena ini async (Firebase), 
-        // kita lakukan filtering visual dulu, pembersihan localStorage dilakukan saat data terambil
-        
-        if (history.length === 0) {
-            fabHistory.style.display = 'none';
-            return;
-        }
-
-        fabHistory.style.display = 'flex'; // Munculkan tombol jika ada history
-        
-        // Reset Container
-        historyContainer.innerHTML = `
-            <div id="active-orders-section">
-                <div class="history-section-title" style="color:var(--sbs-orange)">SEDANG BERJALAN</div>
-                <div id="list-active"></div>
-            </div>
-            <div id="past-orders-section">
-                <div class="history-section-title" style="color:#888">RIWAYAT SELESAI</div>
-                <div id="list-past"></div>
-                <button class="btn-clear-history" onclick="manualClearHistory()">Hapus Semua Riwayat</button>
-            </div>
-        `;
-
-        const listActive = document.getElementById('list-active');
-        const listPast = document.getElementById('list-past');
-        let activeCount = 0;
-        let pastCount = 0;
-
-        history.forEach(orderId => {
-            db.ref('orders/' + orderId).on('value', (snapshot) => {
-                const data = snapshot.val();
-                if(data) {
-                    // Cek Auto Clear: Jika status completed/rejected DAN sudah > 6 jam
-                    if (['completed', 'rejected'].includes(data.status)) {
-                        const orderTime = new Date(data.completedAt || data.timestamp).getTime();
-                        if (now - orderTime > AUTO_CLEAR_TIME) {
-                            // Skip render (jangan tampilkan), nanti hapus dari LS
-                            return; 
-                        }
-                    }
-
-                    // Tentukan Styling & Grup
-                    let statusText = 'MENUNGGU';
-                    let color = '#888';
-                    let isActive = false;
-
-                    // Logika Status
-                    if(data.status === 'new') { statusText = 'MENUNGGU KONFIRMASI'; color = '#888'; isActive = true; }
-                    else if(data.status === 'qris_unpaid') { statusText = 'MENUNGGU PEMBAYARAN'; color = '#e67e22'; isActive = true; }
-                    else if(data.status === 'pending_payment') { statusText = 'VERIFIKASI PEMBAYARAN'; color = '#e67e22'; isActive = true; }
-                    else if(data.status === 'unpaid') { statusText = 'DIPROSES'; color = '#FF6600'; isActive = true; }
-                    else if(data.status === 'processing') { statusText = 'SEDANG DISIAPKAN'; color = '#3498db'; isActive = true; }
-                    else if(data.status === 'completed') { statusText = 'SELESAI'; color = '#2ecc71'; isActive = false; }
-                    else if(data.status === 'rejected') { statusText = 'DITOLAK'; color = 'red'; isActive = false; }
-
-                    // Render Card (Hanya render jika belum ada)
-                    let cardId = 'card-' + orderId;
-                    if (!document.getElementById(cardId)) {
-                        const itemNames = (data.items || []).map(i => i.name).join(', ');
-                        const html = `
-                            <div id="${cardId}" class="history-card" style="border-left:4px solid ${color}">
-                                <div class="history-header">
-                                    <span>Meja: ${data.tableNumber || '-'}</span>
-                                    <span>${data.paymentMethod === 'qris' ? 'QRIS' : 'TUNAI'}</span>
-                                </div>
-                                <div class="history-status" style="color:${color}">${statusText}</div>
-                                <div class="history-items">${itemNames}</div>
-                            </div>
-                        `;
-
-                        if (isActive) {
-                            listActive.innerHTML += html;
-                            activeCount++;
-                        } else {
-                            listPast.innerHTML += html;
-                            pastCount++;
-                        }
-                    }
-                    
-                    // Update Badge Status Aktif
-                    if (activeCount > 0) {
-                        fabHistory.classList.add('active-order');
-                        badgeHistory.innerText = activeCount;
-                        badgeHistory.classList.add('show');
-                    } else {
-                        fabHistory.classList.remove('active-order');
-                        badgeHistory.classList.remove('show');
-                    }
-
-                    // Sembunyikan Section Judul jika kosong
-                    document.getElementById('active-orders-section').style.display = activeCount > 0 ? 'block' : 'none';
-                    document.getElementById('past-orders-section').style.display = pastCount > 0 ? 'block' : 'none';
-                    
-                    // Jika sama sekali tidak ada data (karena terhapus waktu), sembunyikan tombol
-                    if (activeCount === 0 && pastCount === 0) fabHistory.style.display = 'none';
-                }
-            });
+        cart.forEach((item, index) => {
+            totalPrice += (item.price * item.qty);
+            container.innerHTML += `
+                <div class="cart-item">
+                    <div class="item-main">
+                        <span>${item.name} <small>(${item.qty}x)</small></span>
+                        <span>Rp ${(item.price * item.qty).toLocaleString()}</span>
+                    </div>
+                    <div class="cart-actions" style="margin-top:5px; margin-bottom:5px;">
+                        <button onclick="changeQty(${index}, -1)">-</button>
+                        <span style="margin:0 5px;">${item.qty}</span>
+                        <button onclick="changeQty(${index}, 1)">+</button>
+                    </div>
+                    <input type="text" class="item-note-input" 
+                           placeholder="Catatan..." 
+                           value="${item.note}" 
+                           onchange="updateNote(${index}, this.value)">
+                </div>
+            `;
         });
+
+        modalTotal.innerText = "Rp " + totalPrice.toLocaleString('id-ID');
+        modal.style.display = 'flex';
     }
 
-    function manualClearHistory() {
-        if(confirm("Hapus semua riwayat pesanan yang sudah selesai?")) {
-            // Kita hanya menghapus referensi di localStorage, data di database tetap aman
-            // Tapi logika yang benar adalah hanya menghapus ID yang statusnya sudah selesai
-            // Untuk kesederhanaan sisi klien:
-            localStorage.removeItem('sbs_order_history');
-            trackOrders(); // Refresh
-            alert("Riwayat dibersihkan.");
+    function updateNote(index, value) {
+        cart[index].note = value;
+    }
+
+    function changeQty(index, delta) {
+        cart[index].qty += delta;
+        if (cart[index].qty <= 0) {
+            cart.splice(index, 1);
         }
+        updateCartUI();
+        openCart(); 
     }
 
     function closeCart() {
