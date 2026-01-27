@@ -859,7 +859,10 @@
         const tableNum = document.getElementById('table-number').value;
         const custName = document.getElementById('customer-real-name').value;
         const custPhone = document.getElementById('customer-phone').value;
-        const paymentMethod = document.getElementById('payment-method').value;
+        
+        // Ambil nilai dari Radio Button yang terpilih (Bukan ID dropdown lagi)
+        const paymentRadio = document.querySelector('input[name="payment_method"]:checked');
+        const paymentMethod = paymentRadio ? paymentRadio.value : 'tunai';
 
         if (!tableNum) { alert("Mohon isi Nomor Meja!"); return; }
         if (!custName) { alert("Mohon isi Nama Kakak!"); return; }
