@@ -88,8 +88,51 @@
         .view-btn { font-size: 10px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; margin-top: 2px; display: inline-block; }
 
         /* --- MODAL ORDER & SUCCESS --- */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        .modal-content { background-color: #fff; width: 100%; max-width: 450px; border-radius: 20px; padding: 25px; border: 4px solid var(--sbs-black); max-height: 85vh; overflow-y: auto; position: relative; }
+        /* --- FIX SCROLL & POSISI MODAL (TARUH DI DALAM <style>) --- */
+body.noscroll { overflow: hidden; } /* Mencegah background bergerak */
+
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 9999 !important; /* Agar muncul di depan tombol floating */
+    left: 0; top: 0; 
+    width: 100%; height: 100%; 
+    background-color: rgba(0,0,0,0.85); 
+    backdrop-filter: blur(4px);
+    display: flex; /* Memastikan window di tengah */
+    align-items: center; 
+    justify-content: center;
+    overscroll-behavior: contain; 
+}
+
+.modal-content {
+    background-color: #fff; 
+    width: 90%; max-width: 400px; 
+    border-radius: 20px; padding: 25px; 
+    border: 4px solid var(--sbs-black); 
+    max-height: 80vh; /* Agar tidak meluber keluar layar */
+    overflow-y: auto; /* Konten di dalam window bisa di-scroll */
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+/* --- CSS UNTUK PILIHAN PEMBAYARAN BARU --- */
+.payment-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
+.p-option { cursor: pointer; position: relative; }
+.p-option input { display: none; } /* Sembunyikan radio button asli */
+.p-label {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 15px 10px; border: 2px solid #ddd; border-radius: 10px;
+    font-weight: bold; font-size: 13px; color: #888; transition: 0.2s;
+    text-align: center; height: 100%;
+}
+.p-label span { font-size: 20px; margin-bottom: 5px; display: block; }
+.p-option input:checked + .p-label {
+    border-color: var(--sbs-orange);
+    background-color: #fff8f0;
+    color: var(--sbs-orange);
+    box-shadow: 0 4px 10px rgba(255, 102, 0, 0.2);
+}
         .modal-header { font-family: 'Bebas Neue'; font-size: 30px; margin-bottom: 15px; border-bottom: 2px solid #eee; }
         
         .cart-item { margin-bottom: 15px; border-bottom: 1px dashed #ddd; padding-bottom: 10px; }
@@ -474,6 +517,7 @@
     <div class="modal-content">
         <div class="close-modal" onclick="closeCart()">&times;</div>
         <div class="modal-header">PESANANMU</div>
+        
         <div id="cart-items-container"></div>
         
         <div class="total-row">
@@ -483,24 +527,34 @@
         
         <div class="input-group">
             <label>Nomor Meja*</label>
-            <input type="number" id="table-number" placeholder="Scan QR Meja..." required inputmode="numeric">
+            <input type="number" id="table-number" placeholder="Nomor Meja..." required inputmode="numeric">
         </div>
         <div class="input-group">
             <label>Nama Kakak*</label>
-            <input type="text" id="customer-real-name" placeholder="Siapa nama kakak?" required>
+            <input type="text" id="customer-real-name" placeholder="Nama..." required>
         </div>
         
         <div class="input-group">
             <label>Metode Pembayaran*</label>
-            <select id="payment-method">
-                <option value="tunai">Bayar Tunai di Kasir</option>
-                <option value="qris">QRIS / E-Wallet (Bayar Sekarang)</option>
-            </select>
+            <div class="payment-options">
+                <label class="p-option">
+                    <input type="radio" name="payment_method" value="tunai" checked>
+                    <div class="p-label">
+                        <span>💵</span> TUNAI (Kasir)
+                    </div>
+                </label>
+                <label class="p-option">
+                    <input type="radio" name="payment_method" value="qris">
+                    <div class="p-label">
+                        <span>📱</span> QRIS / E-Wallet
+                    </div>
+                </label>
+            </div>
         </div>
         
         <div class="input-group">
-            <label>Nomor HP / WA (Opsional)</label>
-            <input type="tel" id="customer-phone" placeholder="08xxxxxxxxxx" inputmode="tel">
+            <label>Nomor HP (Opsional)</label>
+            <input type="tel" id="customer-phone" placeholder="08..." inputmode="tel">
         </div>
 
         <button class="btn-order" onclick="submitOrder()">KIRIM KE DAPUR</button>
@@ -611,13 +665,15 @@
 
     // --- FUNGSI MEMBUKA & RENDER KERANJANG (YANG HILANG) ---
     function openCart() {
-        renderCart();
-        document.getElementById('cart-modal').style.display = 'flex';
-    }
+    renderCart();
+    document.getElementById('cart-modal').style.display = 'flex'; 
+    document.body.classList.add('noscroll'); // Mengaktifkan pengunci scroll
+}
 
-    function closeCart() {
-        document.getElementById('cart-modal').style.display = 'none';
-    }
+function closeCart() {
+    document.getElementById('cart-modal').style.display = 'none';
+    document.body.classList.remove('noscroll'); // Mematikan pengunci scroll
+}
 
     function renderCart() {
         const container = document.getElementById('cart-items-container');
