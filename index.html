@@ -582,7 +582,19 @@
         <button class="btn-close-final" onclick="closeHistory()">TUTUP</button>
     </div>
 </div>
-
+<div id="clear-history-modal" class="modal">
+    <div class="modal-content" style="text-align:center;">
+        <div class="success-icon" style="color:var(--red); font-size:50px; margin-bottom:10px;">🗑</div>
+        <div class="modal-header" style="border:none; margin-bottom:10px; text-align:center; color:var(--sbs-black);">HAPUS RIWAYAT?</div>
+        <div class="success-msg" style="margin-bottom:20px;">
+            Semua riwayat pesanan yang <b>SUDAH SELESAI</b> akan dihapus permanen dari memori HP ini.
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <button class="btn-close-final" style="background:#eee; color:#555; border:none;" onclick="closeClearHistoryModal()">BATAL</button>
+            <button class="btn-close-final" style="background:var(--red); color:#fff; border:none;" onclick="executeClearHistory()">YA, HAPUS</button>
+        </div>
+    </div>
+</div>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
@@ -1008,10 +1020,17 @@
     }
 
     function manualClearHistory() {
-        if(confirm("Hapus riwayat pesanan yang sudah selesai dari HP ini?")) {
-            localStorage.removeItem('sbs_order_history');
-            location.reload();
-        }
+        // Jangan pakai confirm() biasa, panggil modal baru
+        document.getElementById('clear-history-modal').style.display = 'flex';
+    }
+
+    function closeClearHistoryModal() {
+        document.getElementById('clear-history-modal').style.display = 'none';
+    }
+
+    function executeClearHistory() {
+        localStorage.removeItem('sbs_order_history');
+        location.reload(); // Refresh halaman agar bersih
     }
 
     function openHistory() { 
