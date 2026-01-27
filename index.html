@@ -14,160 +14,62 @@
         .logo-container img { width: 100%; height: auto; }
         .header-title h1 { font-family: 'Bebas Neue', cursive; font-size: 55px; margin: 0; line-height: 0.8; letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff; }
 
-        /* --- TRACKING STATUS BAR (UPDATED) --- */
-        #status-tracker {
-            position: fixed; top: 0; left: 0; width: 100%; 
-            background: var(--sbs-black); color: #fff; padding: 10px; 
-            z-index: 2000; text-align: center; font-size: 14px; 
-            font-weight: bold; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            cursor: pointer; /* Menandakan bisa diklik */
-        }
-        .status-badge { 
-            background: var(--sbs-orange); color: #fff; padding: 3px 10px; 
-            border-radius: 5px; margin-left: 10px; text-transform: uppercase; 
-        }
-        
-        /* Search & Tabs */
-        .search-wrapper { position: relative; margin-bottom: 20px; z-index: 101; }
-        .search-box { width: 100%; box-sizing: border-box; background: #fff; border: 3px solid var(--sbs-black); border-radius: 50px; padding: 12px 20px 12px 45px; font-family: 'Montserrat', sans-serif; font-weight: 700; text-transform: uppercase; outline: none; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); }
-        .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 18px; opacity: 0.6; }
-        .clear-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: #ddd; border: none; width: 20px; height: 20px; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; font-size: 12px;}
-        .tabs { display: flex; overflow-x: auto; gap: 10px; padding: 12px; margin-bottom: 25px; position: sticky; top: 10px; z-index: 100; background: var(--sbs-dark-yellow); border: 3px solid var(--sbs-black); border-radius: 50px; box-shadow: 6px 6px 0px rgba(0,0,0,0.1); scrollbar-width: none; }
-        .tabs.hidden-by-search { display: none; }
-        .tab-btn { background: #fff; border: 2px solid var(--sbs-black); padding: 8px 20px; border-radius: 50px; font-family: 'Montserrat', sans-serif; font-size: 11px; text-transform: uppercase; white-space: nowrap; cursor: pointer; box-shadow: 3px 3px 0px rgba(0,0,0,0.2); transition: 0.1s; }
-        .tab-btn.active { background: var(--sbs-black); color: #fff; transform: translate(2px, 2px); box-shadow: none; }
+        /* --- UI BARU: FLOATING BUTTONS (REVISI) --- */
+/* Sembunyikan elemen lama */
+#status-tracker, #cart-bar { display: none !important; }
 
-        /* Content & Cards */
-        .content { display: none; grid-template-columns: 1fr; gap: 30px; }
-        .content.active { display: grid; animation: fadeIn 0.4s ease-out; }
-        .search-mode-active .content { display: grid !important; animation: none; }
-        .card-hidden, .section-hidden { display: none !important; }
-        
-        .menu-card { background: #fff; border: 3px solid var(--sbs-black); border-radius: 25px; overflow: hidden; box-shadow: 10px 10px 0px var(--sbs-black); position: relative; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.1s; }
-        .menu-card:active { transform: scale(0.98); }
-        .card-img-box { width: 100%; height: auto; aspect-ratio: 1 / 1; position: relative; background: #eee; border-bottom: 3px solid var(--sbs-black); }
-        .card-img-box img { width: 100%; height: 100%; object-fit: cover; }
-        .best-rec { border-color: var(--sbs-orange); box-shadow: 10px 10px 0px var(--sbs-orange); }
-
-        /* --- NEW ADD BUTTON (CART ICON) --- */
-        .add-badge { 
-            position: absolute; bottom: 15px; right: 15px; 
-            background: var(--sbs-orange); color: #fff; 
-            width: 50px; height: 50px; border-radius: 50%; 
-            border: 3px solid var(--sbs-black); 
-            display: flex; align-items: center; justify-content: center; 
-            box-shadow: 3px 3px 0px var(--sbs-black); 
-            transition: 0.2s; z-index: 10;
-            opacity: 0.9; 
-        }
-        .add-badge svg { width: 24px; height: 24px; fill: white; }
-        .menu-card:active .add-badge { transform: scale(1.1); background: var(--sbs-black); opacity: 1; }
-        
-        /* ALCS Style */
-        .alcs-card { background: #fff; border: 3px solid var(--sbs-black); box-shadow: 8px 8px 0px var(--sbs-black); border-radius: 20px; padding: 20px; margin-bottom: 0; position: relative; }
-        .alcs-brand { font-family: 'Montserrat', sans-serif; font-size: 26px; text-transform: uppercase; font-weight: 900; border-bottom: 3px solid #eee; padding-bottom: 8px; margin-bottom: 15px;}
-        .alcs-row { display: flex; justify-content: space-between; font-size: 16px; border-bottom: 1px dashed #ddd; padding: 5px 0; cursor: pointer;}
-        .alcs-variant { font-weight: 500; }
-        .alcs-price-tag { font-family: 'Montserrat', sans-serif; font-weight: 800; }
-
-        /* --- CART FLOATING BAR --- */
-        #cart-bar {
-            position: fixed; bottom: 20px; left: 20px; right: 20px;
-            background: var(--sbs-black); color: #fff;
-            padding: 15px 25px; border-radius: 50px;
-            display: none; justify-content: space-between; align-items: center;
-            box-shadow: 0px 10px 20px rgba(0,0,0,0.5); z-index: 999;
-            font-family: 'Montserrat', sans-serif; cursor: pointer; border: 2px solid #fff;
-            animation: slideUp 0.3s ease-out;
-        }
-        .cart-left { display: flex; flex-direction: column; }
-        .cart-hint { font-size: 10px; color: var(--sbs-yellow); text-transform: uppercase; font-weight: bold; margin-bottom: -2px; }
-        #cart-info { font-weight: bold; font-size: 15px; }
-        .cart-right { text-align: right; }
-        #cart-total { color: #fff; font-size: 16px; font-weight: 900; }
-        .view-btn { font-size: 10px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; margin-top: 2px; display: inline-block; }
-
-        /* --- MODAL ORDER & SUCCESS --- */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        .modal-content { background-color: #fff; width: 100%; max-width: 450px; border-radius: 20px; padding: 25px; border: 4px solid var(--sbs-black); max-height: 85vh; overflow-y: auto; position: relative; }
-        .modal-header { font-family: 'Bebas Neue'; font-size: 30px; margin-bottom: 15px; border-bottom: 2px solid #eee; }
-        
-        .cart-item { margin-bottom: 15px; border-bottom: 1px dashed #ddd; padding-bottom: 10px; }
-        .item-main { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; }
-        .item-note-input { width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 8px; margin-top: 8px; font-size: 12px; font-family: 'Poppins'; outline: none; box-sizing: border-box; }
-        .item-note-input:focus { border-color: var(--sbs-orange); background: #fffdf9; }
-        
-        .cart-actions button { background: #ddd; border: none; padding: 2px 8px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-left: 5px;}
-        
-        .total-row { display: flex; justify-content: space-between; margin-top: 20px; font-weight: bold; font-size: 18px; border-top: 2px solid var(--sbs-black); padding-top: 10px; }
-        
-        /* NEW FORM STYLES */
-        .input-group { margin-top: 15px; }
-        .input-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #666; }
-        .input-group input, .input-group select { width: 100%; padding: 10px; border: 2px solid var(--sbs-black); border-radius: 10px; box-sizing: border-box; font-family: 'Poppins'; font-size: 14px; background: #fff; }
-        .input-group input:focus, .input-group select:focus { border-color: var(--sbs-orange); outline: none; background: #fffdf9; }
-        
-        .btn-order { background: var(--sbs-orange); color: #fff; border: 3px solid var(--sbs-black); width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; margin-top: 20px; cursor: pointer; font-size: 16px; }
-        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; font-weight: bold; }
-
-        /* Success Message */
-        #success-modal .modal-content { text-align: center; border-color: #28a745; }
-        .success-icon { font-size: 60px; color: #28a745; margin-bottom: 15px; }
-        .success-msg { font-size: 16px; line-height: 1.6; color: #444; margin-bottom: 20px; }
-        .btn-close-final { background: var(--sbs-black); color: #fff; padding: 12px 30px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; width: 100%; }
-
-        /* --- HISTORY MODAL (NEW) --- */
-        .history-card { border: 2px solid #eee; border-radius: 10px; padding: 10px; margin-bottom: 10px; background: #f9f9f9; }
-        .history-header { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; color: #666; margin-bottom: 5px; }
-        .history-status { font-size: 14px; font-weight: 900; color: var(--sbs-black); text-transform: uppercase; }
-        .history-items { font-size: 13px; margin-top: 5px; border-top: 1px dashed #ddd; padding-top: 5px; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideUp { from { transform: translateY(100px); } to { transform: translateY(0); } }
-
-/* Container Tombol Melayang di Kanan Atas */
+/* 1. Container Tombol: Posisinya saya sesuaikan agar lebih rapi */
 .floating-container {
-    position: fixed; top: 20px; right: 20px; z-index: 2100;
-    display: flex; flex-direction: column; gap: 15px; align-items: flex-end;
+    position: fixed; top: 25px; right: 20px; z-index: 2100;
+    display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
 }
 
-/* Tombol Bulat (Cart & History) */
+/* 2. Tombol Bulat: Ukuran saya kecilkan dari 60px ke 45px */
 .fab-btn {
-    width: 60px; height: 60px;
+    width: 45px; height: 45px; /* Lebih kecil & proporsional */
     border-radius: 50%;
-    border: 3px solid var(--sbs-black);
+    border: 2px solid var(--sbs-black); /* Border dipertipis dikit */
     background: #fff;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+    box-shadow: 3px 3px 0px rgba(0,0,0,0.15);
     cursor: pointer; position: relative;
     transition: transform 0.1s;
 }
-.fab-btn:active { transform: scale(0.95); box-shadow: 2px 2px 0px rgba(0,0,0,0.2); }
-.fab-btn svg { width: 28px; height: 28px; fill: var(--sbs-black); }
+.fab-btn:active { transform: scale(0.95); }
+.fab-btn svg { width: 22px; height: 22px; fill: var(--sbs-black); } /* Icon dikecilkan */
 
-/* Tombol Keranjang (Utama) */
+/* Tombol Keranjang */
 .fab-cart { background: var(--sbs-yellow); }
-.fab-cart.has-items { animation: bounce 0.5s; background: var(--sbs-orange); border-color: #fff; }
+.fab-cart.has-items { background: var(--sbs-orange); border-color: #fff; }
 .fab-cart.has-items svg { fill: #fff; }
 
-/* Tombol Riwayat (Muncul jika ada pesanan) */
-.fab-history { background: #fff; display: none; } /* Default hidden */
-.fab-history.active-order { background: #2ecc71; border-color: #fff; } /* Hijau jika ada pesanan aktif */
+/* Tombol Riwayat */
+.fab-history { background: #fff; display: none; }
+.fab-history.active-order { background: #2ecc71; border-color: #fff; }
 .fab-history.active-order svg { fill: #fff; }
 
-/* Badge Counter */
+/* 3. Badge Counter (FIX WARNA) */
 .fab-badge {
     position: absolute; top: -5px; right: -5px;
-    background: var(--red); color: #fff;
-    font-size: 11px; font-weight: 900;
-    min-width: 20px; height: 20px; padding: 2px;
-    border-radius: 50%; border: 2px solid #fff;
+    background-color: #ff0000 !important; /* Merah Solid (Paksa) */
+    color: #ffffff !important; /* Teks Putih */
+    font-size: 10px; font-weight: 900;
+    min-width: 18px; height: 18px; padding: 2px;
+    border-radius: 50%; border: 2px solid #fff; /* Border putih biar kontras */
     display: flex; align-items: center; justify-content: center;
     opacity: 0; transform: scale(0); transition: 0.2s;
+    z-index: 2200;
 }
 .fab-badge.show { opacity: 1; transform: scale(1); }
 
-/* --- UPDATE MODAL RIWAYAT --- */
+/* --- PENTING: PERBAIKAN POPUP (MODAL) --- */
+/* Ini memaksa popup muncul DI DEPAN tombol floating */
+.modal { 
+    z-index: 9999 !important; 
+    backdrop-filter: blur(2px); /* Efek blur di belakang popup agar fokus */
+}
+
+/* Style tambahan riwayat */
 .history-section-title {
     font-size: 14px; font-weight: 900; color: var(--sbs-black);
     margin: 15px 0 10px 0; border-bottom: 2px solid var(--sbs-yellow);
@@ -178,9 +80,6 @@
     font-size: 11px; padding: 5px 10px; border-radius: 20px;
     cursor: pointer; margin-top: 10px; width: 100%;
 }
-.btn-clear-history:hover { background: #eee; color: var(--red); border-color: var(--red); }
-
-@keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
         
     </style>
 </head>
