@@ -165,55 +165,65 @@
 
         /* --- UI BARU: FLOATING BUTTONS (REVISI) --- */
 /* Sembunyikan elemen lama */
-/* --- UI BARU: FLOATING BUTTONS (REVISI POSISI) --- */
+/* --- UI FLOATING BUTTONS (FINAL) --- */
         #status-tracker, #cart-bar { display: none !important; }
 
-        /* 1. Container Tombol: BERDAMPINGAN (ROW) & LEBIH KE ATAS */
         .floating-container {
-            position: fixed; 
-            top: 25px; /* Sejajar dengan Logo */
-            right: 15px; 
+            /* Ganti 'fixed' jadi 'absolute' agar ikut terscroll dan tidak menutupi layar terus */
+            position: absolute; 
+            top: 25px; 
+            right: 20px; 
             z-index: 2100;
             display: flex; 
-            flex-direction: row; /* KUNCI: Membuatnya berdampingan (Horizontal) */
-            gap: 10px; 
-            align-items: center;
+            flex-direction: column; /* Kembali ke atas-bawah */
+            gap: 8px; 
+            align-items: flex-end; /* Rata Kanan */
         }
 
-        /* 2. Tombol Bulat: DIPERKECIL SEDIKIT (45px -> 38px) */
+        /* Base Button Style */
         .fab-btn {
-            width: 38px; height: 38px; /* Ukuran lebih pas */
             border-radius: 50%;
-            border: 2px solid var(--sbs-black);
-            background: #fff;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 2px 2px 0px rgba(0,0,0,0.15); /* Shadow diperhalus */
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
             cursor: pointer; position: relative;
             transition: transform 0.1s;
         }
         .fab-btn:active { transform: scale(0.95); }
-        .fab-btn svg { width: 18px; height: 18px; fill: var(--sbs-black); } /* Icon menyesuaikan */
 
-        /* Warna Tombol */
-        .fab-cart { background: var(--sbs-yellow); }
+        /* 1. KERANJANG (UTAMA - BESAR) */
+        .fab-cart { 
+            width: 48px; height: 48px; /* Ukuran Normal */
+            border: 2px solid var(--sbs-black);
+            background: var(--sbs-yellow);
+            z-index: 2; /* Di atas */
+        }
         .fab-cart.has-items { background: var(--sbs-orange); border-color: #fff; }
+        .fab-cart svg { width: 24px; height: 24px; fill: var(--sbs-black); }
         .fab-cart.has-items svg { fill: #fff; }
 
-        .fab-history { background: #fff; display: none; }
-        .fab-history.active-order { background: #2ecc71; border-color: #fff; }
+        /* 2. RIWAYAT (MINI - 50% LEBIH KECIL) */
+        .fab-history { 
+            width: 32px; height: 32px; /* Ukuran Mini */
+            border: 1px solid #aaa; /* Border tipis */
+            background: #fff; 
+            display: none; /* Default hidden, muncul via JS */
+            z-index: 1;
+        }
+        .fab-history svg { width: 16px; height: 16px; fill: #888; } /* Icon kecil */
+        
+        /* Jika ada pesanan aktif, jadi hijau */
+        .fab-history.active-order { background: #2ecc71; border-color: #2ecc71; }
         .fab-history.active-order svg { fill: #fff; }
 
-        /* 3. Badge Counter (Posisi disesuaikan dengan tombol kecil) */
+        /* Badge Counter */
         .fab-badge {
             position: absolute; top: -5px; right: -5px;
-            background-color: #ff0000 !important;
-            color: #ffffff !important;
-            font-size: 9px; font-weight: 900;
-            min-width: 16px; height: 16px; padding: 2px;
+            background-color: #ff0000 !important; color: #fff !important;
+            font-size: 10px; font-weight: 900;
+            min-width: 18px; height: 18px; padding: 2px;
             border-radius: 50%; border: 2px solid #fff;
             display: flex; align-items: center; justify-content: center;
-            opacity: 0; transform: scale(0); transition: 0.2s;
-            z-index: 2200;
+            opacity: 0; transform: scale(0); transition: 0.2s; z-index: 2200;
         }
         .fab-badge.show { opacity: 1; transform: scale(1); }
 
@@ -584,14 +594,21 @@
 </div>
 <div id="clear-history-modal" class="modal">
     <div class="modal-content" style="text-align:center;">
-        <div class="success-icon" style="color:var(--red); font-size:50px; margin-bottom:10px;">🗑</div>
-        <div class="modal-header" style="border:none; margin-bottom:10px; text-align:center; color:var(--sbs-black);">HAPUS RIWAYAT?</div>
-        <div class="success-msg" style="margin-bottom:20px;">
+        <div class="success-icon" style="color:red; font-size:50px; margin-bottom:10px;">🗑</div>
+        <div class="modal-header" style="border:none; margin-bottom:10px; text-align:center; color:#1A1A1A;">HAPUS RIWAYAT?</div>
+        <div class="success-msg" style="margin-bottom:20px; font-size:14px; color:#555;">
             Semua riwayat pesanan yang <b>SUDAH SELESAI</b> akan dihapus permanen dari memori HP ini.
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <button class="btn-close-final" style="background:#eee; color:#555; border:none;" onclick="closeClearHistoryModal()">BATAL</button>
-            <button class="btn-close-final" style="background:var(--red); color:#fff; border:none;" onclick="executeClearHistory()">YA, HAPUS</button>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:10px;">
+            <button onclick="closeClearHistoryModal()" 
+                    style="background:#eee; color:#333; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">
+                BATAL
+            </button>
+            <button onclick="executeClearHistory()" 
+                    style="background:red; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">
+                YA, HAPUS
+            </button>
         </div>
     </div>
 </div>
@@ -643,6 +660,7 @@
         // AUTO-RESTORE QRIS POPUP (Anti-Refresh Loss)
         checkPendingQRIS();
         updateCartUI();
+        trackOrders();
     };
 
     function addToCart(name, price) {
