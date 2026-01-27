@@ -165,54 +165,52 @@
 
         /* --- UI BARU: FLOATING BUTTONS (REVISI) --- */
 /* Sembunyikan elemen lama */
-/* --- UI FLOATING BUTTONS (FINAL) --- */
-        #status-tracker, #cart-bar { display: none !important; }
+#status-tracker, #cart-bar { display: none !important; }
 
         .floating-container {
-            /* Ganti 'fixed' jadi 'absolute' agar ikut terscroll dan tidak menutupi layar terus */
-            position: absolute; 
-            top: 25px; 
-            right: 20px; 
-            z-index: 2100;
+            position: absolute; /* Agar ikut scroll & tidak menutupi search bar terus */
+            top: 20px; 
+            right: 15px; 
+            z-index: 200; /* Di atas elemen lain tapi di bawah modal */
             display: flex; 
-            flex-direction: column; /* Kembali ke atas-bawah */
-            gap: 8px; 
-            align-items: flex-end; /* Rata Kanan */
+            flex-direction: column; /* Susunan Vertikal */
+            gap: 8px; /* Jarak antar tombol */
+            align-items: center;
         }
 
-        /* Base Button Style */
+        /* Base Button */
         .fab-btn {
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
             cursor: pointer; position: relative;
             transition: transform 0.1s;
-        }
-        .fab-btn:active { transform: scale(0.95); }
-
-        /* 1. KERANJANG (UTAMA - BESAR) */
-        .fab-cart { 
-            width: 48px; height: 48px; /* Ukuran Normal */
             border: 2px solid var(--sbs-black);
+        }
+        .fab-btn:active { transform: scale(0.90); }
+
+        /* 1. KERANJANG (POSISI ATAS - UTAMA) */
+        .fab-cart { 
+            width: 42px; height: 42px; /* Ukuran Pas (Tidak terlalu besar) */
             background: var(--sbs-yellow);
-            z-index: 2; /* Di atas */
+            order: 1; /* Pastikan di urutan pertama (Atas) */
+            z-index: 2;
         }
         .fab-cart.has-items { background: var(--sbs-orange); border-color: #fff; }
-        .fab-cart svg { width: 24px; height: 24px; fill: var(--sbs-black); }
+        .fab-cart svg { width: 20px; height: 20px; fill: var(--sbs-black); }
         .fab-cart.has-items svg { fill: #fff; }
 
-        /* 2. RIWAYAT (MINI - 50% LEBIH KECIL) */
+        /* 2. RIWAYAT (POSISI BAWAH - MINI) */
         .fab-history { 
-            width: 32px; height: 32px; /* Ukuran Mini */
-            border: 1px solid #aaa; /* Border tipis */
+            width: 32px; height: 32px; /* Lebih kecil */
             background: #fff; 
-            display: none; /* Default hidden, muncul via JS */
-            z-index: 1;
+            display: none; /* Muncul via JS */
+            order: 2; /* Di urutan kedua (Bawah) */
+            border-width: 1px;
         }
-        .fab-history svg { width: 16px; height: 16px; fill: #888; } /* Icon kecil */
+        .fab-history svg { width: 16px; height: 16px; fill: #555; }
         
-        /* Jika ada pesanan aktif, jadi hijau */
-        .fab-history.active-order { background: #2ecc71; border-color: #2ecc71; }
+        .fab-history.active-order { background: #2ecc71; border-color: #fff; }
         .fab-history.active-order svg { fill: #fff; }
 
         /* Badge Counter */
@@ -220,12 +218,15 @@
             position: absolute; top: -5px; right: -5px;
             background-color: #ff0000 !important; color: #fff !important;
             font-size: 10px; font-weight: 900;
-            min-width: 18px; height: 18px; padding: 2px;
+            min-width: 16px; height: 16px; padding: 2px;
             border-radius: 50%; border: 2px solid #fff;
             display: flex; align-items: center; justify-content: center;
-            opacity: 0; transform: scale(0); transition: 0.2s; z-index: 2200;
+            opacity: 0; transform: scale(0); transition: 0.2s;
         }
         .fab-badge.show { opacity: 1; transform: scale(1); }
+
+        /* FIX SCROLL LOCK */
+        body.noscroll { overflow: hidden !important; height: 100vh; }
 
 /* --- PENTING: PERBAIKAN POPUP (MODAL) --- */
 /* Ini memaksa popup muncul DI DEPAN tombol floating */
@@ -251,14 +252,14 @@
 <body>
 
     <div class="floating-container">
-    <div id="fab-history" class="fab-btn fab-history" onclick="openHistory()">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-        <div id="badge-history" class="fab-badge">0</div>
-    </div>
-
     <div id="fab-cart" class="fab-btn fab-cart" onclick="openCart()">
         <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11v-2H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
         <div id="badge-cart" class="fab-badge">0</div>
+    </div>
+
+    <div id="fab-history" class="fab-btn fab-history" onclick="openHistory()">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        <div id="badge-history" class="fab-badge">0</div>
     </div>
 </div>
 
@@ -1054,10 +1055,12 @@
     function openHistory() { 
         trackOrders();
         document.getElementById('history-modal').style.display = 'flex'; 
+        document.body.classList.add('noscroll'); // KUNCI LAYAR
     }
     
     function closeHistory() { 
         document.getElementById('history-modal').style.display = 'none'; 
+        document.body.classList.remove('noscroll'); // BUKA KUNCI
     }
 
     // --- TAB & SWIPE & SEARCH LOGIC ---
