@@ -165,51 +165,57 @@
 
         /* --- UI BARU: FLOATING BUTTONS (REVISI) --- */
 /* Sembunyikan elemen lama */
-#status-tracker, #cart-bar { display: none !important; }
+/* --- UI BARU: FLOATING BUTTONS (REVISI POSISI) --- */
+        #status-tracker, #cart-bar { display: none !important; }
 
-/* 1. Container Tombol: Posisinya saya sesuaikan agar lebih rapi */
-.floating-container {
-    position: fixed; top: 25px; right: 20px; z-index: 2100;
-    display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
-}
+        /* 1. Container Tombol: BERDAMPINGAN (ROW) & LEBIH KE ATAS */
+        .floating-container {
+            position: fixed; 
+            top: 25px; /* Sejajar dengan Logo */
+            right: 15px; 
+            z-index: 2100;
+            display: flex; 
+            flex-direction: row; /* KUNCI: Membuatnya berdampingan (Horizontal) */
+            gap: 10px; 
+            align-items: center;
+        }
 
-/* 2. Tombol Bulat: Ukuran saya kecilkan dari 60px ke 45px */
-.fab-btn {
-    width: 45px; height: 45px; /* Lebih kecil & proporsional */
-    border-radius: 50%;
-    border: 2px solid var(--sbs-black); /* Border dipertipis dikit */
-    background: #fff;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 3px 3px 0px rgba(0,0,0,0.15);
-    cursor: pointer; position: relative;
-    transition: transform 0.1s;
-}
-.fab-btn:active { transform: scale(0.95); }
-.fab-btn svg { width: 22px; height: 22px; fill: var(--sbs-black); } /* Icon dikecilkan */
+        /* 2. Tombol Bulat: DIPERKECIL SEDIKIT (45px -> 38px) */
+        .fab-btn {
+            width: 38px; height: 38px; /* Ukuran lebih pas */
+            border-radius: 50%;
+            border: 2px solid var(--sbs-black);
+            background: #fff;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.15); /* Shadow diperhalus */
+            cursor: pointer; position: relative;
+            transition: transform 0.1s;
+        }
+        .fab-btn:active { transform: scale(0.95); }
+        .fab-btn svg { width: 18px; height: 18px; fill: var(--sbs-black); } /* Icon menyesuaikan */
 
-/* Tombol Keranjang */
-.fab-cart { background: var(--sbs-yellow); }
-.fab-cart.has-items { background: var(--sbs-orange); border-color: #fff; }
-.fab-cart.has-items svg { fill: #fff; }
+        /* Warna Tombol */
+        .fab-cart { background: var(--sbs-yellow); }
+        .fab-cart.has-items { background: var(--sbs-orange); border-color: #fff; }
+        .fab-cart.has-items svg { fill: #fff; }
 
-/* Tombol Riwayat */
-.fab-history { background: #fff; display: none; }
-.fab-history.active-order { background: #2ecc71; border-color: #fff; }
-.fab-history.active-order svg { fill: #fff; }
+        .fab-history { background: #fff; display: none; }
+        .fab-history.active-order { background: #2ecc71; border-color: #fff; }
+        .fab-history.active-order svg { fill: #fff; }
 
-/* 3. Badge Counter (FIX WARNA) */
-.fab-badge {
-    position: absolute; top: -5px; right: -5px;
-    background-color: #ff0000 !important; /* Merah Solid (Paksa) */
-    color: #ffffff !important; /* Teks Putih */
-    font-size: 10px; font-weight: 900;
-    min-width: 18px; height: 18px; padding: 2px;
-    border-radius: 50%; border: 2px solid #fff; /* Border putih biar kontras */
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; transform: scale(0); transition: 0.2s;
-    z-index: 2200;
-}
-.fab-badge.show { opacity: 1; transform: scale(1); }
+        /* 3. Badge Counter (Posisi disesuaikan dengan tombol kecil) */
+        .fab-badge {
+            position: absolute; top: -5px; right: -5px;
+            background-color: #ff0000 !important;
+            color: #ffffff !important;
+            font-size: 9px; font-weight: 900;
+            min-width: 16px; height: 16px; padding: 2px;
+            border-radius: 50%; border: 2px solid #fff;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transform: scale(0); transition: 0.2s;
+            z-index: 2200;
+        }
+        .fab-badge.show { opacity: 1; transform: scale(1); }
 
 /* --- PENTING: PERBAIKAN POPUP (MODAL) --- */
 /* Ini memaksa popup muncul DI DEPAN tombol floating */
