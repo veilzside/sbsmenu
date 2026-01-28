@@ -207,7 +207,7 @@
                 <div style="flex:1;">
                     <span class="item-name">${qty}x ${item.name}</span>
                     ${unitPriceHtml}
-                    ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
+                    ${item.note ? `<span class="item-note">統 ${item.note}</span>` : ''}
                 </div>
                 <div style="text-align:right;">
                     <span class="item-price">${subtotal.toLocaleString()}</span>
@@ -236,7 +236,6 @@
         let kpiHtml = '';
         if (order.status === 'completed') {
             const responColor = durRespon > 180000 ? '#e74c3c' : '#fff';
-            // Font size diset ke 11px agar identik dengan meta-time-block (Masuk/Selesai)
             kpiHtml = `
             <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555; font-size:11px;">
                 <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
@@ -254,9 +253,22 @@
             </div>`;
         }
 
-        let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
-        let rawTotal = String(order.total).replace(/[^0-9]/g, '');
-        const safeTotal = Number(rawTotal) || 0;
+        let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK 笨/div></div>` : `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
+        
+        // Handle Tampilan Total (Mendukung struktur baru dengan pajak)
+        let totalVal = 0;
+        let subVal = 0;
+        let taxVal = 0;
+
+        if (order.finalData) {
+            totalVal = order.finalData.finalTotal;
+            subVal = order.finalData.subtotal;
+            taxVal = order.finalData.tax;
+        } else {
+             // Backward compatibility
+             totalVal = Number(String(order.total).replace(/[^0-9]/g, '')) || 0;
+             subVal = totalVal; // Asumsi lama tanpa pajak
+        }
 
         div.innerHTML = `
             <div class="card-header">
@@ -273,7 +285,10 @@
                 </div>
             </div>
             <div class="item-list">${itemsHtml}</div>
-            <div class="total-display" style="margin-bottom:5px;">Total: Rp ${safeTotal.toLocaleString()}</div>
+            <div class="total-display" style="margin-bottom:5px; font-size:16px;">
+               ${taxVal > 0 ? `<small style="font-size:12px; color:#aaa; font-weight:normal;">Sub: ${subVal.toLocaleString()} | Tax: ${taxVal.toLocaleString()}</small><br>` : ''}
+               Total: Rp ${totalVal.toLocaleString()}
+            </div>
             ${kpiHtml}
             ${statusFooter}
         `;
@@ -289,9 +304,14 @@
         if(p==='finance') calculateFinance();
     }
 
+    // 5. LAPORAN PAJAK OTOMATIS
     function calculateFinance() {
         const mode = document.getElementById('finance-mode').value;
         let totalRev = 0;
+        let totalTax = 0;
+        let totalGross = 0;
+        let totalDisc = 0;
+
         let targetDate, targetMonth;
         if (mode === 'daily') targetDate = new Date(document.getElementById('finance-date').value);
         else { const val = document.getElementById('finance-month').value; if(val) targetMonth = val; }
@@ -299,14 +319,43 @@
         dbOrders.forEach(o => {
             if (o.status !== 'completed' && o.status !== 'done') return;
             const oDate = new Date(o.completedAt || o.timestamp);
-            let raw = String(o.total).replace(/[^0-9]/g, '');
-            let total = Number(raw) || 0;
             let match = false;
             if (mode === 'daily' && targetDate && oDate.toDateString() === targetDate.toDateString()) match = true;
             if (mode === 'monthly' && targetMonth && oDate.toISOString().slice(0,7) === targetMonth) match = true;
-            if(match) totalRev += total;
+            
+            if(match) {
+                // Gunakan finalData jika ada (format baru), atau fallback ke format lama
+                if (o.finalData) {
+                    totalGross += o.finalData.subtotal;
+                    totalTax += o.finalData.tax;
+                    totalDisc += (o.finalData.discount || 0);
+                    totalRev += o.finalData.finalTotal;
+                } else {
+                    // Fallback data lama (asumsi harga sudah final, tanpa pajak terpisah)
+                    let raw = Number(String(o.total).replace(/[^0-9]/g, '')) || 0;
+                    totalRev += raw;
+                    totalGross += raw;
+                }
+            }
         });
-        document.getElementById('main-stat-rev').innerText = "Rp " + totalRev.toLocaleString('id-ID');
+
+        const statHtml = `
+            <div style="font-size:12px; color:#aaa; margin-bottom:5px;">OMZET BERSIH (Net Sales)</div>
+            <div class="stat-val" style="font-size:28px; color:var(--accent);">Rp ${(totalGross - totalDisc).toLocaleString('id-ID')}</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px; border-top:1px solid #444; padding-top:15px;">
+                 <div>
+                    <div style="font-size:10px; color:#888;">TAX (10%)</div>
+                    <div style="font-size:16px; color:#fff; font-weight:bold;">Rp ${totalTax.toLocaleString('id-ID')}</div>
+                 </div>
+                 <div>
+                    <div style="font-size:10px; color:#888;">TOTAL MASUK</div>
+                    <div style="font-size:16px; color:var(--green); font-weight:bold;">Rp ${totalRev.toLocaleString('id-ID')}</div>
+                 </div>
+            </div>
+            ${totalDisc > 0 ? `<div style="font-size:10px; color:#e74c3c; margin-top:5px;">Total Diskon: Rp ${totalDisc.toLocaleString()}</div>` : ''}
+        `;
+
+        document.querySelector('.stat-card').innerHTML = statHtml;
     }
 
     function toggleFinanceFilter() {
