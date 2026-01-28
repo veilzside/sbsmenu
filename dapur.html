@@ -655,23 +655,28 @@
                 </div>`;
         }
 
+        // --- BUTTONS LOGIC ---
         let printButtons = '';
-        // PRINT BILL BUTTON (Hanya jika belum lunas)
-        let billButton = '';
-        if(['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status)) {
-             billButton = `<button class="btn-print" style="background:#e67e22; border-color:#d35400;" onclick="printDirect('${order.id}', 'bill')"><span style="font-size:16px;">📄</span> BILL</button>`;
-        }
-
         if(order.status !== 'rejected') {
+            const btnStyle = "flex:1;";
+            
+            // TOMBOL KIRI: CHECKER
+            const btnChecker = `<button class="btn-print" style="${btnStyle}" onclick="printDirect('${order.id}', 'checker')"><span style="font-size:16px;">🖨</span> CHECKER</button>`;
+            
+            // TOMBOL TENGAH: BILL (Hanya aktif jika belum lunas)
+            let btnBill = '';
+            if(['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status)) {
+                btnBill = `<button class="btn-print" style="${btnStyle} background:#e67e22; border-color:#d35400;" onclick="printDirect('${order.id}', 'bill')"><span style="font-size:16px;">📄</span> BILL</button>`;
+            }
+            
+            // TOMBOL KANAN: RECEIPT
+            const btnReceipt = `<button class="btn-print" style="${btnStyle}" onclick="printDirect('${order.id}', 'invoice')"><span style="font-size:16px;">🧾</span> RECEIPT</button>`;
+            
             printButtons = `
-            <div class="btn-print-group">
-                ${billButton}
-                <button class="btn-print" onclick="printDirect('${order.id}', 'checker')">
-                    <span style="font-size:16px;">🖨</span> CHECKER
-                </button>
-                <button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">
-                    <span style="font-size:16px;">🧾</span> RECEIPT
-                </button>
+            <div class="btn-print-group" style="display:flex; gap:10px;">
+                ${btnChecker}
+                ${btnBill}
+                ${btnReceipt}
             </div>`;
         }
 
@@ -695,7 +700,7 @@
         if(order.status === 'rejected') statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
         else if (order.status === 'completed') statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
 
-        // TOTAL DISPLAY YANG LEBIH LENGKAP
+        // TOTAL DISPLAY
         let totalDisplayHtml = `
             <div style="border-top:1px dashed #444; margin-top:10px; padding-top:5px; font-size:13px; color:#aaa;">
                 <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>${finance.subtotal.toLocaleString()}</span></div>
@@ -711,7 +716,11 @@
             <div class="card-header">
                 <div class="header-left">
                     <span class="cust-name">${displayName}</span>
-                    <div style="margin-top:2px;">${paymentBadge} <span class="order-id">#${getDailyQueueNumber(order.id)}</span></div>
+                    <div style="margin-top:4px; display:flex; align-items:center;">
+                         ${paymentBadge}
+                         <span style="font-size:18px; font-weight:800; color:#fff; margin-left:5px;">#${getDailyQueueNumber(order.id)}</span>
+                         <span style="font-size:11px; color:#666; margin-left:8px; font-family:monospace;">(ID: ...${order.id.slice(-4)})</span>
+                    </div>
                 </div>
                 ${headerRight}
             </div>
@@ -741,7 +750,6 @@
             const order = allOrders.find(o => o.id === orderKey);
             const newItems = [...order.items];
             const removed = newItems.splice(itemIndex, 1)[0];
-            // Update items saja, total dihitung ulang saat render/verify
             db.ref('orders/' + orderKey).update({ items: newItems });
         });
     }
