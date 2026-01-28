@@ -217,6 +217,13 @@
     let unreadOrdersCount = 0;
     let unreadHistoryCount = 0;
     
+    // GLOBAL TAX SETTING (Dikontrol dari Admin)
+    let isTaxEnabled = false;
+    db.ref('settings/tax_enabled').on('value', snap => {
+        isTaxEnabled = snap.val() || false;
+        // Re-render jika perlu, atau biarkan update di next interaction
+    });
+
     // 1. COLLECTED BY (IDENTITAS KASIR)
     let cashierName = localStorage.getItem('sbs_cashier_name');
     function checkCashier() {
@@ -229,7 +236,6 @@
             }
         }
     }
-    // Jalankan cek kasir saat load
     checkCashier();
 
     const soundNew = document.getElementById('sound-new');
@@ -253,8 +259,7 @@
     function toggleAudio() {
         if (!audioUnlocked) {
             soundNew.play().then(() => {
-                soundNew.pause();
-                soundNew.currentTime = 0;
+                soundNew.pause(); soundNew.currentTime = 0;
                 audioUnlocked = true;
                 btnAudio.classList.remove('inactive');
                 btnAudio.classList.add('active');
@@ -338,48 +343,39 @@
         badgeHis.style.display = (unreadHistoryCount > 0 && activePage !== 'history') ? 'flex' : 'none';
     }
 
-    // 2. QUEUE NUMBER (RESET HARIAN)
     function getDailyQueueNumber(orderId) {
         const targetOrder = allOrders.find(o => o.id === orderId);
         if(!targetOrder) return "00";
         const targetDate = new Date(targetOrder.timestamp).toDateString();
-        // Filter order hari ini, urutkan dari yang terlama ke terbaru (ASC) untuk dapat nomor urut
         const dailyOrders = allOrders
             .filter(o => new Date(o.timestamp).toDateString() === targetDate)
             .sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
         
         const index = dailyOrders.findIndex(o => o.id === orderId);
-        // Format 2 digit (01, 02, ... 99)
         return (index + 1).toString().padStart(2, '0');
     }
 
-    // 3. KALKULASI PAJAK & TOTAL (Centralized Logic)
+    // 3. KALKULASI TOTAL
     function calculateTotals(order) {
-        // Jika data sudah final (ada di DB), pakai itu. Jika belum, hitung on-the-fly.
         let subtotal = 0;
-        
-        // Cek apakah items ada harganya
         if (order.items) {
              order.items.forEach(i => {
                  subtotal += (parseInt(i.price) * parseInt(i.qty));
              });
         }
-
-        // Logic Diskon (jika ada di DB)
         let discount = order.discount || 0;
-        
-        // Tax Base (Setelah Diskon)
         let taxBase = subtotal - discount;
         if (taxBase < 0) taxBase = 0;
 
-        // Pajak 10%
-        let tax = Math.ceil(taxBase * 0.1);
+        // Logic Pajak: Hanya hitung jika isTaxEnabled = TRUE
+        let tax = 0;
+        if (isTaxEnabled) {
+            tax = Math.ceil(taxBase * 0.1);
+        }
 
-        // Jika order status completed/processing, kita percaya total di DB (karena mungkin ada pembulatan manual)
-        // Tapi untuk display awal, kita hitung ulang
         let finalTotal = taxBase + tax;
-
-        // Jika di DB sudah tersimpan struktur final (ada subtotal), gunakan itu
+        
+        // Prioritaskan data yang sudah tersimpan (finalData)
         if (order.finalData) {
             return order.finalData;
         }
@@ -387,30 +383,42 @@
         return { subtotal, discount, tax, finalTotal };
     }
 
-    // 4. SYSTEM PRINTING (Bill, Checker, Receipt)
+    // --- HELPER UNTUK POSISI TEXT (32 KOLOM) ---
+    function padRow(leftStr, rightStr) {
+        const width = 32; // Standar lebar kertas 58mm
+        const leftLen = leftStr.length;
+        const rightLen = rightStr.length;
+        const space = width - leftLen - rightLen;
+        if (space < 0) return leftStr + " " + rightStr; // Fallback jika terlalu panjang
+        return leftStr + " ".repeat(space) + rightStr;
+    }
+
+    // 4. PRINTING SYSTEM (REVISI TOTAL SESUAI GAMBAR KANAN)
     function printDirect(id, type) {
         const o = allOrders.find(x => x.id === id); 
         if (!o) return;
 
         const q = getDailyQueueNumber(id);
-        const totals = calculateTotals(o);
+        const totals = calculateTotals(o); // Ambil kalkulasi (dengan/tanpa pajak)
         const d = new Date(o.timestamp);
-        const s = d.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
-        const t = d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+        // Format Tanggal: 28/01/26 18:04
+        const dateStr = d.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'}) + " " + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
         
-        // Identitas Kasir (Ambil dari DB jika ada, atau localStorage)
-        const cName = o.cashier || cashierName || 'Staff';
+        const cName = (o.cashier || cashierName || 'Staff').toUpperCase();
+        const custName = (o.customerName || "Customer").toUpperCase();
+        // ID Format Baru: 7 Digit dari belakang ID Firebase, UpperCase
+        const displayID = o.id.slice(-7).toUpperCase();
 
         const ESC = "\x1B"; const GS = "\x1D"; const INIT = ESC + "@";
-        const ALIGN_CENTER = ESC + "a" + "\x01"; const ALIGN_LEFT = ESC + "a" + "\x00"; const ALIGN_RIGHT = ESC + "a" + "\x02";
+        const ALIGN_CENTER = ESC + "a" + "\x01"; const ALIGN_LEFT = ESC + "a" + "\x00"; 
         const BOLD_ON = ESC + "E" + "\x01"; const BOLD_OFF = ESC + "E" + "\x00";
         const TEXT_DOUBLE = GS + "!" + "\x11"; const TEXT_NORMAL = GS + "!" + "\x00";
 
         let txt = INIT;
 
         if (type === 'checker') {
-            // --- FORMAT CHECKER (DAPUR) ---
-            txt += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF + "\n" + ALIGN_LEFT + "TABLE: " + BOLD_ON + (o.tableNumber || "TA") + BOLD_OFF + "\nQUEUE: #" + q + "\nTIME : " + t + "\nID   : " + id.slice(-4).toUpperCase() + "\n--------------------------------\n";
+            // CHECKER TETAP SIMPLE
+            txt += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF + "\n" + ALIGN_LEFT + "TABLE: " + BOLD_ON + (o.tableNumber || "TA") + BOLD_OFF + "\nQUEUE: #" + q + "\nTIME : " + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) + "\nID   : " + displayID + "\n--------------------------------\n";
             o.items.forEach(i => {
                 txt += BOLD_ON + i.qty + " x " + i.name + BOLD_OFF + "\n";
                 if(i.note) txt += "   [ " + i.note + " ]\n";
@@ -419,38 +427,66 @@
             txt += "\n\n\n";
 
         } else {
-            // --- FORMAT INVOICE / BILL ---
-            let headerTitle = "SBS CAFE";
-            let footerMsg = "Wifi: SBSkopi8\nTerima Kasih!";
+            // --- INVOICE / BILL (FORMAT KANAN) ---
             
+            // 1. BILL HEADER SPECIAL
             if (type === 'bill') {
-                headerTitle = "TAGIHAN SEMENTARA";
-                footerMsg = "PLEASE PAY AT CASHIER";
-                txt += ALIGN_CENTER + BOLD_ON + "THIS IS NOT A RECEIPT\n" + BOLD_OFF;
+                txt += ALIGN_CENTER + BOLD_ON + "THIS IS NOT A RECEIPT\n\n" + BOLD_OFF;
             }
 
-            txt += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + headerTitle + "\n" + TEXT_NORMAL + BOLD_OFF + "Jl. Mundu 8, Kota Malang\n085159039877\n--------------------------------\n";
-            txt += ALIGN_LEFT + "Date : " + s + " " + t + "\nQueue: #" + q + "\nCashier: " + cName + "\nTable: " + (o.tableNumber || "TA") + "\nID   : " + id.slice(-4).toUpperCase() + "\n--------------------------------\n";
-            
+            // 2. HEADER TOKO (Sama persis gambar kanan)
+            txt += ALIGN_CENTER + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + "Jl. Mundu 8, Kota Malang\nJawa Timur, 65116\n085159039877\n";
+            txt += ALIGN_LEFT + "--------------------------------\n"; // Separator garis putus2
+
+            // 3. META DATA (Left Aligned)
+            txt += "TABLE: " + (o.tableNumber || "TA") + "\n";
+            txt += "Queue Order: #" + q + "\n";
+            txt += "CUST : " + custName + "\n"; 
+            txt += "Cashier: " + cName + "\n";
+            txt += "Date : " + dateStr + "\n";
+            txt += "ID   : " + displayID + "\n";
+            txt += "--------------------------------\n"; // Separator tipis
+
+            // 4. ITEMS LOOP (Format: Baris 1 Nama, Baris 2 Qty@Harga...Total)
             o.items.forEach(i => {
                 let p = parseInt(String(i.price).replace(/[^0-9]/g, '')) || 0;
                 let sub = i.qty * p;
-                txt += i.name + "\n" + i.qty + "x @" + p.toLocaleString('id-ID') + ALIGN_RIGHT + sub.toLocaleString('id-ID') + "\n" + ALIGN_LEFT;
-                if(i.note) txt += "  (Note: " + i.note + ")\n";
+                
+                // Baris 1: Nama Menu
+                txt += i.name + "\n";
+                
+                // Baris 2: detail harga
+                let leftText = i.qty + "x @" + p.toLocaleString('id-ID'); // "2x @15.000"
+                let rightText = sub.toLocaleString('id-ID'); // "30.000"
+                
+                txt += padRow(leftText, rightText) + "\n";
+                
+                // Note jika ada
+                if(i.note) txt += "  (" + i.note + ")\n";
             });
+            
+            txt += "--------------------------------\n"; // Separator sebelum total
 
-            txt += "--------------------------------\n";
-            
-            // Rincian Harga
-            txt += ALIGN_LEFT + "Subtotal" + ALIGN_RIGHT + totals.subtotal.toLocaleString('id-ID') + "\n";
-            if (totals.discount > 0) {
-                txt += ALIGN_LEFT + "Disc" + ALIGN_RIGHT + "- " + totals.discount.toLocaleString('id-ID') + "\n";
+            // 5. TOTALS SECTION
+            // Jika Pajak Mati -> Tampilkan Langsung TOTAL (Seperti gambar kanan)
+            if (!isTaxEnabled && totals.discount === 0) {
+                 // Format gambar kanan: TOTAL (kiri), Harga (Kanan)
+                 txt += "\n" + padRow("TOTAL", totals.finalTotal.toLocaleString('id-ID')) + "\n";
+            } 
+            else {
+                // Jika Pajak Hidup ATAU ada diskon -> Tampilkan rincian
+                txt += padRow("Subtotal", totals.subtotal.toLocaleString('id-ID')) + "\n";
+                if (totals.discount > 0) {
+                    txt += padRow("Disc", "- " + totals.discount.toLocaleString('id-ID')) + "\n";
+                }
+                if (totals.tax > 0) {
+                    txt += padRow("Tax (10%)", totals.tax.toLocaleString('id-ID')) + "\n";
+                }
+                txt += "\n" + BOLD_ON + padRow("TOTAL", totals.finalTotal.toLocaleString('id-ID')) + BOLD_OFF + "\n";
             }
-            txt += ALIGN_LEFT + "Tax (10%)" + ALIGN_RIGHT + totals.tax.toLocaleString('id-ID') + "\n";
-            
-            txt += ALIGN_LEFT + "--------------------------------\n";
-            txt += BOLD_ON + "TOTAL" + ALIGN_RIGHT + totals.finalTotal.toLocaleString('id-ID') + BOLD_OFF + "\n";
-            txt += "--------------------------------\n" + ALIGN_CENTER + footerMsg + "\n\n\n\n";
+
+            // 6. FOOTER
+            txt += ALIGN_CENTER + "\nWifi: SBSkopi8\nTerima Kasih!\n\n\n\n";
         }
 
         const buffer = new Uint8Array(txt.length);
@@ -460,54 +496,49 @@
         window.location.href = "rawbt:base64," + btoa(binary);
     }
 
-    // 5. VERIFIKASI DENGAN DISKON
     function verifyAndPrint(key, btn) {
         const order = allOrders.find(o => o.id === key);
         if(!order) return;
 
-        // Hitung total saat ini
         const currentData = calculateTotals(order);
-        
-        // Prompt Diskon
-        let discInput = prompt(`Subtotal: ${currentData.subtotal.toLocaleString()}\nMasukkan Diskon (Rp) jika ada (0 jika tidak):`, "0");
-        
-        if (discInput === null) return; // Cancelled
+        let discInput = prompt(`Subtotal: ${currentData.subtotal.toLocaleString()}\nMasukkan Diskon (Rp) jika ada:`, "0");
+        if (discInput === null) return; 
         
         let discountVal = parseInt(discInput.replace(/[^0-9]/g, '')) || 0;
         
-        // Re-calculate logic untuk disimpan
+        // Re-calculate with user discount
         let taxBase = currentData.subtotal - discountVal;
         if(taxBase < 0) taxBase = 0;
-        let taxVal = Math.ceil(taxBase * 0.1);
+        
+        let taxVal = 0;
+        if(isTaxEnabled) taxVal = Math.ceil(taxBase * 0.1); // Pajak dinamis sesuai setting
+        
         let finalTotal = taxBase + taxVal;
 
-        // Konfirmasi Akhir
-        let confirmMsg = `Subtotal: ${currentData.subtotal.toLocaleString()}\nDiskon: ${discountVal.toLocaleString()}\nPajak (10%): ${taxVal.toLocaleString()}\n\nTOTAL FINAL: Rp ${finalTotal.toLocaleString()}\n\nLanjut proses?`;
+        let confirmMsg = `Subtotal: ${currentData.subtotal.toLocaleString()}\nDiskon: ${discountVal.toLocaleString()}\n`;
+        if(isTaxEnabled) confirmMsg += `Pajak (10%): ${taxVal.toLocaleString()}\n`;
+        confirmMsg += `\nTOTAL FINAL: Rp ${finalTotal.toLocaleString()}\n\nLanjut proses?`;
         
         if (!confirm(confirmMsg)) return;
 
-        // Visual animation
         const card = btn.closest('.order-card');
         if (card) card.classList.add('fade-out');
 
-        // Print Checker Otomatis
         try { printDirect(key, 'checker'); } catch(e) {}
 
-        // Update DB
         setTimeout(() => { 
             db.ref('orders/' + key).update({
                 status: 'processing',
                 paidAt: new Date().toISOString(),
                 cashier: cashierName,
                 discount: discountVal,
-                // Simpan snapshot keuangan agar laporan tidak berubah jika harga menu berubah
                 finalData: {
                     subtotal: currentData.subtotal,
                     discount: discountVal,
                     tax: taxVal,
-                    finalTotal: finalTotal
+                    finalTotal: finalTotal,
+                    taxEnabledAtPrint: isTaxEnabled // Catat status pajak saat print
                 },
-                // Update total utama agar index.html (history user) tetap konsisten menampilkan angka akhir
                 total: finalTotal 
             }); 
         }, 500);
@@ -591,7 +622,6 @@
         if(['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(order.status)) timerStart = t1;
         else if (order.status === 'processing') timerStart = t3;
 
-        // Hitung Data Keuangan untuk Tampilan
         const finance = calculateTotals(order);
 
         const div = document.createElement('div');
@@ -655,29 +685,17 @@
                 </div>`;
         }
 
-        // --- BUTTONS LOGIC ---
         let printButtons = '';
         if(order.status !== 'rejected') {
             const btnStyle = "flex:1;";
-            
-            // TOMBOL KIRI: CHECKER
             const btnChecker = `<button class="btn-print" style="${btnStyle}" onclick="printDirect('${order.id}', 'checker')"><span style="font-size:16px;">🖨</span> CHECKER</button>`;
-            
-            // TOMBOL TENGAH: BILL (Hanya aktif jika belum lunas)
             let btnBill = '';
             if(['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status)) {
                 btnBill = `<button class="btn-print" style="${btnStyle} background:#e67e22; border-color:#d35400;" onclick="printDirect('${order.id}', 'bill')"><span style="font-size:16px;">📄</span> BILL</button>`;
             }
-            
-            // TOMBOL KANAN: RECEIPT
             const btnReceipt = `<button class="btn-print" style="${btnStyle}" onclick="printDirect('${order.id}', 'invoice')"><span style="font-size:16px;">🧾</span> RECEIPT</button>`;
             
-            printButtons = `
-            <div class="btn-print-group" style="display:flex; gap:10px;">
-                ${btnChecker}
-                ${btnBill}
-                ${btnReceipt}
-            </div>`;
+            printButtons = `<div class="btn-print-group" style="display:flex; gap:10px;">${btnChecker}${btnBill}${btnReceipt}</div>`;
         }
 
         let buttonsHtml = '';
@@ -700,12 +718,12 @@
         if(order.status === 'rejected') statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
         else if (order.status === 'completed') statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
 
-        // TOTAL DISPLAY
+        // Tampilan Total di Kartu (Visual HTML tetap rapi, struk ikut gambar kanan)
         let totalDisplayHtml = `
             <div style="border-top:1px dashed #444; margin-top:10px; padding-top:5px; font-size:13px; color:#aaa;">
                 <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>${finance.subtotal.toLocaleString()}</span></div>
                 ${finance.discount > 0 ? `<div style="display:flex; justify-content:space-between; color:#e74c3c;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>` : ''}
-                <div style="display:flex; justify-content:space-between;"><span>Tax (10%):</span><span>${finance.tax.toLocaleString()}</span></div>
+                ${finance.tax > 0 ? `<div style="display:flex; justify-content:space-between;"><span>Tax (10%):</span><span>${finance.tax.toLocaleString()}</span></div>` : ''}
                 <div style="display:flex; justify-content:space-between; margin-top:5px; font-weight:600; color:var(--accent); font-size:18px;">
                     <span>Total:</span><span>Rp ${finance.finalTotal.toLocaleString()}</span>
                 </div>
