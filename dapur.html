@@ -206,23 +206,31 @@
     }
     const db = firebase.database();
     
-    // --- FIX LAYAR KOSONG: PEMBERSIH CACHE TAB LAMA ---
-    let currentTab = localStorage.getItem('sbs_active_tab');
-    if (currentTab !== 'kasir' && currentTab !== 'dapur') {
-        currentTab = 'kasir';
-        localStorage.setItem('sbs_active_tab', 'kasir');
-    }
-
+    // --- STATE MANAGEMENT ---
+    let currentTab = localStorage.getItem('sbs_active_tab') || 'kasir';
     let allOrders = [];
     let activePage = 'orders'; 
     let audioUnlocked = false;
     let confirmCallback = null;
-    
-    // Variabel Notifikasi
     let previousOrderStatuses = {}; 
     let isFirstLoad = true;
     let unreadOrdersCount = 0;
     let unreadHistoryCount = 0;
+    
+    // 1. COLLECTED BY (IDENTITAS KASIR)
+    let cashierName = localStorage.getItem('sbs_cashier_name');
+    function checkCashier() {
+        if (!cashierName) {
+            cashierName = prompt("Masukkan Nama Kasir yang bertugas:", "Admin");
+            if (cashierName) {
+                localStorage.setItem('sbs_cashier_name', cashierName);
+            } else {
+                cashierName = "Staff";
+            }
+        }
+    }
+    // Jalankan cek kasir saat load
+    checkCashier();
 
     const soundNew = document.getElementById('sound-new');
     const soundNag = document.getElementById('sound-nag');
@@ -242,17 +250,7 @@
         if(activeEl) activeEl.classList.add('active');
     }
 
-    function filterTab(status) {
-        currentTab = status;
-        localStorage.setItem('sbs_active_tab', status);
-        setupTabs(); 
-        renderOrders();
-        updateBadges(); 
-    }
-
-    // --- AUDIO FIX (ANTI-DUCKING MOBIL) ---
     function toggleAudio() {
-        const btnAudio = document.getElementById('btn-audio');
         if (!audioUnlocked) {
             soundNew.play().then(() => {
                 soundNew.pause();
@@ -264,11 +262,7 @@
             }).catch(e => console.error("Audio error:", e));
         } else {
             audioUnlocked = false;
-            [soundNew, soundNag].forEach(audio => {
-                audio.pause();
-                audio.currentTime = 0;
-                audio.src = audio.src; 
-            });
+            [soundNew, soundNag].forEach(audio => { audio.pause(); audio.currentTime = 0; });
             btnAudio.classList.remove('active');
             btnAudio.classList.add('inactive');
             btnAudio.innerHTML = "🔕";
@@ -287,26 +281,7 @@
         }
     }
 
-    function updateNavBadges() {
-        const badgeOrd = document.getElementById('badge-nav-orders');
-        const badgeHis = document.getElementById('badge-nav-history');
-
-        if(unreadOrdersCount > 0 && activePage !== 'orders') {
-            badgeOrd.innerText = unreadOrdersCount;
-            badgeOrd.style.display = 'flex';
-        } else {
-            badgeOrd.style.display = 'none';
-        }
-
-        if(unreadHistoryCount > 0 && activePage !== 'history') {
-            badgeHis.innerText = unreadHistoryCount;
-            badgeHis.style.display = 'flex';
-        } else {
-            badgeHis.style.display = 'none';
-        }
-    }
-
-    // --- LISTENER UTAMA (LOGIKA BADGE SESUAI REQUEST) ---
+    // --- LISTENER FIREBASE ---
     db.ref('orders').on('value', (snapshot) => {
         const data = snapshot.val();
         let shouldRing = false;
@@ -322,24 +297,16 @@
                 if (!isFirstLoad) {
                     const currentStat = order.status;
                     const prevStat = previousOrderStatuses[key];
-
-                    // 1. BADGE PESANAN (FIXED: ID BARU SAJA)
-                    // Hanya bertambah jika pesanan BENAR-BENAR BARU (!prevStat).
-                    // QRIS bayar (prevStat ada) TIDAK menambah badge.
-                    const isActive = ['new', 'qris_unpaid', 'pending_payment'].includes(currentStat);
-                    if (isActive && !prevStat) {
+                    
+                    // Logic Badge
+                    if (['new', 'qris_unpaid', 'pending_payment'].includes(currentStat) && !prevStat) {
                         if (activePage !== 'orders') unreadOrdersCount++;
                     }
-
-                    // 2. BADGE RIWAYAT (DIKEMBALIKAN)
-                    // Bertambah jika pindah status dari aktif ke selesai/tolak
-                    const isDone = ['completed', 'rejected'].includes(currentStat);
-                    const wasActive = prevStat && !['completed', 'rejected'].includes(prevStat);
-                    if (isDone && wasActive) {
+                    if (['completed', 'rejected'].includes(currentStat) && prevStat && !['completed', 'rejected'].includes(prevStat)) {
                         if (activePage !== 'history') unreadHistoryCount++;
                     }
 
-                    // 3. ALARM
+                    // Logic Audio
                     if (audioUnlocked) {
                         if (currentStat === 'new' && prevStat !== 'new') shouldRing = true;
                         if (currentStat === 'pending_payment' && prevStat === 'qris_unpaid') shouldRing = true;
@@ -360,48 +327,130 @@
         updateBadges(); 
     });
 
+    function updateNavBadges() {
+        const badgeOrd = document.getElementById('badge-nav-orders');
+        const badgeHis = document.getElementById('badge-nav-history');
+        
+        badgeOrd.innerText = unreadOrdersCount;
+        badgeOrd.style.display = (unreadOrdersCount > 0 && activePage !== 'orders') ? 'flex' : 'none';
+        
+        badgeHis.innerText = unreadHistoryCount;
+        badgeHis.style.display = (unreadHistoryCount > 0 && activePage !== 'history') ? 'flex' : 'none';
+    }
+
+    // 2. QUEUE NUMBER (RESET HARIAN)
     function getDailyQueueNumber(orderId) {
         const targetOrder = allOrders.find(o => o.id === orderId);
         if(!targetOrder) return "00";
         const targetDate = new Date(targetOrder.timestamp).toDateString();
-        const dailyOrders = allOrders.filter(o => new Date(o.timestamp).toDateString() === targetDate).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+        // Filter order hari ini, urutkan dari yang terlama ke terbaru (ASC) untuk dapat nomor urut
+        const dailyOrders = allOrders
+            .filter(o => new Date(o.timestamp).toDateString() === targetDate)
+            .sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+        
         const index = dailyOrders.findIndex(o => o.id === orderId);
-        return index + 1;
+        // Format 2 digit (01, 02, ... 99)
+        return (index + 1).toString().padStart(2, '0');
     }
 
-    // --- FUNGSI PRINT & PROSES (FIXED: FAIL-SAFE) ---
+    // 3. KALKULASI PAJAK & TOTAL (Centralized Logic)
+    function calculateTotals(order) {
+        // Jika data sudah final (ada di DB), pakai itu. Jika belum, hitung on-the-fly.
+        let subtotal = 0;
+        
+        // Cek apakah items ada harganya
+        if (order.items) {
+             order.items.forEach(i => {
+                 subtotal += (parseInt(i.price) * parseInt(i.qty));
+             });
+        }
+
+        // Logic Diskon (jika ada di DB)
+        let discount = order.discount || 0;
+        
+        // Tax Base (Setelah Diskon)
+        let taxBase = subtotal - discount;
+        if (taxBase < 0) taxBase = 0;
+
+        // Pajak 10%
+        let tax = Math.ceil(taxBase * 0.1);
+
+        // Jika order status completed/processing, kita percaya total di DB (karena mungkin ada pembulatan manual)
+        // Tapi untuk display awal, kita hitung ulang
+        let finalTotal = taxBase + tax;
+
+        // Jika di DB sudah tersimpan struktur final (ada subtotal), gunakan itu
+        if (order.finalData) {
+            return order.finalData;
+        }
+
+        return { subtotal, discount, tax, finalTotal };
+    }
+
+    // 4. SYSTEM PRINTING (Bill, Checker, Receipt)
     function printDirect(id, type) {
         const o = allOrders.find(x => x.id === id); 
         if (!o) return;
 
         const q = getDailyQueueNumber(id);
+        const totals = calculateTotals(o);
         const d = new Date(o.timestamp);
         const s = d.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
         const t = d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
         
+        // Identitas Kasir (Ambil dari DB jika ada, atau localStorage)
+        const cName = o.cashier || cashierName || 'Staff';
+
         const ESC = "\x1B"; const GS = "\x1D"; const INIT = ESC + "@";
-        const ALIGN_CENTER = ESC + "a" + "\x01"; const ALIGN_LEFT = ESC + "a" + "\x00";
+        const ALIGN_CENTER = ESC + "a" + "\x01"; const ALIGN_LEFT = ESC + "a" + "\x00"; const ALIGN_RIGHT = ESC + "a" + "\x02";
         const BOLD_ON = ESC + "E" + "\x01"; const BOLD_OFF = ESC + "E" + "\x00";
         const TEXT_DOUBLE = GS + "!" + "\x11"; const TEXT_NORMAL = GS + "!" + "\x00";
 
         let txt = INIT;
-        if (type === 'invoice') {
-            txt += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + BOLD_OFF + "Jl. Mundu 8, Kota Malang\n085159039877\n--------------------------------\n" + ALIGN_LEFT + BOLD_ON + "TABLE: " + (o.tableNumber || "TA") + BOLD_OFF + "\nQueue: #" + q + "\nDate : " + s + " " + t + "\nID   : 2SA" + id.slice(-4).toUpperCase() + "\n--------------------------------\n";
-            o.items.forEach(i => {
-                let p = parseInt(String(i.price).replace(/[^0-9]/g, '')) || 0;
-                let sub = i.qty * p;
-                txt += i.name + "\n" + i.qty + "x @" + p.toLocaleString('id-ID') + "     " + sub.toLocaleString('id-ID') + "\n";
-                if(i.note) txt += "  (Note: " + i.note + ")\n";
-            });
-            txt += "--------------------------------\n" + BOLD_ON + "TOTAL          " + (parseInt(String(o.total).replace(/[^0-9]/g, '')) || 0).toLocaleString('id-ID') + BOLD_OFF + "\n--------------------------------\n" + ALIGN_CENTER + "Wifi: SBSkopi8\nTerima Kasih!\n\n\n\n";
-        } else {
-            txt += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF + "\n" + ALIGN_LEFT + "TABLE: " + BOLD_ON + (o.tableNumber || "TA") + BOLD_OFF + "\nQUEUE: #" + q + "\nTIME : " + t + "\nID   : " + displayID + "\n--------------------------------\n";
+
+        if (type === 'checker') {
+            // --- FORMAT CHECKER (DAPUR) ---
+            txt += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF + "\n" + ALIGN_LEFT + "TABLE: " + BOLD_ON + (o.tableNumber || "TA") + BOLD_OFF + "\nQUEUE: #" + q + "\nTIME : " + t + "\nID   : " + id.slice(-4).toUpperCase() + "\n--------------------------------\n";
             o.items.forEach(i => {
                 txt += BOLD_ON + i.qty + " x " + i.name + BOLD_OFF + "\n";
                 if(i.note) txt += "   [ " + i.note + " ]\n";
                 txt += "\n";
             });
-            txt += "\n\n\n\n";
+            txt += "\n\n\n";
+
+        } else {
+            // --- FORMAT INVOICE / BILL ---
+            let headerTitle = "SBS CAFE";
+            let footerMsg = "Wifi: SBSkopi8\nTerima Kasih!";
+            
+            if (type === 'bill') {
+                headerTitle = "TAGIHAN SEMENTARA";
+                footerMsg = "PLEASE PAY AT CASHIER";
+                txt += ALIGN_CENTER + BOLD_ON + "THIS IS NOT A RECEIPT\n" + BOLD_OFF;
+            }
+
+            txt += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + headerTitle + "\n" + TEXT_NORMAL + BOLD_OFF + "Jl. Mundu 8, Kota Malang\n085159039877\n--------------------------------\n";
+            txt += ALIGN_LEFT + "Date : " + s + " " + t + "\nQueue: #" + q + "\nCashier: " + cName + "\nTable: " + (o.tableNumber || "TA") + "\nID   : " + id.slice(-4).toUpperCase() + "\n--------------------------------\n";
+            
+            o.items.forEach(i => {
+                let p = parseInt(String(i.price).replace(/[^0-9]/g, '')) || 0;
+                let sub = i.qty * p;
+                txt += i.name + "\n" + i.qty + "x @" + p.toLocaleString('id-ID') + ALIGN_RIGHT + sub.toLocaleString('id-ID') + "\n" + ALIGN_LEFT;
+                if(i.note) txt += "  (Note: " + i.note + ")\n";
+            });
+
+            txt += "--------------------------------\n";
+            
+            // Rincian Harga
+            txt += ALIGN_LEFT + "Subtotal" + ALIGN_RIGHT + totals.subtotal.toLocaleString('id-ID') + "\n";
+            if (totals.discount > 0) {
+                txt += ALIGN_LEFT + "Disc" + ALIGN_RIGHT + "- " + totals.discount.toLocaleString('id-ID') + "\n";
+            }
+            txt += ALIGN_LEFT + "Tax (10%)" + ALIGN_RIGHT + totals.tax.toLocaleString('id-ID') + "\n";
+            
+            txt += ALIGN_LEFT + "--------------------------------\n";
+            txt += BOLD_ON + "TOTAL" + ALIGN_RIGHT + totals.finalTotal.toLocaleString('id-ID') + BOLD_OFF + "\n";
+            txt += "--------------------------------\n" + ALIGN_CENTER + footerMsg + "\n\n\n\n";
         }
 
         const buffer = new Uint8Array(txt.length);
@@ -411,38 +460,62 @@
         window.location.href = "rawbt:base64," + btoa(binary);
     }
 
+    // 5. VERIFIKASI DENGAN DISKON
     function verifyAndPrint(key, btn) {
-        // 1. Cari kartu pembungkus tombol ini
-        const card = btn.closest('.order-card');
-        
-        // 2. Jalankan animasi visual (Mengecil & Hilang)
-        if (card) {
-            card.classList.add('fade-out');
-        }
+        const order = allOrders.find(o => o.id === key);
+        if(!order) return;
 
-        // 3. Print Checker (tetap jalan di background)
-        try {
-            printDirect(key, 'checker');
-        } catch(e) {
-            console.error("Print Error:", e);
-        }
+        // Hitung total saat ini
+        const currentData = calculateTotals(order);
         
-        // 4. Update status database SETELAH animasi selesai (500ms)
+        // Prompt Diskon
+        let discInput = prompt(`Subtotal: ${currentData.subtotal.toLocaleString()}\nMasukkan Diskon (Rp) jika ada (0 jika tidak):`, "0");
+        
+        if (discInput === null) return; // Cancelled
+        
+        let discountVal = parseInt(discInput.replace(/[^0-9]/g, '')) || 0;
+        
+        // Re-calculate logic untuk disimpan
+        let taxBase = currentData.subtotal - discountVal;
+        if(taxBase < 0) taxBase = 0;
+        let taxVal = Math.ceil(taxBase * 0.1);
+        let finalTotal = taxBase + taxVal;
+
+        // Konfirmasi Akhir
+        let confirmMsg = `Subtotal: ${currentData.subtotal.toLocaleString()}\nDiskon: ${discountVal.toLocaleString()}\nPajak (10%): ${taxVal.toLocaleString()}\n\nTOTAL FINAL: Rp ${finalTotal.toLocaleString()}\n\nLanjut proses?`;
+        
+        if (!confirm(confirmMsg)) return;
+
+        // Visual animation
+        const card = btn.closest('.order-card');
+        if (card) card.classList.add('fade-out');
+
+        // Print Checker Otomatis
+        try { printDirect(key, 'checker'); } catch(e) {}
+
+        // Update DB
         setTimeout(() => { 
-            updateStatus(key, 'processing'); 
+            db.ref('orders/' + key).update({
+                status: 'processing',
+                paidAt: new Date().toISOString(),
+                cashier: cashierName,
+                discount: discountVal,
+                // Simpan snapshot keuangan agar laporan tidak berubah jika harga menu berubah
+                finalData: {
+                    subtotal: currentData.subtotal,
+                    discount: discountVal,
+                    tax: taxVal,
+                    finalTotal: finalTotal
+                },
+                // Update total utama agar index.html (history user) tetap konsisten menampilkan angka akhir
+                total: finalTotal 
+            }); 
         }, 500);
     }
 
     function finishOrder(key, btn) {
-        // 1. Cari kartu pembungkus tombol ini
         const card = btn.closest('.order-card');
-        
-        // 2. Jalankan animasi visual (Mengecil & Hilang)
-        if (card) {
-            card.classList.add('fade-out');
-        }
-        
-        // 3. Update status ke 'completed' setelah animasi selesai (500ms)
+        if (card) card.classList.add('fade-out');
         setTimeout(() => { 
             updateStatus(key, 'completed'); 
         }, 500);
@@ -518,6 +591,9 @@
         if(['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(order.status)) timerStart = t1;
         else if (order.status === 'processing') timerStart = t3;
 
+        // Hitung Data Keuangan untuk Tampilan
+        const finance = calculateTotals(order);
+
         const div = document.createElement('div');
         div.className = `order-card status-${order.status}`;
         if(order.status === 'qris_unpaid') div.style.borderLeftColor = '#888';
@@ -527,7 +603,7 @@
         let itemsHtml = (order.items || []).map((item, idx) => {
             const qty = parseInt(item.qty); const price = parseInt(item.price); const subtotal = qty * price;
             const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-            const trashBtn = !['completed', 'rejected'].includes(order.status) ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
+            const trashBtn = !['completed', 'rejected', 'processing'].includes(order.status) ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
             return `<div class="item-row"><div style="flex:1;"><span class="item-name">${qty}x ${item.name}</span>${unitPriceHtml}${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}</div><div style="text-align:right;"><span class="item-price">${subtotal.toLocaleString()}</span>${trashBtn}</div></div>`;
         }).join('');
 
@@ -560,25 +636,14 @@
                     if(t4 && t3) dM = t4 - t3;
                 }
                 if(t4 && t1) dT = t4 - t1;
-
                 const responColor = dR > 180000 ? '#e74c3c' : '#fff';
                 kpiHtml = `
                 <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555; font-size:11px;">
-                    <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Pesan - Bayar (Cust):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(dP)}</span>
-                    </div>
-                    <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor}; font-weight:600;">${fmtDur(dR)}</span>
-                    </div>
-                    <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span style="color:#777;">Masak (Dapur):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(dM)}</span>
-                    </div>
                     <div class="dur-total-row" style="margin-top:6px; padding-top:6px; border-top:1px solid #444; display:flex; justify-content:space-between; font-size:12px; font-weight:700;">
-                        <span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:var(--accent);">${fmtDur(dT)}</span>
+                        <span style="color:#aaa;">DURASI TOTAL:</span> <span style="color:var(--accent);">${fmtDur(dT)}</span>
                     </div>
                 </div>`;
             }
-
         } else {
             headerRight = `
                 <div class="header-right">
@@ -591,14 +656,21 @@
         }
 
         let printButtons = '';
+        // PRINT BILL BUTTON (Hanya jika belum lunas)
+        let billButton = '';
+        if(['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status)) {
+             billButton = `<button class="btn-print" style="background:#e67e22; border-color:#d35400;" onclick="printDirect('${order.id}', 'bill')"><span style="font-size:16px;">📄</span> BILL</button>`;
+        }
+
         if(order.status !== 'rejected') {
             printButtons = `
             <div class="btn-print-group">
+                ${billButton}
                 <button class="btn-print" onclick="printDirect('${order.id}', 'checker')">
                     <span style="font-size:16px;">🖨</span> CHECKER
                 </button>
                 <button class="btn-print" onclick="printDirect('${order.id}', 'invoice')">
-                    <span style="font-size:16px;">🧾</span> INVOICE
+                    <span style="font-size:16px;">🧾</span> RECEIPT
                 </button>
             </div>`;
         }
@@ -607,60 +679,44 @@
         const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">TOLAK</button>`;
 
         if (order.status === 'new') { 
-            buttonsHtml = `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    ${btnTolak}
-                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">LUNAS & PROSES</button>
-                </div>
-            `;
+            buttonsHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnTolak}<button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">LUNAS & PROSES</button></div>`;
         } 
         else if (order.status === 'qris_unpaid') {
-            buttonsHtml = `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    ${btnTolak}
-                    <button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGGU PEMBAYARAN</button>
-                </div>
-                <div style="text-align:center; font-size:10px; color:#FF6600; font-weight:bold; margin-top:5px;">
-                    ⚠ CUSTOMER BELUM MELAKUKAN PEMBAYARAN
-                </div>
-            `;
+            buttonsHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnTolak}<button class="btn btn-grey" disabled style="opacity:0.5; cursor:not-allowed;">MENUNGGU PEMBAYARAN</button></div><div style="text-align:center; font-size:10px; color:#FF6600; font-weight:bold; margin-top:5px;">⚠ CUSTOMER BELUM MELAKUKAN PEMBAYARAN</div>`;
         }
         else if (order.status === 'pending_payment') {
-            buttonsHtml = `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    ${btnTolak}
-                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">VERIFIKASI & PROSES</button>
-                </div>
-                <div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">⚠ CEK MUTASI!</div>
-            `;
+            buttonsHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnTolak}<button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">VERIFIKASI & PROSES</button></div><div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">⚠ CEK MUTASI!</div>`;
         }
-        else if (order.status === 'unpaid') { 
-            buttonsHtml = `
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    ${btnTolak}
-                    <button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">LUNAS & PROSES</button>
-                </div>
-            `;
-        } 
         else if (order.status === 'processing') {
-    // Menggunakan finishOrder(id, this) untuk efek animasi
-    buttonsHtml = `<button class="btn btn-green btn-full" onclick="finishOrder('${order.id}', this)">SELESAI & ANTAR</button>`;
-}
+            buttonsHtml = `<button class="btn btn-green btn-full" onclick="finishOrder('${order.id}', this)">SELESAI & ANTAR</button>`;
+        }
 
         let statusFooter = '';
         if(order.status === 'rejected') statusFooter = `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>`;
         else if (order.status === 'completed') statusFooter = `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
 
+        // TOTAL DISPLAY YANG LEBIH LENGKAP
+        let totalDisplayHtml = `
+            <div style="border-top:1px dashed #444; margin-top:10px; padding-top:5px; font-size:13px; color:#aaa;">
+                <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>${finance.subtotal.toLocaleString()}</span></div>
+                ${finance.discount > 0 ? `<div style="display:flex; justify-content:space-between; color:#e74c3c;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>` : ''}
+                <div style="display:flex; justify-content:space-between;"><span>Tax (10%):</span><span>${finance.tax.toLocaleString()}</span></div>
+                <div style="display:flex; justify-content:space-between; margin-top:5px; font-weight:800; color:var(--accent); font-size:18px;">
+                    <span>Total:</span><span>Rp ${finance.finalTotal.toLocaleString()}</span>
+                </div>
+            </div>
+        `;
+
         div.innerHTML = `
             <div class="card-header">
                 <div class="header-left">
                     <span class="cust-name">${displayName}</span>
-                    <div style="margin-top:2px;">${paymentBadge} <span class="order-id">ID: ...${order.id.slice(-4)}</span></div>
+                    <div style="margin-top:2px;">${paymentBadge} <span class="order-id">#${getDailyQueueNumber(order.id)}</span></div>
                 </div>
                 ${headerRight}
             </div>
             <div class="item-list">${itemsHtml}</div>
-            <div class="total-display">Total: Rp ${Number(String(order.total).replace(/[^0-9]/g, '')).toLocaleString()}</div>
+            ${totalDisplayHtml}
             ${kpiHtml}
             ${statusFooter}
             ${printButtons}
@@ -685,8 +741,8 @@
             const order = allOrders.find(o => o.id === orderKey);
             const newItems = [...order.items];
             const removed = newItems.splice(itemIndex, 1)[0];
-            let currentTotal = parseInt(String(order.total).replace(/[^0-9]/g, '')) || 0;
-            db.ref('orders/' + orderKey).update({ items: newItems, total: currentTotal - (removed.price * removed.qty) });
+            // Update items saja, total dihitung ulang saat render/verify
+            db.ref('orders/' + orderKey).update({ items: newItems });
         });
     }
 
@@ -711,7 +767,6 @@
         updateBadges(); 
     }
 
-    // --- FUNGSI UPDATE BADGE (TIDAK SINKRON DENGAN ICON) ---
     function updateBadges() {
         const countKasir = allOrders.filter(o => ['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(o.status)).length;
         const countDapur = allOrders.filter(o => o.status === 'processing').length;
@@ -722,10 +777,6 @@
     function showConfirm(m, c) { document.getElementById('confirm-msg').innerText = m; confirmCallback = c; document.getElementById('custom-confirm-modal').style.display = 'flex'; }
     function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
     document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
-
-    function openEditModal(k) { /* Disabled */ }
-    function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
-    function saveExtraItem() { /* Disabled */ }
 
     setupTabs();
 </script>
