@@ -5,260 +5,243 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SBS Admin & Finance</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        .sidebar { width: 260px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
+        .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
+        
+        .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
+        .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
+        
+        .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; }
+        .page-title { margin:0 0 20px 0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
+
+        .stat-card { background: var(--card-bg); padding: 25px; border-radius: 15px; border: 1px solid #444; margin-bottom: 20px; text-align: center; }
+        .filters { display: flex; gap: 10px; margin-bottom: 20px; }
+        .form-select, .form-input { padding: 10px; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 8px; font-family: 'Poppins'; }
+        
+        /* History Cards */
+        .history-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        .order-card { background: var(--card-bg); border-radius: 10px; padding: 15px; border-left: 5px solid #555; font-size: 13px; }
+        .order-card.status-completed { border-left-color: var(--green); }
+        .order-card.status-rejected { border-left-color: var(--red); opacity: 0.7; }
+        
+        .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px dashed #444; padding-bottom: 5px; }
+        
+        /* Logs Table */
+        .logs-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .logs-table th { text-align: left; padding: 10px; background: #222; color: #888; }
+        .logs-table td { padding: 10px; border-bottom: 1px solid #333; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 5px; }
+            .brand { display: none; }
+            .menu-item { font-size: 10px; padding: 5px; text-align: center; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">SBS ADMIN</div>
+        <div class="menu-item active" onclick="showPage('finance')">💰 Keuangan</div>
+        <div class="menu-item" onclick="showPage('history')">📜 Riwayat</div>
+        <div class="menu-item" onclick="showPage('logs')">⚠️ Logs</div>
+    </div>
+
+    <div class="main">
+        <div id="finance-page">
+            <h2 class="page-title">LAPORAN KEUANGAN</h2>
+            
+            <div class="filters">
+                <select id="finance-mode" class="form-select" onchange="toggleFinanceFilter()">
+                    <option value="daily">Harian</option>
+                    <option value="monthly">Bulanan</option>
+                </select>
+                <input type="date" id="finance-date" class="form-input" onchange="calculateFinance()">
+                <input type="month" id="finance-month" class="form-input" style="display:none;" onchange="calculateFinance()">
+            </div>
+
+            <div class="stat-card">
+                <div style="font-size:12px; color:#aaa;">TOTAL PENDAPATAN BERSIH</div>
+                <div id="main-stat-rev" style="font-size:36px; color:var(--green); font-weight:bold;">Rp 0</div>
+            </div>
+        </div>
+
+        <div id="history-page" style="display:none;">
+            <h2 class="page-title">RIWAYAT PESANAN</h2>
+            <div style="margin-bottom:15px;">
+                <input type="date" id="history-date-picker" class="form-input" onchange="renderHistory()">
+            </div>
+            <div id="history-grid" class="history-grid"></div>
+        </div>
+
+        <div id="logs-page" style="display:none;">
+            <h2 class="page-title">ACTIVITY LOGS</h2>
+            <table class="logs-table">
+                <thead><tr><th>Waktu</th><th>Aktivitas</th></tr></thead>
+                <tbody id="logs-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
-        authDomain: "sbs-menu-d1611.firebaseapp.com",
-        databaseURL: "https://sbs-menu-d1611-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "sbs-menu-d1611",
-        storageBucket: "sbs-menu-d1611.firebasestorage.app",
-        messagingSenderId: "530098727952",
-        appId: "1:530098727952:web:1bb3072d93be9564fbee95"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    let dbOrders = [];
-    
-    // --- STATE PAJAK ---
-    let taxEnabled = false;
+        const firebaseConfig = {
+            apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
+            authDomain: "sbs-menu-d1611.firebaseapp.com",
+            databaseURL: "https://sbs-menu-d1611-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "sbs-menu-d1611",
+            storageBucket: "sbs-menu-d1611.firebasestorage.app",
+            messagingSenderId: "530098727952",
+            appId: "1:530098727952:web:1bb3072d93be9564fbee95"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        let dbOrders = [];
+        let taxEnabled = false;
 
-    // Load Settings saat awal
-    db.ref('settings/tax_enabled').on('value', (snap) => {
-        taxEnabled = snap.val() || false;
-        updateTaxButtonUI();
-        // Recalculate finance jika setting berubah (opsional, agar real-time)
-        calculateFinance();
-    });
-
-    document.getElementById('finance-date').valueAsDate = new Date();
-    document.getElementById('history-date-picker').valueAsDate = new Date();
-
-    db.ref('orders').on('value', s => {
-        dbOrders = []; if(s.val()) Object.keys(s.val()).forEach(k=>dbOrders.push({id:k,...s.val()[k]}));
-        calculateFinance(); renderHistory();
-    });
-
-    db.ref('activity_logs').limitToLast(50).on('value', snap => {
-        const tbody = document.getElementById('logs-tbody');
-        tbody.innerHTML = '';
-        const logs = [];
-        if(snap.val()) Object.keys(snap.val()).forEach(k => logs.push(snap.val()[k]));
-        logs.sort((a,b) => b.timestamp - a.timestamp);
-        logs.forEach(log => {
-            tbody.innerHTML += `<tr><td><div class="log-time">${log.timeString || '-'}</div></td><td><b>${log.action}</b><br><small>${log.details}</small></td></tr>`;
+        // LOAD SETTING PAJAK
+        db.ref('settings/tax_enabled').on('value', (snap) => {
+            taxEnabled = snap.val() || false;
+            updateTaxButtonUI();
+            calculateFinance(); 
         });
-    });
 
-    // --- FITUR KONTROL PAJAK ---
-    function toggleTaxSetting() {
-        const newState = !taxEnabled;
-        db.ref('settings/tax_enabled').set(newState).then(() => {
-            alert(newState ? "Pajak 10% DIAKTIFKAN" : "Pajak 10% DINONAKTIFKAN");
+        // INIT DATES
+        document.getElementById('finance-date').valueAsDate = new Date();
+        document.getElementById('history-date-picker').valueAsDate = new Date();
+
+        // LOAD ORDERS
+        db.ref('orders').on('value', s => {
+            dbOrders = []; if(s.val()) Object.keys(s.val()).forEach(k=>dbOrders.push({id:k,...s.val()[k]}));
+            calculateFinance(); renderHistory();
         });
-    }
 
-    function updateTaxButtonUI() {
-        const container = document.getElementById('tax-control-container');
-        if (!container) {
-            // Inject tombol ke dalam finance-page jika belum ada
-            const financePage = document.getElementById('finance-page');
-            const newDiv = document.createElement('div');
-            newDiv.id = 'tax-control-container';
-            newDiv.style.marginBottom = '20px';
-            newDiv.style.padding = '15px';
-            newDiv.style.background = '#2b2b36';
-            newDiv.style.borderRadius = '10px';
-            newDiv.style.border = '1px solid #444';
-            newDiv.style.display = 'flex';
-            newDiv.style.justifyContent = 'space-between';
-            newDiv.style.alignItems = 'center';
+        // LOAD LOGS
+        db.ref('activity_logs').limitToLast(50).on('value', snap => {
+            const tbody = document.getElementById('logs-tbody');
+            tbody.innerHTML = '';
+            const logs = [];
+            if(snap.val()) Object.keys(snap.val()).forEach(k => logs.push(snap.val()[k]));
+            logs.sort((a,b) => b.timestamp - a.timestamp);
+            logs.forEach(log => {
+                tbody.innerHTML += `<tr><td><div class="log-time">${log.timeString || '-'}</div></td><td><b>${log.action}</b><br><small>${log.details}</small></td></tr>`;
+            });
+        });
+
+        // UI CONTROL PAJAK
+        function toggleTaxSetting() {
+            const newState = !taxEnabled;
+            db.ref('settings/tax_enabled').set(newState).then(() => alert(newState ? "Pajak 10% DIAKTIFKAN" : "Pajak 10% DINONAKTIFKAN"));
+        }
+
+        function updateTaxButtonUI() {
+            let container = document.getElementById('tax-control-container');
+            if (!container) {
+                const page = document.getElementById('finance-page');
+                container = document.createElement('div');
+                container.id = 'tax-control-container';
+                container.style.cssText = 'margin-bottom:20px; padding:15px; background:#2b2b36; border-radius:10px; border:1px solid #444; display:flex; justify-content:space-between; align-items:center;';
+                const filters = page.querySelector('.filters');
+                filters.parentNode.insertBefore(container, filters.nextSibling);
+            }
+            const statusText = taxEnabled ? '<span style="color:#2ecc71; font-weight:bold;">AKTIF (10%)</span>' : '<span style="color:#e74c3c; font-weight:bold;">NON-AKTIF</span>';
+            const btnColor = taxEnabled ? '#e74c3c' : '#2ecc71';
+            const btnText = taxEnabled ? 'Matikan Pajak' : 'Hidupkan Pajak';
             
-            // Sisipkan setelah filter
-            const filters = financePage.querySelector('.filters');
-            filters.parentNode.insertBefore(newDiv, filters.nextSibling);
-        }
-        
-        const ui = document.getElementById('tax-control-container');
-        const statusText = taxEnabled ? '<span style="color:#2ecc71; font-weight:bold;">AKTIF (10%)</span>' : '<span style="color:#e74c3c; font-weight:bold;">NON-AKTIF</span>';
-        const btnColor = taxEnabled ? '#e74c3c' : '#2ecc71';
-        const btnText = taxEnabled ? 'Matikan Pajak' : 'Hidupkan Pajak';
-        
-        ui.innerHTML = `
-            <div style="font-size:14px; font-weight:bold; color:#ccc;">STATUS PAJAK (PPN)</div>
-            <div style="display:flex; align-items:center; gap:15px;">
-                ${statusText}
-                <button onclick="toggleTaxSetting()" style="background:${btnColor}; border:none; padding:8px 15px; border-radius:5px; color:#fff; font-weight:bold; cursor:pointer;">${btnText}</button>
-            </div>
-        `;
-    }
-
-    function fmtDur(ms) {
-        if (!ms || ms < 0) return "-";
-        const s = Math.floor(ms / 1000);
-        const m = Math.floor(s / 60);
-        const rs = s % 60;
-        return `${m}m ${rs}s`;
-    }
-
-    // --- BAGIAN INI TIDAK DISENTUH SESUAI INSTRUKSI (HISTORY & LOGIC LAIN) ---
-    function createHistoryCard(order) {
-        let displayName = "Pelanggan";
-        if (order.tableNumber) {
-            displayName = "MEJA " + order.tableNumber;
-            if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
-        } else if (order.customer) {
-            if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
-            else displayName = order.customer;
-        }
-        
-        const t1 = new Date(order.timestamp).getTime(); 
-        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; 
-        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; 
-        const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
-
-        const div = document.createElement('div');
-        div.className = `order-card status-${order.status}`;
-        
-        let itemsHtml = (order.items || []).map(item => {
-            const qty = parseInt(item.qty);
-            const price = parseInt(item.price);
-            const subtotal = qty * price;
-            const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-            return `
-            <div class="item-row">
-                <div style="flex:1;">
-                    <span class="item-name">${qty}x ${item.name}</span>
-                    ${unitPriceHtml}
-                    ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
-                </div>
-                <div style="text-align:right;">
-                    <span class="item-price">${subtotal.toLocaleString()}</span>
-                </div>
-            </div>`;
-        }).join('');
-
-        const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
-        const timeIn = new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
-        let timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
-
-        let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
-        if (order.status === 'completed') {
-            if (order.paymentMethod === 'qris') {
-                if(t2 && t1) durPesan = t2 - t1;
-                if(t3 && t2) durRespon = t3 - t2;
-                if(t4 && t3) durMasak = t4 - t3;
-            } else {
-                if(t3 && t1) durPesan = t3 - t1;
-                durRespon = 0; 
-                if(t4 && t3) durMasak = t4 - t3;
-            }
-            if(t4 && t1) durTotal = t4 - t1;
+            container.innerHTML = `<div style="font-size:14px; font-weight:bold; color:#ccc;">STATUS PAJAK (PPN)</div><div style="display:flex; align-items:center; gap:15px;">${statusText}<button onclick="toggleTaxSetting()" style="background:${btnColor}; border:none; padding:8px 15px; border-radius:5px; color:#fff; font-weight:bold; cursor:pointer;">${btnText}</button></div>`;
         }
 
-        let kpiHtml = '';
-        if (order.status === 'completed') {
-            const responColor = durRespon > 180000 ? '#e74c3c' : '#fff';
-            kpiHtml = `
-            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555; font-size:11px;">
-                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                    <span style="color:#777;">Pesan - Bayar (Cust):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durPesan)}</span>
-                </div>
-                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                    <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor}; font-weight:600;">${fmtDur(durRespon)}</span>
-                </div>
-                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                    <span style="color:#777;">Masak (Dapur):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durMasak)}</span>
-                </div>
-                <div class="dur-total-row" style="margin-top:6px; padding-top:6px; border-top:1px solid #444; display:flex; justify-content:space-between; font-size:12px; font-weight:700;">
-                    <span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:var(--accent);">${fmtDur(durTotal)}</span>
-                </div>
-            </div>`;
+        // --- CORE FUNCTIONS (JANGAN DIUBAH) ---
+        function calculateFinance() {
+            const mode = document.getElementById('finance-mode').value;
+            let totalRev = 0;
+            let targetDate, targetMonth;
+            if (mode === 'daily') targetDate = new Date(document.getElementById('finance-date').value);
+            else { const val = document.getElementById('finance-month').value; if(val) targetMonth = val; }
+
+            dbOrders.forEach(o => {
+                if (o.status !== 'completed' && o.status !== 'done') return;
+                const oDate = new Date(o.completedAt || o.timestamp);
+                let match = false;
+                if (mode === 'daily' && targetDate && oDate.toDateString() === targetDate.toDateString()) match = true;
+                if (mode === 'monthly' && targetMonth && oDate.toISOString().slice(0,7) === targetMonth) match = true;
+                
+                if(match) {
+                    let val = 0;
+                    if(o.finalData && o.finalData.finalTotal) val = o.finalData.finalTotal;
+                    else { let raw = String(o.total).replace(/[^0-9]/g, ''); val = Number(raw) || 0; }
+                    totalRev += val;
+                }
+            });
+            document.getElementById('main-stat-rev').innerText = "Rp " + totalRev.toLocaleString('id-ID');
         }
 
-        let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
-        let rawTotal = String(order.total).replace(/[^0-9]/g, '');
-        const safeTotal = Number(rawTotal) || 0;
+        function toggleFinanceFilter() {
+            const m = document.getElementById('finance-mode').value;
+            document.getElementById('finance-date').style.display = m === 'daily' ? 'block' : 'none';
+            document.getElementById('finance-month').style.display = m === 'monthly' ? 'block' : 'none';
+            calculateFinance();
+        }
 
-        div.innerHTML = `
-            <div class="card-header">
-                <div class="header-left">
-                    <span class="cust-name">${displayName}</span>
-                    <span class="order-id">ID: ...${order.id.slice(-4)}</span>
-                </div>
-                <div class="header-right">
-                    <span class="meta-date">${dateStr}</span>
-                    <div class="meta-time-block">
-                        <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br>
-                        <span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="item-list">${itemsHtml}</div>
-            <div class="total-display" style="margin-bottom:5px;">Total: Rp ${safeTotal.toLocaleString()}</div>
-            ${kpiHtml}
-            ${statusFooter}
-        `;
-        return div;
-    }
+        function renderHistory() {
+            const grid = document.getElementById('history-grid');
+            grid.innerHTML = '';
+            const filterDate = new Date(document.getElementById('history-date-picker').value).toDateString();
+            const sorted = [...dbOrders].sort((a,b) => (b.completedAt ? new Date(b.completedAt) : 0) - (a.completedAt ? new Date(a.completedAt) : 0));
+            sorted.forEach(order => {
+                if (['completed', 'rejected', 'done'].includes(order.status)) {
+                    if (new Date(order.completedAt || order.timestamp).toDateString() === filterDate) {
+                        grid.appendChild(createHistoryCard(order));
+                    }
+                }
+            });
+        }
 
-    function showPage(p) {
-        document.querySelectorAll('.main').forEach(e=>e.style.display='none');
-        document.getElementById(p+'-page').style.display='block';
-        document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active'));
-        const idx = p === 'finance' ? 0 : (p === 'logs' ? 1 : 2);
-        document.querySelectorAll('.menu-item')[idx].classList.add('active');
-        if(p==='finance') calculateFinance();
-    }
-
-    function calculateFinance() {
-        const mode = document.getElementById('finance-mode').value;
-        let totalRev = 0;
-        let targetDate, targetMonth;
-        if (mode === 'daily') targetDate = new Date(document.getElementById('finance-date').value);
-        else { const val = document.getElementById('finance-month').value; if(val) targetMonth = val; }
-
-        dbOrders.forEach(o => {
-            if (o.status !== 'completed' && o.status !== 'done') return;
-            const oDate = new Date(o.completedAt || o.timestamp);
-            let match = false;
-            if (mode === 'daily' && targetDate && oDate.toDateString() === targetDate.toDateString()) match = true;
-            if (mode === 'monthly' && targetMonth && oDate.toISOString().slice(0,7) === targetMonth) match = true;
+        function createHistoryCard(order) {
+            let displayName = order.tableNumber ? ("MEJA " + order.tableNumber + (order.customerName ? " - " + order.customerName.toUpperCase() : "")) : order.customer || "Pelanggan";
+            const t1 = new Date(order.timestamp).getTime(); 
+            const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
             
-            if(match) {
-                // Gunakan finalTotal jika ada (karena pajak), atau fallback ke total biasa
-                let val = 0;
-                if(o.finalData && o.finalData.finalTotal) {
-                    val = o.finalData.finalTotal;
-                } else {
-                    let raw = String(o.total).replace(/[^0-9]/g, '');
-                    val = Number(raw) || 0;
-                }
-                totalRev += val;
-            }
-        });
-        document.getElementById('main-stat-rev').innerText = "Rp " + totalRev.toLocaleString('id-ID');
-    }
+            let itemsHtml = (order.items || []).map(item => {
+                const qty = parseInt(item.qty); const price = parseInt(item.price);
+                return `<div class="item-row"><div style="flex:1;"><span style="color:#fff;">${qty}x ${item.name}</span></div><div style="text-align:right;"><span style="color:#aaa;">${(qty * price).toLocaleString()}</span></div></div>`;
+            }).join('');
 
-    function toggleFinanceFilter() {
-        const m = document.getElementById('finance-mode').value;
-        document.getElementById('finance-date').style.display = m === 'daily' ? 'block' : 'none';
-        document.getElementById('finance-month').style.display = m === 'monthly' ? 'block' : 'none';
-        calculateFinance();
-    }
+            const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday:'short', day:'numeric', month:'short'});
+            const timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) : '-';
+            let totalVal = 0;
+            if (order.finalData) totalVal = order.finalData.finalTotal;
+            else { totalVal = Number(String(order.total).replace(/[^0-9]/g, '')) || 0; }
 
-    function renderHistory() {
-        const grid = document.getElementById('history-grid');
-        grid.innerHTML = '';
-        const filterDate = new Date(document.getElementById('history-date-picker').value).toDateString();
-        const sorted = [...dbOrders].sort((a,b) => (b.completedAt ? new Date(b.completedAt) : 0) - (a.completedAt ? new Date(a.completedAt) : 0));
-        sorted.forEach(order => {
-            if (['completed', 'rejected', 'done'].includes(order.status)) {
-                if (new Date(order.completedAt || order.timestamp).toDateString() === filterDate) {
-                    grid.appendChild(createHistoryCard(order));
-                }
-            }
-        });
-    }
-</script>
+            const div = document.createElement('div');
+            div.className = `order-card status-${order.status}`;
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #444; padding-bottom:5px;">
+                    <div><span style="font-weight:bold; color:var(--accent);">${displayName}</span><br><small style="color:#666;">ID: ...${order.id.slice(-4)}</small></div>
+                    <div style="text-align:right;"><small>${dateStr}</small><br><strong style="color:#fff;">${timeOut}</strong></div>
+                </div>
+                <div class="item-list">${itemsHtml}</div>
+                <div style="text-align:right; font-size:16px; font-weight:bold; color:#fff; margin-top:5px;">Rp ${totalVal.toLocaleString()}</div>
+                <div style="text-align:center; margin-top:10px; color:${order.status==='rejected'?'var(--red)':'var(--green)'}; font-weight:bold;">${order.status==='rejected'?'DITOLAK':'SELESAI'}</div>
+            `;
+            return div;
+        }
+
+        function showPage(p) {
+            document.querySelectorAll('.main > div').forEach(e=>e.style.display='none');
+            document.getElementById(p+'-page').style.display='block';
+            document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active'));
+            const idx = p === 'finance' ? 0 : (p === 'history' ? 1 : 2);
+            document.querySelectorAll('.menu-item')[idx].classList.add('active');
+            if(p==='finance') calculateFinance();
+        }
+    </script>
 </body>
 </html>
