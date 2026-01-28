@@ -706,7 +706,7 @@
                 <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>${finance.subtotal.toLocaleString()}</span></div>
                 ${finance.discount > 0 ? `<div style="display:flex; justify-content:space-between; color:#e74c3c;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>` : ''}
                 <div style="display:flex; justify-content:space-between;"><span>Tax (10%):</span><span>${finance.tax.toLocaleString()}</span></div>
-                <div style="display:flex; justify-content:space-between; margin-top:5px; font-weight:800; color:var(--accent); font-size:18px;">
+                <div style="display:flex; justify-content:space-between; margin-top:5px; font-weight:600; color:var(--accent); font-size:18px;">
                     <span>Total:</span><span>Rp ${finance.finalTotal.toLocaleString()}</span>
                 </div>
             </div>
@@ -718,8 +718,10 @@
                     <span class="cust-name">${displayName}</span>
                     <div style="margin-top:4px; display:flex; align-items:center;">
                          ${paymentBadge}
-                         <span style="font-size:18px; font-weight:800; color:#fff; margin-left:5px;">#${getDailyQueueNumber(order.id)}</span>
-                         <span style="font-size:11px; color:#666; margin-left:8px; font-family:monospace;">(ID: ...${order.id.slice(-4)})</span>
+                         <span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span>
+                    </div>
+                    <div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">
+                         Queue No : ${getDailyQueueNumber(order.id)}
                     </div>
                 </div>
                 ${headerRight}
