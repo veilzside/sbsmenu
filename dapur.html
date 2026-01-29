@@ -216,8 +216,6 @@
     // Variabel Badge Sidebar
     let unreadOrdersCount = 0;
     let unreadHistoryCount = 0;
-    
-    // Variabel untuk menyimpan hitungan Real-time
     let realActiveCount = 0;
     let realHistoryCount = 0;
     
@@ -225,6 +223,8 @@
     let isTaxEnabled = false;
     db.ref('settings/tax_enabled').on('value', snap => {
         isTaxEnabled = snap.val() || false;
+        // Re-render jika setting pajak berubah agar angka update
+        renderOrders();
     });
 
     // IDENTITAS KASIR
@@ -295,7 +295,6 @@
                 allOrders.push(order);
                 currentStatuses[key] = order.status;
 
-                // Logic Audio
                 if (!isFirstLoad && audioUnlocked) {
                     const currentStat = order.status;
                     const prevStat = previousOrderStatuses[key];
@@ -305,44 +304,25 @@
             });
         }
         
-        // 1. HITUNG REAL COUNT
+        // LOGIKA BADGE (Tetap seperti sebelumnya)
         realActiveCount = allOrders.filter(o => ['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(o.status)).length;
-        
         const todayStr = new Date().toDateString();
         realHistoryCount = allOrders.filter(o => 
             (['completed', 'rejected'].includes(o.status)) && 
             (new Date(o.completedAt || o.timestamp).toDateString() === todayStr)
         ).length;
 
-        // 2. LOGIKA BADGE SIDEBAR (PERSISTENT & AUTO ADJUST)
-        // Ambil data "Terakhir Dilihat" dari LocalStorage
         let seenOrd = parseInt(localStorage.getItem('sbs_seen_orders')) || 0;
         let seenHis = parseInt(localStorage.getItem('sbs_seen_history')) || 0;
 
-        // Auto-Correction: Jika jumlah asli berkurang (misal ada yg selesai), turunkan juga nilai "seen"
-        // agar badge tidak negatif, dan siap mendeteksi pesanan baru berikutnya.
-        if (realActiveCount < seenOrd) {
-            seenOrd = realActiveCount;
-            localStorage.setItem('sbs_seen_orders', seenOrd);
-        }
-        if (realHistoryCount < seenHis) {
-            seenHis = realHistoryCount;
-            localStorage.setItem('sbs_seen_history', seenHis);
-        }
+        if (realActiveCount < seenOrd) { seenOrd = realActiveCount; localStorage.setItem('sbs_seen_orders', seenOrd); }
+        if (realHistoryCount < seenHis) { seenHis = realHistoryCount; localStorage.setItem('sbs_seen_history', seenHis); }
 
-        // Kalkulasi Badge (Selisih Real vs Seen)
         unreadOrdersCount = realActiveCount - seenOrd;
         unreadHistoryCount = realHistoryCount - seenHis;
 
-        // Jika user sedang membuka halaman itu sekarang, langsung reset badge jadi 0
-        if (activePage === 'orders') {
-            unreadOrdersCount = 0;
-            localStorage.setItem('sbs_seen_orders', realActiveCount);
-        }
-        if (activePage === 'history') {
-            unreadHistoryCount = 0;
-            localStorage.setItem('sbs_seen_history', realHistoryCount);
-        }
+        if (activePage === 'orders') { unreadOrdersCount = 0; localStorage.setItem('sbs_seen_orders', realActiveCount); }
+        if (activePage === 'history') { unreadHistoryCount = 0; localStorage.setItem('sbs_seen_history', realHistoryCount); }
 
         previousOrderStatuses = currentStatuses;
         if (isFirstLoad) isFirstLoad = false;
@@ -351,27 +331,23 @@
         
         allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         
-        updateNavBadges(); // Update icon sidebar
+        updateNavBadges();
         setupTabs(); 
         renderOrders();
-        updateTabBadges(); // Update tab kasir/dapur (tetap pakai real count)
+        updateTabBadges();
     });
 
-    // Update Badge Sidebar (Pesanan & Riwayat) - Berdasarkan Diff
     function updateNavBadges() {
         const badgeOrd = document.getElementById('badge-nav-orders');
         const badgeHis = document.getElementById('badge-nav-history');
-        
         badgeOrd.innerText = unreadOrdersCount;
         badgeOrd.style.display = (unreadOrdersCount > 0) ? 'flex' : 'none';
-        
         badgeHis.innerText = unreadHistoryCount;
         badgeHis.style.display = (unreadHistoryCount > 0) ? 'flex' : 'none';
     }
 
-    // Update Badge Tab (Kasir & Dapur) - Berdasarkan Total Real
     function updateTabBadges() {
-        const countKasir = realActiveCount; // Tetap pakai total asli
+        const countKasir = realActiveCount;
         const countDapur = allOrders.filter(o => o.status === 'processing').length;
         document.getElementById('badge-kasir').innerText = countKasir;
         document.getElementById('badge-dapur').innerText = countDapur;
@@ -379,16 +355,8 @@
 
     function showPage(pageId) {
         activePage = pageId; 
-        
-        // SAAT MEMBUKA HALAMAN: TANDAI "SUDAH DILIHAT"
-        if (pageId === 'orders') {
-            unreadOrdersCount = 0;
-            localStorage.setItem('sbs_seen_orders', realActiveCount);
-        }
-        if (pageId === 'history') {
-            unreadHistoryCount = 0;
-            localStorage.setItem('sbs_seen_history', realHistoryCount);
-        }
+        if (pageId === 'orders') { unreadOrdersCount = 0; localStorage.setItem('sbs_seen_orders', realActiveCount); }
+        if (pageId === 'history') { unreadHistoryCount = 0; localStorage.setItem('sbs_seen_history', realHistoryCount); }
         updateNavBadges();
 
         document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
@@ -409,12 +377,15 @@
         return (index + 1).toString().padStart(2, '0');
     }
 
-    function calculateTotals(order) {
+    // --- KALKULASI & LIVE UPDATE ---
+    function calculateTotals(order, overrideDisc = null) {
         let subtotal = 0;
         if (order.items) {
              order.items.forEach(i => { subtotal += (parseInt(i.price) * parseInt(i.qty)); });
         }
-        let discount = order.discount || 0;
+        // Gunakan overrideDisc jika ada (dari input live), jika tidak gunakan dari DB
+        let discount = (overrideDisc !== null) ? overrideDisc : (order.discount || 0);
+        
         let taxBase = subtotal - discount;
         if (taxBase < 0) taxBase = 0;
 
@@ -422,8 +393,40 @@
         if (isTaxEnabled) tax = Math.ceil(taxBase * 0.1);
 
         let finalTotal = taxBase + tax;
-        if (order.finalData) return order.finalData;
+        
+        // Kalau data sudah final (history), return data final
+        if (order.finalData && overrideDisc === null) return order.finalData;
+
         return { subtotal, discount, tax, finalTotal };
+    }
+
+    // Fungsi ini dipanggil setiap kali user mengetik di kolom diskon
+    function updateLiveTotal(orderId) {
+        const order = allOrders.find(o => o.id === orderId);
+        if (!order) return;
+
+        const inputEl = document.getElementById(`disc-input-${orderId}`);
+        const val = inputEl ? parseInt(inputEl.value) : 0;
+        const disc = isNaN(val) ? 0 : val;
+
+        const totals = calculateTotals(order, disc);
+
+        // Update UI
+        const taxRow = document.getElementById(`tax-row-${orderId}`);
+        const totalEl = document.getElementById(`total-val-${orderId}`);
+
+        if (taxRow) {
+            if (isTaxEnabled && totals.tax > 0) {
+                taxRow.style.display = 'flex';
+                taxRow.innerHTML = `<span>Tax (10%):</span><span>${totals.tax.toLocaleString()}</span>`;
+            } else {
+                taxRow.style.display = 'none';
+            }
+        }
+        
+        if (totalEl) {
+            totalEl.innerText = `Rp ${totals.finalTotal.toLocaleString()}`;
+        }
     }
 
     function padRow(leftStr, rightStr) {
@@ -435,12 +438,17 @@
         return leftStr + " ".repeat(space) + rightStr;
     }
 
+    // --- PRINTING (Bill, Checker, Receipt) ---
     function printDirect(id, type) {
         const o = allOrders.find(x => x.id === id); 
         if (!o) return;
 
+        // Ambil diskon terkini dari input jika ada (agar print bill sesuai yg diketik)
+        const inputEl = document.getElementById(`disc-input-${id}`);
+        const currentDisc = inputEl ? (parseInt(inputEl.value) || 0) : (o.discount || 0);
+
         const q = getDailyQueueNumber(id);
-        const totals = calculateTotals(o); 
+        const totals = calculateTotals(o, currentDisc); // Hitung pakai diskon terbaru
         const d = new Date(o.timestamp);
         const dateStr = d.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'}) + " " + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
         
@@ -465,6 +473,7 @@
             txt += "\n\n\n";
 
         } else {
+            // RECEIPT / BILL
             if (type === 'bill') {
                 txt += ALIGN_CENTER + BOLD_ON + "THIS IS NOT A RECEIPT\n\n" + BOLD_OFF;
             }
@@ -494,13 +503,21 @@
             
             txt += "--------------------------------\n";
 
+            // LOGIKA TAMPILAN TOTAL STRUK
+            // Jika Pajak OFF dan Diskon 0 -> Tampilan Simple
             if (!isTaxEnabled && totals.discount === 0) {
                  txt += "\n" + BOLD_ON + padRow("TOTAL", totals.finalTotal.toLocaleString('id-ID')) + BOLD_OFF + "\n";
             } 
             else {
+                // Tampilan Detail
                 txt += padRow("Subtotal", totals.subtotal.toLocaleString('id-ID')) + "\n";
-                if (totals.discount > 0) txt += padRow("Disc", "- " + totals.discount.toLocaleString('id-ID')) + "\n";
-                if (totals.tax > 0) txt += padRow("Tax (10%)", totals.tax.toLocaleString('id-ID')) + "\n";
+                // HANYA PRINT DISKON JIKA > 0
+                if (totals.discount > 0) {
+                    txt += padRow("Disc", "- " + totals.discount.toLocaleString('id-ID')) + "\n";
+                }
+                if (totals.tax > 0) {
+                    txt += padRow("Tax (10%)", totals.tax.toLocaleString('id-ID')) + "\n";
+                }
                 txt += "\n" + BOLD_ON + padRow("TOTAL", totals.finalTotal.toLocaleString('id-ID')) + BOLD_OFF + "\n";
             }
             
@@ -515,28 +532,29 @@
         window.location.href = "rawbt:base64," + btoa(binary);
     }
 
+    // --- PROSES PESANAN ---
     function verifyAndPrint(key, btn) {
         const order = allOrders.find(o => o.id === key);
         if(!order) return;
-        const currentData = calculateTotals(order);
-        let discInput = prompt(`Subtotal: ${currentData.subtotal.toLocaleString()}\nMasukkan Diskon (Rp) jika ada:`, "0");
-        if (discInput === null) return; 
+
+        // Ambil nilai diskon dari input field card
+        const inputEl = document.getElementById(`disc-input-${key}`);
+        const discountVal = inputEl ? (parseInt(inputEl.value) || 0) : 0;
         
-        let discountVal = parseInt(discInput.replace(/[^0-9]/g, '')) || 0;
-        let taxBase = currentData.subtotal - discountVal;
-        if(taxBase < 0) taxBase = 0;
-        let taxVal = 0;
-        if(isTaxEnabled) taxVal = Math.ceil(taxBase * 0.1); 
-        let finalTotal = taxBase + taxVal;
-        let confirmMsg = `Subtotal: ${currentData.subtotal.toLocaleString()}\nDiskon: ${discountVal.toLocaleString()}\n`;
-        if(isTaxEnabled) confirmMsg += `Pajak (10%): ${taxVal.toLocaleString()}\n`;
-        confirmMsg += `\nTOTAL FINAL: Rp ${finalTotal.toLocaleString()}\n\nLanjut proses?`;
+        // Hitung ulang final
+        const currentData = calculateTotals(order, discountVal);
+        
+        let confirmMsg = `Subtotal: ${currentData.subtotal.toLocaleString()}\nDiskon: ${currentData.discount.toLocaleString()}\n`;
+        if(isTaxEnabled) confirmMsg += `Pajak (10%): ${currentData.tax.toLocaleString()}\n`;
+        confirmMsg += `\nTOTAL FINAL: Rp ${currentData.finalTotal.toLocaleString()}\n\nLanjut proses?`;
         
         if (!confirm(confirmMsg)) return;
 
         const card = btn.closest('.order-card');
         if (card) card.classList.add('fade-out');
-        try { printDirect(key, 'checker'); } catch(e) {}
+        
+        // 3. MATIKAN AUTO PRINT CHECKER
+        // try { printDirect(key, 'checker'); } catch(e) {}  <-- Baris ini dihapus/komen
 
         setTimeout(() => { 
             db.ref('orders/' + key).update({
@@ -547,11 +565,11 @@
                 finalData: {
                     subtotal: currentData.subtotal,
                     discount: discountVal,
-                    tax: taxVal,
-                    finalTotal: finalTotal,
+                    tax: currentData.tax,
+                    finalTotal: currentData.finalTotal,
                     taxEnabledAtPrint: isTaxEnabled 
                 },
-                total: finalTotal 
+                total: currentData.finalTotal 
             }); 
         }, 500);
     }
@@ -651,7 +669,9 @@
         const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0;
         let timerStart = (['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(order.status)) ? t1 : (order.status === 'processing' ? t3 : 0);
         
+        // Hitung Data Awal (tanpa override diskon)
         const finance = calculateTotals(order);
+
         const div = document.createElement('div');
         div.className = `order-card status-${order.status}`;
         if(order.status === 'qris_unpaid') div.style.borderLeftColor = '#888';
@@ -671,10 +691,15 @@
         let headerRight = `<div class="header-right"><span class="meta-date">${dateStr}</span><div class="meta-time-block"><span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span></div><div class="timer-badge live-timer" data-start="${timerStart}">--:--</div></div>`;
         if(order.status === 'completed' || order.status === 'rejected') headerRight = `<div class="header-right"><span class="meta-date">${dateStr}</span><div class="meta-time-block"><span class="time-label">Selesai:</span> <span class="time-highlight">${new Date(order.completedAt).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}</span></div></div>`;
 
+        // TOMBOL PRINT (BILL MUNCUL DI SEMUA STATUS AKTIF)
         let printButtons = '';
         if(order.status !== 'rejected') {
             const btnStyle = "flex:1;";
-            let btnBill = (['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status)) ? `<button class="btn-print" style="${btnStyle} background:#e67e22; border-color:#d35400;" onclick="printDirect('${order.id}', 'bill')"><span style="font-size:16px;">📄</span> BILL</button>` : '';
+            // 2. TOMBOL BILL MUNCUL DI KASIR & DAPUR (STATUS PROCESSING JUGA)
+            let btnBill = '';
+            if(['new', 'unpaid', 'pending_payment', 'qris_unpaid', 'processing'].includes(order.status)) {
+                btnBill = `<button class="btn-print" style="${btnStyle} background:#e67e22; border-color:#d35400;" onclick="printDirect('${order.id}', 'bill')"><span style="font-size:16px;">📄</span> BILL</button>`;
+            }
             printButtons = `<div class="btn-print-group">${`<button class="btn-print" style="${btnStyle}" onclick="printDirect('${order.id}', 'checker')"><span style="font-size:16px;">🖨</span> CHECKER</button>`}${btnBill}${`<button class="btn-print" style="${btnStyle}" onclick="printDirect('${order.id}', 'invoice')"><span style="font-size:16px;">🧾</span> RECEIPT</button>`}</div>`;
         }
 
@@ -687,7 +712,32 @@
 
         let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : (order.status === 'completed' ? `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>` : '');
 
-        let totalDisplayHtml = `<div style="border-top:1px dashed #444; margin-top:10px; padding-top:5px; font-size:13px; color:#aaa;"><div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>${finance.subtotal.toLocaleString()}</span></div>${finance.discount > 0 ? `<div style="display:flex; justify-content:space-between; color:#e74c3c;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>` : ''}${finance.tax > 0 ? `<div style="display:flex; justify-content:space-between;"><span>Tax (10%):</span><span>${finance.tax.toLocaleString()}</span></div>` : ''}<div style="display:flex; justify-content:space-between; margin-top:5px; font-weight:600; color:var(--accent); font-size:18px;"><span>Total:</span><span>Rp ${finance.finalTotal.toLocaleString()}</span></div></div>`;
+        // 1. INPUT DISKON DI CARD (Bukan Popup)
+        // Hanya muncul jika status belum selesai (new, unpaid, pending). Kalau sudah processing, diskon di-lock (text only)
+        let discInputHtml = '';
+        const isEditable = ['new', 'unpaid', 'pending_payment'].includes(order.status);
+        
+        if(isEditable) {
+            discInputHtml = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin:5px 0; font-size:13px;">
+                <span>Disc (Rp):</span>
+                <input type="number" id="disc-input-${order.id}" value="${order.discount||0}" oninput="updateLiveTotal('${order.id}')" style="width:100px; background:#222; border:1px solid #555; color:#fff; padding:4px; border-radius:4px; text-align:right;">
+            </div>`;
+        } else if (finance.discount > 0) {
+             discInputHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
+        }
+
+        // Total Display HTML dengan Live Update ID
+        let totalDisplayHtml = `
+            <div style="border-top:1px dashed #444; margin-top:10px; padding-top:5px; font-size:13px; color:#aaa;">
+                <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>${finance.subtotal.toLocaleString()}</span></div>
+                ${discInputHtml}
+                <div id="tax-row-${order.id}" style="display:${(isTaxEnabled && finance.tax > 0) ? 'flex' : 'none'}; justify-content:space-between;"><span>Tax (10%):</span><span>${finance.tax.toLocaleString()}</span></div>
+                <div style="display:flex; justify-content:space-between; margin-top:5px; font-weight:600; color:var(--accent); font-size:18px;">
+                    <span>Total:</span><span id="total-val-${order.id}">Rp ${finance.finalTotal.toLocaleString()}</span>
+                </div>
+            </div>
+        `;
 
         div.innerHTML = `<div class="card-header"><div class="header-left"><span class="cust-name">${displayName}</span><div style="margin-top:4px; display:flex; align-items:center;">${paymentBadge}<span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span></div><div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">Queue No : ${getDailyQueueNumber(order.id)}</div></div>${headerRight}</div><div class="item-list">${itemsHtml}</div>${totalDisplayHtml}${statusFooter}${printButtons}<div class="actions" style="display:block;">${buttonsHtml}</div>`;
         return div;
