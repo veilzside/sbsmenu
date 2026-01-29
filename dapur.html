@@ -223,7 +223,6 @@
     let isTaxEnabled = false;
     db.ref('settings/tax_enabled').on('value', snap => {
         isTaxEnabled = snap.val() || false;
-        // Re-render jika setting pajak berubah agar angka update
         renderOrders();
     });
 
@@ -304,7 +303,7 @@
             });
         }
         
-        // LOGIKA BADGE (Tetap seperti sebelumnya)
+        // LOGIKA BADGE
         realActiveCount = allOrders.filter(o => ['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(o.status)).length;
         const todayStr = new Date().toDateString();
         realHistoryCount = allOrders.filter(o => 
@@ -383,7 +382,6 @@
         if (order.items) {
              order.items.forEach(i => { subtotal += (parseInt(i.price) * parseInt(i.qty)); });
         }
-        // Gunakan overrideDisc jika ada (dari input live), jika tidak gunakan dari DB
         let discount = (overrideDisc !== null) ? overrideDisc : (order.discount || 0);
         
         let taxBase = subtotal - discount;
@@ -394,13 +392,11 @@
 
         let finalTotal = taxBase + tax;
         
-        // Kalau data sudah final (history), return data final
         if (order.finalData && overrideDisc === null) return order.finalData;
 
         return { subtotal, discount, tax, finalTotal };
     }
 
-    // Fungsi ini dipanggil setiap kali user mengetik di kolom diskon
     function updateLiveTotal(orderId) {
         const order = allOrders.find(o => o.id === orderId);
         if (!order) return;
@@ -411,7 +407,6 @@
 
         const totals = calculateTotals(order, disc);
 
-        // Update UI
         const taxRow = document.getElementById(`tax-row-${orderId}`);
         const totalEl = document.getElementById(`total-val-${orderId}`);
 
@@ -438,17 +433,16 @@
         return leftStr + " ".repeat(space) + rightStr;
     }
 
-    // --- PRINTING (Bill, Checker, Receipt) ---
+    // --- PRINTING ---
     function printDirect(id, type) {
         const o = allOrders.find(x => x.id === id); 
         if (!o) return;
 
-        // Ambil diskon terkini dari input jika ada (agar print bill sesuai yg diketik)
         const inputEl = document.getElementById(`disc-input-${id}`);
         const currentDisc = inputEl ? (parseInt(inputEl.value) || 0) : (o.discount || 0);
 
         const q = getDailyQueueNumber(id);
-        const totals = calculateTotals(o, currentDisc); // Hitung pakai diskon terbaru
+        const totals = calculateTotals(o, currentDisc); 
         const d = new Date(o.timestamp);
         const dateStr = d.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'}) + " " + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
         
@@ -503,15 +497,11 @@
             
             txt += "--------------------------------\n";
 
-            // LOGIKA TAMPILAN TOTAL STRUK
-            // Jika Pajak OFF dan Diskon 0 -> Tampilan Simple
             if (!isTaxEnabled && totals.discount === 0) {
                  txt += "\n" + BOLD_ON + padRow("TOTAL", totals.finalTotal.toLocaleString('id-ID')) + BOLD_OFF + "\n";
             } 
             else {
-                // Tampilan Detail
                 txt += padRow("Subtotal", totals.subtotal.toLocaleString('id-ID')) + "\n";
-                // HANYA PRINT DISKON JIKA > 0
                 if (totals.discount > 0) {
                     txt += padRow("Disc", "- " + totals.discount.toLocaleString('id-ID')) + "\n";
                 }
@@ -532,7 +522,7 @@
         window.location.href = "rawbt:base64," + btoa(binary);
     }
 
-    // --- PROSES PESANAN ---
+    // --- PROSES PESANAN (POPUP CONFIRM DIHAPUS) ---
     function verifyAndPrint(key, btn) {
         const order = allOrders.find(o => o.id === key);
         if(!order) return;
@@ -541,20 +531,17 @@
         const inputEl = document.getElementById(`disc-input-${key}`);
         const discountVal = inputEl ? (parseInt(inputEl.value) || 0) : 0;
         
-        // Hitung ulang final
+        // Hitung ulang final (Simpan data valid ke DB)
         const currentData = calculateTotals(order, discountVal);
         
-        let confirmMsg = `Subtotal: ${currentData.subtotal.toLocaleString()}\nDiskon: ${currentData.discount.toLocaleString()}\n`;
-        if(isTaxEnabled) confirmMsg += `Pajak (10%): ${currentData.tax.toLocaleString()}\n`;
-        confirmMsg += `\nTOTAL FINAL: Rp ${currentData.finalTotal.toLocaleString()}\n\nLanjut proses?`;
-        
-        if (!confirm(confirmMsg)) return;
+        // --- POPUP CONFIRM DIHAPUS ---
+        // Langsung eksekusi animasi dan update DB
 
         const card = btn.closest('.order-card');
         if (card) card.classList.add('fade-out');
         
-        // 3. MATIKAN AUTO PRINT CHECKER
-        // try { printDirect(key, 'checker'); } catch(e) {}  <-- Baris ini dihapus/komen
+        // Auto Print Checker DIMATIKAN sesuai request
+        // try { printDirect(key, 'checker'); } catch(e) {}
 
         setTimeout(() => { 
             db.ref('orders/' + key).update({
@@ -577,7 +564,9 @@
     function finishOrder(key, btn) {
         const card = btn.closest('.order-card');
         if (card) card.classList.add('fade-out');
-        setTimeout(() => { updateStatus(key, 'completed'); }, 500);
+        setTimeout(() => { 
+            updateStatus(key, 'completed'); 
+        }, 500);
     }
 
     function updateStatus(key, status) {
