@@ -212,8 +212,14 @@
     let activePage = 'orders'; 
     let audioUnlocked = false;
     let isFirstLoad = true;
+    
+    // Variabel Badge Sidebar
     let unreadOrdersCount = 0;
     let unreadHistoryCount = 0;
+    
+    // Variabel untuk menyimpan hitungan Real-time
+    let realActiveCount = 0;
+    let realHistoryCount = 0;
     
     // GLOBAL TAX SETTING
     let isTaxEnabled = false;
@@ -274,7 +280,7 @@
         }
     }
 
-    // --- LISTENER FIREBASE (FIXED BADGE LOGIC) ---
+    // --- LISTENER FIREBASE ---
     let previousOrderStatuses = {};
     
     db.ref('orders').on('value', (snapshot) => {
@@ -289,29 +295,54 @@
                 allOrders.push(order);
                 currentStatuses[key] = order.status;
 
-                // Logic Audio (Hanya berbunyi jika status berubah)
+                // Logic Audio
                 if (!isFirstLoad && audioUnlocked) {
                     const currentStat = order.status;
                     const prevStat = previousOrderStatuses[key];
-                    
                     if (currentStat === 'new' && prevStat !== 'new') shouldRing = true;
                     if (currentStat === 'pending_payment' && prevStat === 'qris_unpaid') shouldRing = true;
                 }
             });
         }
         
-        // --- PERBAIKAN LOGIKA BADGE ---
-        // Hitung ulang total pesanan aktif setiap kali data berubah (termasuk saat refresh/load pertama)
-        const activeOrders = allOrders.filter(o => ['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(o.status)).length;
-        unreadOrdersCount = activeOrders; // Badge samping = Total pending
+        // 1. HITUNG REAL COUNT
+        realActiveCount = allOrders.filter(o => ['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(o.status)).length;
         
-        // Untuk History, kita bisa hitung yang selesai hari ini
         const todayStr = new Date().toDateString();
-        const completedToday = allOrders.filter(o => 
+        realHistoryCount = allOrders.filter(o => 
             (['completed', 'rejected'].includes(o.status)) && 
             (new Date(o.completedAt || o.timestamp).toDateString() === todayStr)
         ).length;
-        unreadHistoryCount = completedToday;
+
+        // 2. LOGIKA BADGE SIDEBAR (PERSISTENT & AUTO ADJUST)
+        // Ambil data "Terakhir Dilihat" dari LocalStorage
+        let seenOrd = parseInt(localStorage.getItem('sbs_seen_orders')) || 0;
+        let seenHis = parseInt(localStorage.getItem('sbs_seen_history')) || 0;
+
+        // Auto-Correction: Jika jumlah asli berkurang (misal ada yg selesai), turunkan juga nilai "seen"
+        // agar badge tidak negatif, dan siap mendeteksi pesanan baru berikutnya.
+        if (realActiveCount < seenOrd) {
+            seenOrd = realActiveCount;
+            localStorage.setItem('sbs_seen_orders', seenOrd);
+        }
+        if (realHistoryCount < seenHis) {
+            seenHis = realHistoryCount;
+            localStorage.setItem('sbs_seen_history', seenHis);
+        }
+
+        // Kalkulasi Badge (Selisih Real vs Seen)
+        unreadOrdersCount = realActiveCount - seenOrd;
+        unreadHistoryCount = realHistoryCount - seenHis;
+
+        // Jika user sedang membuka halaman itu sekarang, langsung reset badge jadi 0
+        if (activePage === 'orders') {
+            unreadOrdersCount = 0;
+            localStorage.setItem('sbs_seen_orders', realActiveCount);
+        }
+        if (activePage === 'history') {
+            unreadHistoryCount = 0;
+            localStorage.setItem('sbs_seen_history', realHistoryCount);
+        }
 
         previousOrderStatuses = currentStatuses;
         if (isFirstLoad) isFirstLoad = false;
@@ -320,23 +351,51 @@
         
         allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         
-        updateNavBadges(); // Update badge menu samping
+        updateNavBadges(); // Update icon sidebar
         setupTabs(); 
         renderOrders();
-        updateBadges(); // Update badge tab (Kasir/Dapur)
+        updateTabBadges(); // Update tab kasir/dapur (tetap pakai real count)
     });
 
+    // Update Badge Sidebar (Pesanan & Riwayat) - Berdasarkan Diff
     function updateNavBadges() {
         const badgeOrd = document.getElementById('badge-nav-orders');
         const badgeHis = document.getElementById('badge-nav-history');
         
-        // Tampilkan badge jika ada pesanan, tidak peduli sedang di halaman mana
-        // Agar user selalu sadar ada tanggungan
         badgeOrd.innerText = unreadOrdersCount;
         badgeOrd.style.display = (unreadOrdersCount > 0) ? 'flex' : 'none';
         
         badgeHis.innerText = unreadHistoryCount;
         badgeHis.style.display = (unreadHistoryCount > 0) ? 'flex' : 'none';
+    }
+
+    // Update Badge Tab (Kasir & Dapur) - Berdasarkan Total Real
+    function updateTabBadges() {
+        const countKasir = realActiveCount; // Tetap pakai total asli
+        const countDapur = allOrders.filter(o => o.status === 'processing').length;
+        document.getElementById('badge-kasir').innerText = countKasir;
+        document.getElementById('badge-dapur').innerText = countDapur;
+    }
+
+    function showPage(pageId) {
+        activePage = pageId; 
+        
+        // SAAT MEMBUKA HALAMAN: TANDAI "SUDAH DILIHAT"
+        if (pageId === 'orders') {
+            unreadOrdersCount = 0;
+            localStorage.setItem('sbs_seen_orders', realActiveCount);
+        }
+        if (pageId === 'history') {
+            unreadHistoryCount = 0;
+            localStorage.setItem('sbs_seen_history', realHistoryCount);
+        }
+        updateNavBadges();
+
+        document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
+        document.getElementById(pageId + '-page').style.display = 'block';
+        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+        if(pageId === 'orders') document.querySelectorAll('.menu-item')[0].classList.add('active');
+        if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
     }
 
     function getDailyQueueNumber(orderId) {
@@ -529,33 +588,16 @@
         document.getElementById('custom-confirm-modal').style.display = 'flex';
     }
 
-    function showPage(pageId) {
-        activePage = pageId; 
-        updateNavBadges();
-        document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
-        document.getElementById(pageId + '-page').style.display = 'block';
-        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-        if(pageId === 'orders') document.querySelectorAll('.menu-item')[0].classList.add('active');
-        if(pageId === 'history') document.querySelectorAll('.menu-item')[1].classList.add('active');
-    }
-
     function filterTab(status) {
         currentTab = status;
         localStorage.setItem('sbs_active_tab', status);
-        setupTabs(); renderOrders(); updateBadges(); 
+        setupTabs(); renderOrders(); updateTabBadges(); 
     }
     
     function setupTabs() {
         document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
         const activeEl = document.getElementById('tab-' + currentTab);
         if(activeEl) activeEl.classList.add('active');
-    }
-
-    function updateBadges() {
-        const countKasir = allOrders.filter(o => ['new', 'unpaid', 'qris_unpaid', 'pending_payment'].includes(o.status)).length;
-        const countDapur = allOrders.filter(o => o.status === 'processing').length;
-        document.getElementById('badge-kasir').innerText = countKasir;
-        document.getElementById('badge-dapur').innerText = countDapur;
     }
 
     function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
