@@ -200,9 +200,9 @@
 
         /* 1. KERANJANG (POSISI ATAS - UTAMA) */
         .fab-cart { 
-            width: 42px; height: 42px; /* Ukuran Pas (Tidak terlalu besar) */
+            width: 48px; height: 48px; /* Diperbesar dari 42px menjadi 48px (+15%) */
             background: var(--sbs-yellow);
-            order: 1; /* Pastikan di urutan pertama (Atas) */
+            order: 1; 
             z-index: 2;
         }
         .fab-cart.has-items { background: var(--sbs-orange); border-color: #fff; }
@@ -211,10 +211,10 @@
 
         /* 2. RIWAYAT (POSISI BAWAH - MINI) */
         .fab-history { 
-            width: 32px; height: 32px; /* Lebih kecil */
+            width: 37px; height: 37px; /* Diperbesar dari 32px menjadi 37px (+15%) */
             background: #fff; 
-            display: none; /* Muncul via JS */
-            order: 2; /* Di urutan kedua (Bawah) */
+            display: none; 
+            order: 2; 
             border-width: 1px;
         }
         .fab-history svg { width: 16px; height: 16px; fill: #555; }
