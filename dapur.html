@@ -581,33 +581,25 @@
     function finishOrder(key, btn) {
         const card = btn.closest('.order-card');
         if (card) card.classList.add('fade-out');
-        setTimeout(() => { 
-            updateStatus(key, 'completed'); 
-        }, 500);
+        setTimeout(() => { updateStatus(key, 'completed'); }, 500);
     }
 
-    // UPDATE STATUS + CASHIER (PERBAIKAN UTAMA)
     function updateStatus(key, status, cashierName = null) {
         const updates = { status: status };
         const now = new Date().toISOString(); 
         if(status === 'unpaid') updates.acceptedAt = now; 
         if(status === 'processing') updates.paidAt = now; 
         if(status === 'completed' || status === 'rejected') updates.completedAt = now; 
-        
-        // Simpan nama kasir jika ada (misal dari reject)
         if(cashierName) updates.cashier = cashierName;
-
         db.ref('orders/' + key).update(updates);
     }
     
-    // CONFIRM REJECT (PERBAIKAN UTAMA: AMBIL NAMA KASIR)
     function confirmReject(key) { 
-        // 1. Ambil nama kasir dari tombol
+        // Ambil nama kasir saat ini dari tombol, atau default
         const hiddenCashier = document.getElementById(`selected-cashier-${key}`);
         const selectedCashier = (hiddenCashier && hiddenCashier.value) ? hiddenCashier.value : (localStorage.getItem('sbs_cashier_name') || 'Staff');
 
         document.getElementById('confirm-msg').innerText = "Yakin tolak pesanan ini?";
-        // 2. Pass nama kasir ke updateStatus
         confirmCallback = () => updateStatus(key, 'rejected', selectedCashier);
         document.getElementById('custom-confirm-modal').style.display = 'flex';
     }
@@ -722,7 +714,7 @@
 
         let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : (order.status === 'completed' ? `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>` : '');
 
-        const isEditable = ['new', 'unpaid', 'pending_payment'].includes(order.status);
+        const isEditable = ['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status);
         
         let inputsHtml = '';
         if(isEditable) {
