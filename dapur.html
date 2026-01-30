@@ -218,7 +218,8 @@
     let realActiveCount = 0;
     let realHistoryCount = 0;
     
-    let cashierList = ['Kasir 1', 'Kasir 2', 'Kasir 3']; // Default
+    // Data Kasir (Default)
+    let cashierList = ['Kasir 1', 'Kasir 2', 'Kasir 3'];
 
     // GLOBAL TAX SETTING
     let isTaxEnabled = false;
@@ -227,7 +228,7 @@
         renderOrders();
     });
 
-    // LOAD EMPLOYEES
+    // LOAD EMPLOYEES (Live dari Admin)
     db.ref('employees').on('value', snap => {
         const fetched = [];
         if(snap.val()){
@@ -242,6 +243,7 @@
         renderOrders(); 
     });
 
+    // IDENTITAS KASIR LOCAL (Hanya untuk default tombol, bukan untuk display header)
     let localCashierName = localStorage.getItem('sbs_cashier_name'); 
 
     const soundNew = document.getElementById('sound-new');
@@ -385,6 +387,7 @@
         return (index + 1).toString().padStart(2, '0');
     }
 
+    // --- KALKULASI & LIVE UPDATE ---
     function calculateTotals(order, overrideDisc = null) {
         let subtotal = 0;
         if (order.items) {
@@ -427,6 +430,7 @@
         return leftStr + " ".repeat(space) + rightStr;
     }
 
+    // --- FUNGSI PILIH KASIR (TOMBOL) ---
     function selectCashier(orderId, name) {
         document.getElementById(`selected-cashier-${orderId}`).value = name;
         const container = document.getElementById(`cashier-btn-container-${orderId}`);
@@ -446,6 +450,7 @@
         }
     }
 
+    // --- PRINTING ---
     function printDirect(id, type) {
         const o = allOrders.find(x => x.id === id); 
         if (!o) return;
@@ -454,9 +459,18 @@
         const currentDisc = inputEl ? (parseInt(inputEl.value) || 0) : (o.discount || 0);
 
         const hiddenCashier = document.getElementById(`selected-cashier-${id}`);
-        let selectedCashier = o.cashier || 'Staff';
-        if (hiddenCashier && hiddenCashier.value) {
-            selectedCashier = hiddenCashier.value;
+        
+        // LOGIKA PENTING: Saat Print, prioritas nama kasir:
+        // 1. Yang sudah tersimpan di DB (order.cashier)
+        // 2. Yang dipilih via tombol (hiddenCashier)
+        // 3. Default LocalStorage
+        
+        let selectedCashier = o.cashier; // Coba ambil dari DB dulu
+        if (!selectedCashier && hiddenCashier && hiddenCashier.value) {
+            selectedCashier = hiddenCashier.value; // Kalau DB kosong, ambil dari pilihan tombol
+        }
+        if (!selectedCashier) {
+            selectedCashier = localCashierName || 'Staff'; // Fallback
         }
 
         const q = getDailyQueueNumber(id);
@@ -535,6 +549,7 @@
         window.location.href = "rawbt:base64," + btoa(binary);
     }
 
+    // --- PROSES PESANAN ---
     function verifyAndPrint(key, btn) {
         const order = allOrders.find(o => o.id === key);
         if(!order) return;
@@ -542,6 +557,7 @@
         const inputEl = document.getElementById(`disc-input-${key}`);
         const discountVal = inputEl ? (parseInt(inputEl.value) || 0) : 0;
         
+        // Ambil KASIR dari Tombol
         const hiddenCashier = document.getElementById(`selected-cashier-${key}`);
         const selectedCashier = (hiddenCashier && hiddenCashier.value) ? hiddenCashier.value : (localCashierName || 'Staff');
 
@@ -549,6 +565,7 @@
         const card = btn.closest('.order-card');
         if (card) card.classList.add('fade-out');
         
+        // Update LocalStorage agar pilihan kasir terakhir diingat
         localStorage.setItem('sbs_cashier_name', selectedCashier);
 
         setTimeout(() => { 
@@ -700,21 +717,24 @@
 
         let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : (order.status === 'completed' ? `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>` : '');
 
-        // --- PILIHAN KASIR SEKARANG MUNCUL JUGA UNTUK QRIS (qris_unpaid) ---
-        const isEditable = ['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status);
+        const isEditable = ['new', 'unpaid', 'pending_payment'].includes(order.status);
         
-        let discountHtml = '';
-        let cashierHtml = '';
-
+        // INPUT DISKON
+        let inputsHtml = '';
         if(isEditable) {
-            // INPUT DISKON
-            discountHtml = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                <span style="font-size:12px; color:#aaa;">Disc (Rp):</span>
-                <input type="number" id="disc-input-${order.id}" value="${order.discount||0}" oninput="updateLiveTotal('${order.id}')" style="width:100px; background:#222; border:1px solid #555; color:#fff; padding:4px; border-radius:4px; text-align:right;">
-            </div>`;
+            inputsHtml += `
+            <div style="margin:5px 0; border-top:1px dashed #444; padding-top:5px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <span style="font-size:12px; color:#aaa;">Disc (Rp):</span>
+                    <input type="number" id="disc-input-${order.id}" value="${order.discount||0}" oninput="updateLiveTotal('${order.id}')" style="width:100px; background:#222; border:1px solid #555; color:#fff; padding:4px; border-radius:4px; text-align:right;">
+                </div>`;
+        } else if (finance.discount > 0) {
+             inputsHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin-bottom:5px;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
+        }
 
-            // TOMBOL KASIR
+        // TOMBOL KASIR (Hanya Muncul Jika Editable)
+        let cashierHtml = '';
+        if(isEditable) {
             let cashierBtns = '';
             cashierList.forEach(name => {
                 const isActive = (order.cashier === name) || (localCashierName === name && !order.cashier);
@@ -722,29 +742,24 @@
                 const col = isActive ? '#000' : '#ccc';
                 const border = isActive ? 'var(--accent)' : '#555';
                 const fw = isActive ? 'bold' : 'normal';
+                
                 cashierBtns += `<button class="btn-cashier-select" data-name="${name}" onclick="selectCashier('${order.id}', '${name}')" style="background:${bg}; color:${col}; border:1px solid ${border}; padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; flex:1; font-weight:${fw};">${name}</button>`;
             });
 
             cashierHtml = `
             <div style="margin-top:15px; border-top:1px dashed #444; padding-top:10px;">
-                <div style="font-size:11px; color:#aaa; margin-bottom:5px;">Kasir:</div>
+                <div style="font-size:11px; color:#aaa; margin-bottom:5px;">PILIH KASIR:</div>
                 <div id="cashier-btn-container-${order.id}" style="display:flex; gap:5px; flex-wrap:wrap;">
                     ${cashierBtns}
                 </div>
                 <input type="hidden" id="selected-cashier-${order.id}" value="${order.cashier || localCashierName || ''}">
             </div>`;
-
-        } else if (finance.discount > 0) {
-             discountHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin-bottom:5px;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
         }
 
-        // TAMPILKAN NAMA KASIR DI HEADER (UNTUK HISTORY & ACTIVE)
-        const cName = order.cashier || localCashierName || '-';
-        
         let totalDisplayHtml = `
             <div style="border-top:1px dashed #444; margin-top:10px; padding-top:5px; font-size:13px; color:#aaa;">
                 <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>${finance.subtotal.toLocaleString()}</span></div>
-                ${discountHtml}
+                ${inputsHtml}
                 <div id="tax-row-${order.id}" style="display:${(isTaxEnabled && finance.tax > 0) ? 'flex' : 'none'}; justify-content:space-between;"><span>Tax (10%):</span><span>${finance.tax.toLocaleString()}</span></div>
                 <div style="display:flex; justify-content:space-between; margin-top:5px; font-weight:600; color:var(--accent); font-size:18px;">
                     <span>Total:</span><span id="total-val-${order.id}">Rp ${finance.finalTotal.toLocaleString()}</span>
@@ -752,7 +767,13 @@
             </div>
         `;
 
-        div.innerHTML = `<div class="card-header"><div class="header-left"><span class="cust-name">${displayName}</span><div style="margin-top:4px; display:flex; align-items:center;">${paymentBadge}<span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span></div><div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">Queue No : ${getDailyQueueNumber(order.id)}</div><div style="font-size:11px; color:#aaa;">Cashier: ${cName}</div></div>${headerRight}</div><div class="item-list">${itemsHtml}</div>${totalDisplayHtml}${cashierHtml}${statusFooter}${printButtons}<div class="actions" style="display:block;">${buttonsHtml}</div>`;
+        // FIX HEADER KASIR: Hanya muncul jika order.cashier sudah ada di DB
+        let headerCashierHtml = '';
+        if(order.cashier) {
+            headerCashierHtml = `<div style="font-size:11px; color:#888; margin-top:2px;">Cashier: ${order.cashier}</div>`;
+        }
+
+        div.innerHTML = `<div class="card-header"><div class="header-left"><span class="cust-name">${displayName}</span><div style="margin-top:4px; display:flex; align-items:center;">${paymentBadge}<span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span></div><div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">Queue No : ${getDailyQueueNumber(order.id)}</div>${headerCashierHtml}</div>${headerRight}</div><div class="item-list">${itemsHtml}</div>${totalDisplayHtml}${cashierHtml}${statusFooter}${printButtons}<div class="actions" style="display:block;">${buttonsHtml}</div>`;
         return div;
     }
     
