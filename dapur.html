@@ -247,6 +247,7 @@
     const soundNag = document.getElementById('sound-nag');
     const btnAudio = document.getElementById('btn-audio');
 
+    // FUNGSI FORMAT DURASI (PENTING UTK RIWAYAT)
     function fmtDur(ms) {
         if (!ms || ms < 0) return "-";
         const s = Math.floor(ms / 1000);
@@ -384,7 +385,7 @@
         return (index + 1).toString().padStart(2, '0');
     }
 
-    // --- KALKULASI ---
+    // --- KALKULASI & LIVE UPDATE ---
     function calculateTotals(order, overrideDisc = null) {
         let subtotal = 0;
         if (order.items) {
@@ -427,12 +428,9 @@
         return leftStr + " ".repeat(space) + rightStr;
     }
 
-    // --- FUNGSI PILIH KASIR (FIXED: SAVE TO MEMORY) ---
+    // --- FUNGSI PILIH KASIR (TOMBOL) ---
     function selectCashier(orderId, name) {
-        // 1. Update Input Hidden agar terbaca saat Print/Proses
         document.getElementById(`selected-cashier-${orderId}`).value = name;
-        
-        // 2. Update Visual Tombol
         const container = document.getElementById(`cashier-btn-container-${orderId}`);
         const buttons = container.getElementsByClassName('btn-cashier-select');
         for (let btn of buttons) {
@@ -448,9 +446,7 @@
                 btn.style.fontWeight = 'normal';
             }
         }
-
-        // 3. SIMPAN KE MEMORI (KUNCI PERBAIKAN)
-        // Agar pesanan berikutnya (atau saat refresh) otomatis memilih nama ini
+        // SIMPAN KE MEMORI
         localStorage.setItem('sbs_cashier_name', name);
     }
 
@@ -463,12 +459,10 @@
         const currentDisc = inputEl ? (parseInt(inputEl.value) || 0) : (o.discount || 0);
 
         const hiddenCashier = document.getElementById(`selected-cashier-${id}`);
-        
         let selectedCashier = o.cashier; 
         if (!selectedCashier && hiddenCashier && hiddenCashier.value) {
             selectedCashier = hiddenCashier.value; 
         }
-        // Fallback: Ambil dari memory jika di DB belum ada
         if (!selectedCashier) {
             selectedCashier = localStorage.getItem('sbs_cashier_name') || 'Staff'; 
         }
@@ -557,7 +551,6 @@
         const inputEl = document.getElementById(`disc-input-${key}`);
         const discountVal = inputEl ? (parseInt(inputEl.value) || 0) : 0;
         
-        // Ambil nama dari tombol, atau fallback ke memory
         const hiddenCashier = document.getElementById(`selected-cashier-${key}`);
         const selectedCashier = (hiddenCashier && hiddenCashier.value) ? hiddenCashier.value : (localStorage.getItem('sbs_cashier_name') || 'Staff');
 
@@ -565,7 +558,6 @@
         const card = btn.closest('.order-card');
         if (card) card.classList.add('fade-out');
         
-        // Pastikan memori terupdate
         localStorage.setItem('sbs_cashier_name', selectedCashier);
 
         setTimeout(() => { 
@@ -734,16 +726,11 @@
             
             inputsHtml += `<div style="margin-top:10px;"><div style="font-size:12px; color:#aaa; margin-bottom:3px;">PILIH KASIR:</div><div id="cashier-btn-container-${order.id}" style="display:flex; gap:5px; flex-wrap:wrap;">`;
             
-            // LOGIKA PENTING: BACA MEMORY (localStorage)
+            // BACA MEMORY
             const memoryCashier = localStorage.getItem('sbs_cashier_name');
 
             cashierList.forEach((name, index) => {
-                // Tentukan siapa yang aktif:
-                // 1. Jika order sudah punya cashier (di DB) -> Pakai itu
-                // 2. Jika belum, cek Memory -> Pakai itu
-                // 3. Jika memory kosong -> Pakai Index 0 (tombol pertama)
                 let isActive = false;
-                
                 if (order.cashier) {
                     isActive = (order.cashier === name);
                 } else if (memoryCashier) {
@@ -760,7 +747,6 @@
                 inputsHtml += `<button class="btn-cashier-select" data-name="${name}" onclick="selectCashier('${order.id}', '${name}')" style="background:${bg}; color:${col}; border:1px solid ${border}; padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; flex:1; font-weight:${fw};">${name}</button>`;
             });
             
-            // Set value input hidden sesuai logika di atas
             let defaultVal = order.cashier || memoryCashier || (cashierList.length > 0 ? cashierList[0] : '');
             inputsHtml += `</div><input type="hidden" id="selected-cashier-${order.id}" value="${defaultVal}"></div></div>`;
 
@@ -779,13 +765,52 @@
             </div>
         `;
 
-        // FIX HEADER KASIR: Hanya muncul jika order.cashier sudah ada di DB
         let headerCashierHtml = '';
         if(order.cashier) {
             headerCashierHtml = `<div style="font-size:11px; color:#888; margin-top:2px;">Cashier: ${order.cashier}</div>`;
         }
 
-        div.innerHTML = `<div class="card-header"><div class="header-left"><span class="cust-name">${displayName}</span><div style="margin-top:4px; display:flex; align-items:center;">${paymentBadge}<span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span></div><div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">Queue No : ${getDailyQueueNumber(order.id)}</div>${headerCashierHtml}</div>${headerRight}</div><div class="item-list">${itemsHtml}</div>${totalDisplayHtml}${statusFooter}${printButtons}<div class="actions" style="display:block;">${buttonsHtml}</div>`;
+        // --- TAMBAHKAN LOGIKA KPI DURASI (YANG SEMPAT HILANG) ---
+        let kpiHtml = '';
+        if (order.status === 'completed') {
+            const t1 = new Date(order.timestamp).getTime();
+            const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0;
+            const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0;
+            const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
+
+            let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
+
+            if (order.paymentMethod === 'qris') {
+                if(t2 && t1) durPesan = t2 - t1;
+                if(t3 && t2) durRespon = t3 - t2;
+                if(t4 && t3) durMasak = t4 - t3;
+            } else {
+                if(t3 && t1) durPesan = t3 - t1;
+                durRespon = 0; 
+                if(t4 && t3) durMasak = t4 - t3;
+            }
+            if(t4 && t1) durTotal = t4 - t1;
+
+            const responColor = durRespon > 180000 ? '#e74c3c' : '#aaa'; 
+
+            kpiHtml = `
+            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #444; font-size:11px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Pesan - Bayar:</span> <span style="color:#ddd;">${fmtDur(durPesan)}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor};">${fmtDur(durRespon)}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Masak / Siapkan:</span> <span style="color:#ddd;">${fmtDur(durMasak)}</span>
+                </div>
+                <div style="margin-top:5px; padding-top:5px; border-top:1px solid #333; display:flex; justify-content:space-between; font-weight:bold;">
+                    <span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:#FFD200;">${fmtDur(durTotal)}</span>
+                </div>
+            </div>`;
+        }
+
+        div.innerHTML = `<div class="card-header"><div class="header-left"><span class="cust-name">${displayName}</span><div style="margin-top:4px; display:flex; align-items:center;">${paymentBadge}<span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span></div><div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">Queue No : ${getDailyQueueNumber(order.id)}</div>${headerCashierHtml}</div>${headerRight}</div><div class="item-list">${itemsHtml}</div>${totalDisplayHtml}${kpiHtml}${statusFooter}${printButtons}<div class="actions" style="display:block;">${buttonsHtml}</div>`;
         return div;
     }
     
