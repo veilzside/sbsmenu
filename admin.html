@@ -6,41 +6,13 @@
     <title>SBS Admin & Finance</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
-
-        /* TAMBAHKAN INI DI BAGIAN BAWAH STYLE */
-@media (max-width: 768px) {
-    body { 
-        flex-direction: column; 
-        overflow-y: auto !important; /* Enable Scroll Body */
-        height: auto !important;     /* Enable Refresh */
-        min-height: 100vh;
-    }
-    .sidebar { 
-        width: 100%; 
-        height: 60px; 
-        flex-direction: row; 
-        justify-content: space-around; 
-        padding: 5px; 
-        border-right: none; 
-        border-top: 1px solid #333; 
-        position: fixed; /* Fix Navbar Bawah */
-        bottom: 0; left: 0; z-index: 999;
-    }
-    .main { 
-        padding-bottom: 80px; 
-        height: auto !important; /* Biarkan konten memanjang */
-        overflow: visible !important;
-    }
-    .brand { display: none; }
-    .menu-item { flex: 1; justify-content: center; }
-}
-        
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
+        
+        /* DEFAULT DESKTOP */
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
         
         .sidebar { width: 260px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
-        /* Brand sekarang ada cursor pointer agar tau bisa diklik refresh */
         .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; cursor: pointer; transition: 0.2s; }
         .brand:active { transform: scale(0.95); opacity: 0.8; }
 
@@ -53,7 +25,7 @@
 
         .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 50px; }
         
-        /* CARD STYLE (ORI CHECKPOINT - TIDAK DIUBAH) */
+        /* CARD STYLE */
         .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 6px solid #555; position: relative; }
         .order-card.status-completed { border-left-color: var(--green); opacity: 1; }
         .order-card.status-rejected { border-left-color: #444; background: #222; opacity: 0.8; }
@@ -77,12 +49,6 @@
         .item-price { font-weight: 700; color: #fff; }
         .item-unit-price { font-size: 10px; color: #888; display: block; }
 
-        .duration-box { margin-bottom: 15px; font-size: 12px; color: #aaa; padding: 0 5px; }
-        .dur-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-        .dur-val { color: #fff; font-weight: 700; }
-        .dur-total-row { border-top: 1px dashed #666; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-size: 13px; }
-        .dur-total-val { color: var(--accent); font-weight: 900; }
-
         .total-display { text-align: right; font-size: 18px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
         .status-footer { text-align: center; margin-top: 10px; }
         .status-text-done { color: var(--green); font-weight: 700; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; }
@@ -98,7 +64,7 @@
         .log-table td { padding: 10px; border-bottom: 1px solid #333; }
         .log-time { color: var(--accent); font-weight: 700; font-size: 11px; }
 
-        /* STYLE PEGAWAI (FIXED FOR MOBILE) */
+        /* STYLE PEGAWAI */
         .emp-form { background: var(--card-bg); padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #444; }
         .emp-input-container { display: grid; gap: 10px; grid-template-columns: 2fr 1fr auto; }
         
@@ -108,14 +74,37 @@
         .btn-add { background: var(--green); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-del { background: var(--red); color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 10px; }
 
+        /* --- MOBILE RESPONSIVE FIX (Agar bisa Refresh) --- */
         @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 5px; border-right: none; border-top: 1px solid #333; }
+            body { 
+                flex-direction: column; 
+                overflow-y: auto !important; /* Wajib auto agar bisa di-scroll & refresh */
+                height: auto !important;     
+                min-height: 100vh;
+                -webkit-overflow-scrolling: touch;
+            }
+            .sidebar { 
+                width: 100%; 
+                height: 60px; 
+                flex-direction: row; 
+                justify-content: space-around; 
+                padding: 5px; 
+                border-right: none; 
+                border-top: 1px solid #333; 
+                position: fixed; 
+                bottom: 0; left: 0; z-index: 999;
+                background: #15151a; /* Pastikan background gelap */
+            }
+            .main { 
+                padding-bottom: 80px; 
+                height: auto !important; 
+                overflow: visible !important;
+                flex: none; /* Lepas flex agar mengikuti flow normal */
+            }
             .brand { display: none; }
             .menu-item { flex-direction: column; font-size: 10px; gap: 2px; padding: 5px; background: transparent !important; flex: 1; justify-content: center; }
-            .main { padding-bottom: 80px; }
             
-            /* FIX LAYOUT PEGAWAI DI HP */
+            /* Fix Layout Form Pegawai di HP */
             .emp-input-container { grid-template-columns: 1fr; } 
             .btn-add { width: 100%; margin-top: 5px; }
         }
@@ -283,78 +272,49 @@
         return `${m}m ${rs}s`;
     }
 
-    // --- KEMBALI KE KODE RIWAYAT ASLI (CHECKPOINT) ---
+    // --- KEMBALI KE KODE RIWAYAT ASLI (FIXED) ---
     function createHistoryCard(order) {
-    let displayName = "Pelanggan";
-    if (order.tableNumber) {
-        displayName = "MEJA " + order.tableNumber;
-        if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
-    } else if (order.customer) {
-        if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
-        else displayName = order.customer;
-    }
-    
-    // --- TAMBAHAN KASIR ---
-    let cashierDisplay = order.cashier ? `<div style="font-size:11px; color:#aaa; margin-top:2px;">Cashier: ${order.cashier}</div>` : '';
+        let displayName = "Pelanggan";
+        if (order.tableNumber) {
+            displayName = "MEJA " + order.tableNumber;
+            if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
+        } else if (order.customer) {
+            if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
+            else displayName = order.customer;
+        }
+        
+        let cashierDisplay = order.cashier ? `<div style="font-size:11px; color:#aaa; margin-top:2px;">Cashier: ${order.cashier}</div>` : '';
 
-    const t1 = new Date(order.timestamp).getTime(); 
-    const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
+        const t1 = new Date(order.timestamp).getTime(); 
+        const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
 
-    const div = document.createElement('div');
-    div.className = `order-card status-${order.status}`;
-    
-    let itemsHtml = (order.items || []).map(item => {
-        const qty = parseInt(item.qty);
-        const price = parseInt(item.price);
-        const subtotal = qty * price;
-        const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-        return `
-        <div class="item-row">
-            <div style="flex:1;">
-                <span class="item-name">${qty}x ${item.name}</span>
-                ${unitPriceHtml}
-                ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
-            </div>
-            <div style="text-align:right;">
-                <span class="item-price">${subtotal.toLocaleString()}</span>
-            </div>
-        </div>`;
-    }).join('');
-
-    const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
-    const timeIn = new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
-    let timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
-
-    let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
-    
-    let totalVal = 0;
-    if (order.finalData) totalVal = order.finalData.finalTotal;
-    else { totalVal = Number(String(order.total).replace(/[^0-9]/g, '')) || 0; }
-
-    div.innerHTML = `
-        <div class="card-header">
-            <div class="header-left">
-                <span class="cust-name">${displayName}</span>
-                <span class="order-id">ID: ...${order.id.slice(-4)}</span>
-                ${cashierDisplay} </div>
-            <div class="header-right">
-                <span class="meta-date">${dateStr}</span>
-                <div class="meta-time-block">
-                    <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br>
-                    <span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span>
+        const div = document.createElement('div');
+        div.className = `order-card status-${order.status}`;
+        
+        let itemsHtml = (order.items || []).map(item => {
+            const qty = parseInt(item.qty);
+            const price = parseInt(item.price);
+            const subtotal = qty * price;
+            const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
+            return `
+            <div class="item-row">
+                <div style="flex:1;">
+                    <span class="item-name">${qty}x ${item.name}</span>
+                    ${unitPriceHtml}
+                    ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
                 </div>
-            </div>
-        </div>
-        <div class="item-list">${itemsHtml}</div>
-        <div class="total-display" style="margin-bottom:5px;">Total: Rp ${totalVal.toLocaleString()}</div>
-        ${statusFooter}
-    `;
-    return div;
-}}
+                <div style="text-align:right;">
+                    <span class="item-price">${subtotal.toLocaleString()}</span>
+                </div>
+            </div>`;
+        }).join('');
+
+        const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
+        const timeIn = new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
+        let timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
 
         let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
         
-        // SUPPORT DATA LAMA & BARU (PAJAK)
         let totalVal = 0;
         if (order.finalData) totalVal = order.finalData.finalTotal;
         else { totalVal = Number(String(order.total).replace(/[^0-9]/g, '')) || 0; }
@@ -364,6 +324,7 @@
                 <div class="header-left">
                     <span class="cust-name">${displayName}</span>
                     <span class="order-id">ID: ...${order.id.slice(-4)}</span>
+                    ${cashierDisplay}
                 </div>
                 <div class="header-right">
                     <span class="meta-date">${dateStr}</span>
@@ -375,7 +336,6 @@
             </div>
             <div class="item-list">${itemsHtml}</div>
             <div class="total-display" style="margin-bottom:5px;">Total: Rp ${totalVal.toLocaleString()}</div>
-            ${kpiHtml}
             ${statusFooter}
         `;
         return div;
