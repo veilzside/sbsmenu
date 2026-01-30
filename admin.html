@@ -6,6 +6,35 @@
     <title>SBS Admin & Finance</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
+
+        /* TAMBAHKAN INI DI BAGIAN BAWAH STYLE */
+@media (max-width: 768px) {
+    body { 
+        flex-direction: column; 
+        overflow-y: auto !important; /* Enable Scroll Body */
+        height: auto !important;     /* Enable Refresh */
+        min-height: 100vh;
+    }
+    .sidebar { 
+        width: 100%; 
+        height: 60px; 
+        flex-direction: row; 
+        justify-content: space-around; 
+        padding: 5px; 
+        border-right: none; 
+        border-top: 1px solid #333; 
+        position: fixed; /* Fix Navbar Bawah */
+        bottom: 0; left: 0; z-index: 999;
+    }
+    .main { 
+        padding-bottom: 80px; 
+        height: auto !important; /* Biarkan konten memanjang */
+        overflow: visible !important;
+    }
+    .brand { display: none; }
+    .menu-item { flex: 1; justify-content: center; }
+}
+        
         :root { --bg-dark: #1e1e24; --card-bg: #2b2b36; --accent: #FFD200; --text: #eaeaea; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -256,78 +285,72 @@
 
     // --- KEMBALI KE KODE RIWAYAT ASLI (CHECKPOINT) ---
     function createHistoryCard(order) {
-        let displayName = "Pelanggan";
-        if (order.tableNumber) {
-            displayName = "MEJA " + order.tableNumber;
-            if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
-        } else if (order.customer) {
-            if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
-            else displayName = order.customer;
-        }
-        
-        const t1 = new Date(order.timestamp).getTime(); 
-        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; 
-        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; 
-        const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
+    let displayName = "Pelanggan";
+    if (order.tableNumber) {
+        displayName = "MEJA " + order.tableNumber;
+        if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
+    } else if (order.customer) {
+        if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
+        else displayName = order.customer;
+    }
+    
+    // --- TAMBAHAN KASIR ---
+    let cashierDisplay = order.cashier ? `<div style="font-size:11px; color:#aaa; margin-top:2px;">Cashier: ${order.cashier}</div>` : '';
 
-        const div = document.createElement('div');
-        div.className = `order-card status-${order.status}`;
-        
-        let itemsHtml = (order.items || []).map(item => {
-            const qty = parseInt(item.qty);
-            const price = parseInt(item.price);
-            const subtotal = qty * price;
-            const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
-            return `
-            <div class="item-row">
-                <div style="flex:1;">
-                    <span class="item-name">${qty}x ${item.name}</span>
-                    ${unitPriceHtml}
-                    ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
-                </div>
-                <div style="text-align:right;">
-                    <span class="item-price">${subtotal.toLocaleString()}</span>
-                </div>
-            </div>`;
-        }).join('');
+    const t1 = new Date(order.timestamp).getTime(); 
+    const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
 
-        const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
-        const timeIn = new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
-        let timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
+    const div = document.createElement('div');
+    div.className = `order-card status-${order.status}`;
+    
+    let itemsHtml = (order.items || []).map(item => {
+        const qty = parseInt(item.qty);
+        const price = parseInt(item.price);
+        const subtotal = qty * price;
+        const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
+        return `
+        <div class="item-row">
+            <div style="flex:1;">
+                <span class="item-name">${qty}x ${item.name}</span>
+                ${unitPriceHtml}
+                ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
+            </div>
+            <div style="text-align:right;">
+                <span class="item-price">${subtotal.toLocaleString()}</span>
+            </div>
+        </div>`;
+    }).join('');
 
-        let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
-        if (order.status === 'completed') {
-            if (order.paymentMethod === 'qris') {
-                if(t2 && t1) durPesan = t2 - t1;
-                if(t3 && t2) durRespon = t3 - t2;
-                if(t4 && t3) durMasak = t4 - t3;
-            } else {
-                if(t3 && t1) durPesan = t3 - t1;
-                durRespon = 0; 
-                if(t4 && t3) durMasak = t4 - t3;
-            }
-            if(t4 && t1) durTotal = t4 - t1;
-        }
+    const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
+    const timeIn = new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
+    let timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
 
-        let kpiHtml = '';
-        if (order.status === 'completed') {
-            const responColor = durRespon > 180000 ? '#e74c3c' : '#fff';
-            kpiHtml = `
-            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555; font-size:11px;">
-                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                    <span style="color:#777;">Pesan - Bayar (Cust):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durPesan)}</span>
+    let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
+    
+    let totalVal = 0;
+    if (order.finalData) totalVal = order.finalData.finalTotal;
+    else { totalVal = Number(String(order.total).replace(/[^0-9]/g, '')) || 0; }
+
+    div.innerHTML = `
+        <div class="card-header">
+            <div class="header-left">
+                <span class="cust-name">${displayName}</span>
+                <span class="order-id">ID: ...${order.id.slice(-4)}</span>
+                ${cashierDisplay} </div>
+            <div class="header-right">
+                <span class="meta-date">${dateStr}</span>
+                <div class="meta-time-block">
+                    <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br>
+                    <span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span>
                 </div>
-                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                    <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor}; font-weight:600;">${fmtDur(durRespon)}</span>
-                </div>
-                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                    <span style="color:#777;">Masak (Dapur):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durMasak)}</span>
-                </div>
-                <div class="dur-total-row" style="margin-top:6px; padding-top:6px; border-top:1px solid #444; display:flex; justify-content:space-between; font-size:12px; font-weight:700;">
-                    <span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:var(--accent);">${fmtDur(durTotal)}</span>
-                </div>
-            </div>`;
-        }
+            </div>
+        </div>
+        <div class="item-list">${itemsHtml}</div>
+        <div class="total-display" style="margin-bottom:5px;">Total: Rp ${totalVal.toLocaleString()}</div>
+        ${statusFooter}
+    `;
+    return div;
+}}
 
         let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
         
