@@ -56,19 +56,44 @@
         .card-img-box img { width: 100%; height: 100%; object-fit: cover; }
         .best-rec { border-color: var(--sbs-orange); box-shadow: 10px 10px 0px var(--sbs-orange); }
 
-        /* --- NEW ADD BUTTON (CART ICON) --- */
+        /* --- STYLE ICON TAP (+) BARU --- */
         .add-badge { 
-            position: absolute; bottom: 15px; right: 15px; 
-            background: var(--sbs-orange); color: #fff; 
-            width: 50px; height: 50px; border-radius: 50%; 
-            border: 3px solid var(--sbs-black); 
-            display: none !important;
-            box-shadow: 3px 3px 0px var(--sbs-black); 
-            transition: 0.2s; z-index: 10;
-            opacity: 0.9; 
+            /* Tampilkan kembali (override display:none sebelumnya) */
+            display: flex !important; 
+            
+            /* Posisi di pojok kanan bawah foto */
+            position: absolute; bottom: 10px; right: 10px; 
+            
+            /* Hapus background warna (sesuai request: no fill) */
+            background: transparent; 
+            border: none; 
+            box-shadow: none;
+            
+            /* Ukuran container */
+            width: 40px; height: 40px;
+            align-items: center; justify-content: center;
+            z-index: 10;
+            opacity: 0.9;
+            transition: transform 0.2s;
         }
-        .add-badge svg { width: 24px; height: 24px; fill: white; }
-        .menu-card:active .add-badge { transform: scale(1.1); background: var(--sbs-black); opacity: 1; }
+
+        /* Style untuk garis outline tipis */
+        .add-badge svg { 
+            width: 32px; height: 32px; 
+            fill: none; /* Tidak ada warna isi */
+            stroke: #fff; /* Warna garis Putih */
+            stroke-width: 1.5; /* Ketebalan garis tipis */
+            stroke-linecap: round; 
+            stroke-linejoin: round;
+            /* Bayangan hitam halus agar terlihat di background terang/gelap */
+            filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.6));
+        }
+
+        /* Efek saat diketuk */
+        .menu-card:active .add-badge { 
+            transform: scale(1.2) rotate(-10deg); 
+            opacity: 1;
+        }
         
         /* ALCS Style */
         .alcs-card { background: #fff; border: 3px solid var(--sbs-black); box-shadow: 8px 8px 0px var(--sbs-black); border-radius: 20px; padding: 20px; margin-bottom: 0; position: relative; }
@@ -1146,6 +1171,26 @@
     function clearSearchInput() { if(searchInput) searchInput.value = ''; if(clearBtn) clearBtn.style.display = 'none'; exitSearchMode(); }
     function showFullCategories(targetIds) { let hasResult = false; document.querySelectorAll('.content').forEach(section => { if (targetIds.includes(section.id)) { section.classList.remove('section-hidden'); section.querySelectorAll('.menu-card, .alcs-card').forEach(c => c.classList.remove('card-hidden')); hasResult = true; } else { section.classList.add('section-hidden'); } }); noResults.style.display = hasResult ? 'none' : 'block'; }
     function filterSpecificItems(term) { let hasResult = false; document.querySelectorAll('.content').forEach(section => { let visibleCardsCount = 0; const cards = section.querySelectorAll('.menu-card, .alcs-card'); cards.forEach(card => { const textContent = card.innerText.toLowerCase(); const imgAlt = card.querySelector('img') ? card.querySelector('img').alt.toLowerCase() : ''; const tags = card.getAttribute('data-tags') ? card.getAttribute('data-tags').toLowerCase() : ''; if (textContent.includes(term) || imgAlt.includes(term) || tags.includes(term)) { card.classList.remove('card-hidden'); visibleCardsCount++; hasResult = true; } else { card.classList.add('card-hidden'); } }); if (visibleCardsCount > 0) { section.classList.remove('section-hidden'); } else { section.classList.add('section-hidden'); } }); noResults.style.display = hasResult ? 'none' : 'block'; }
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // SVG Ikon Telunjuk Tap + Tanda Plus (Outline Style)
+        const tapIconSVG = `
+            <svg viewBox="0 0 24 24">
+                <path d="M9 11l3-3 3 3" style="opacity:0"/> <path d="M12 2.5a2.5 2.5 0 0 0-2.5 2.5v7h-1a2.5 2.5 0 0 0-2.5 2.5v5.5a4 4 0 0 0 4 4h4a4 4 0 0 0 4-4v-11.5a2.5 2.5 0 0 0-2.5-2.5h-3.5z" />
+                <line x1="18" y1="5" x2="22" y2="5" stroke="#FFD200" stroke-width="2.5" />
+                <line x1="20" y1="3" x2="20" y2="7" stroke="#FFD200" stroke-width="2.5" />
+            </svg>
+        `;
+
+        // Ganti semua ikon lama
+        const badges = document.querySelectorAll('.add-badge');
+        badges.forEach(badge => {
+            badge.innerHTML = tapIconSVG;
+        });
+    });
+</script>
+
 </script>
 </body>
 </html>
