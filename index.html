@@ -159,6 +159,32 @@
         .history-status { font-size: 14px; font-weight: 900; color: var(--sbs-black); text-transform: uppercase; }
         .history-items { font-size: 13px; margin-top: 5px; border-top: 1px dashed #ddd; padding-top: 5px; }
 
+        /* TAMBAHAN STYLE UNTUK RIWAYAT DETAIL */
+.history-details { 
+    margin-top: 8px; 
+    border-top: 1px dashed #ccc; 
+    padding-top: 8px; 
+}
+.h-row { 
+    display: flex; 
+    justify-content: space-between; 
+    font-size: 12px; 
+    margin-bottom: 4px; 
+    color: #444; 
+    font-family: 'Poppins', sans-serif;
+}
+.h-qty { font-weight: bold; margin-right: 5px; color: var(--sbs-black); }
+.h-total-row { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-top: 8px; 
+    padding-top: 8px; 
+    border-top: 2px solid #eee; 
+    font-weight: 900; 
+    font-size: 14px; 
+    color: var(--sbs-black); 
+}
+        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUp { from { transform: translateY(100px); } to { transform: translateY(0); } }
 
@@ -940,16 +966,15 @@
         const badgeHistory = document.getElementById('badge-history');
         const container = document.getElementById('history-container');
         
-        // 1. Jika tidak ada riwayat sama sekali, sembunyikan tombol hijau
         if (history.length === 0) {
             fabHistory.style.display = 'none';
+            container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">Belum ada riwayat pesanan</div>';
             return;
         }
 
-        // 2. Jika ada, munculkan tombol
         fabHistory.style.display = 'flex';
-
-        // 3. Siapkan wadah untuk "Aktif" dan "Selesai"
+        
+        // Reset container
         container.innerHTML = `
             <div id="active-orders-section" style="display:none;">
                 <div class="history-section-title" style="color:var(--sbs-orange)">SEDANG BERJALAN</div>
@@ -971,23 +996,19 @@
         history.forEach(orderId => {
             db.ref('orders/' + orderId).on('value', (snapshot) => {
                 const data = snapshot.val();
-                
-                // Cek jika data sudah dihapus di database tapi masih ada di HP
                 if (!data) return;
 
-                // LOGIKA AUTO-DELETE: Jika status selesai/tolak DAN sudah > 6 jam, jangan tampilkan
+                // Auto-hide pesanan lama (> 6 jam)
                 if (['completed', 'rejected'].includes(data.status)) {
                     const orderTime = new Date(data.completedAt || data.timestamp).getTime();
-                    if (now - orderTime > AUTO_CLEAR_TIME) {
-                        return; // Skip (Hilang dari pandangan)
-                    }
+                    if (now - orderTime > AUTO_CLEAR_TIME) return;
                 }
 
-                // Tentukan Warna & Teks Status
                 let statusText = 'MENUNGGU';
                 let color = '#888';
                 let isActive = false;
 
+                // Mapping Status
                 if(data.status === 'new') { statusText = 'MENUNGGU KONFIRMASI'; color = '#888'; isActive = true; }
                 else if(data.status === 'qris_unpaid') { statusText = 'MENUNGGU PEMBAYARAN'; color = '#e67e22'; isActive = true; }
                 else if(data.status === 'pending_payment') { statusText = 'VERIFIKASI PEMBAYARAN'; color = '#e67e22'; isActive = true; }
@@ -996,24 +1017,45 @@
                 else if(data.status === 'completed') { statusText = 'SELESAI'; color = '#2ecc71'; isActive = false; }
                 else if(data.status === 'rejected') { statusText = 'DITOLAK / BATAL'; color = 'red'; isActive = false; }
 
-                // Buat Kartu HTML
-                // Cek agar tidak duplikat
                 if(document.getElementById('card-'+orderId)) return;
 
-                const itemNames = (data.items || []).map(i => i.qty + 'x ' + i.name).join(', ');
+                // --- BAGIAN BARU: GENERATE DETAIL ITEM ---
+                let itemsHtml = '';
+                if(data.items) {
+                    data.items.forEach(item => {
+                        let subtotal = item.price * item.qty;
+                        itemsHtml += `
+                            <div class="h-row">
+                                <div><span class="h-qty">${item.qty}x</span> ${item.name}</div>
+                                <div>${subtotal.toLocaleString('id-ID')}</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Cek Total Final (jika ada diskon/pajak dari kasir)
+                let finalTotal = data.total;
+                if(data.finalData && data.finalData.finalTotal) finalTotal = data.finalData.finalTotal;
+
                 const html = `
                     <div id="card-${orderId}" class="history-card" style="border-left:4px solid ${color}">
                         <div class="history-header">
-                            <span>Meja: ${data.tableNumber || '-'}</span>
-                            <span>${data.paymentMethod === 'qris' ? 'QRIS' : 'TUNAI'}</span>
+                            <span>Meja: ${data.tableNumber || '-'} (${data.paymentMethod === 'qris' ? 'QRIS' : 'TUNAI'})</span>
+                            <span style="font-family:monospace; color:#aaa;">#${orderId.slice(-4)}</span>
                         </div>
-                        <div class="history-status" style="color:${color}">${statusText}</div>
-                        <div class="history-items">${itemNames}</div>
-                        <div style="font-size:10px; color:#ccc; margin-top:5px; text-align:right;">ID: ...${orderId.slice(-4)}</div>
+                        <div class="history-status" style="color:${color}; margin-bottom:5px;">${statusText}</div>
+                        
+                        <div class="history-details">
+                            ${itemsHtml}
+                            <div class="h-total-row">
+                                <span>TOTAL</span>
+                                <span>Rp ${parseInt(finalTotal).toLocaleString('id-ID')}</span>
+                            </div>
+                        </div>
                     </div>
                 `;
+                // ------------------------------------------
 
-                // Masukkan ke kategori yang benar
                 if (isActive) {
                     listActive.insertAdjacentHTML('beforeend', html);
                     activeCount++;
@@ -1024,7 +1066,7 @@
                     document.getElementById('past-orders-section').style.display = 'block';
                 }
 
-                // Update Badge di Tombol Hijau
+                // Update Badge Notifikasi
                 if (activeCount > 0) {
                     fabHistory.classList.add('active-order');
                     badgeHistory.innerText = activeCount;
@@ -1034,7 +1076,6 @@
                     badgeHistory.classList.remove('show');
                 }
                 
-                // Jika semua pesanan expired/kosong
                 if(activeCount === 0 && pastCount === 0) fabHistory.style.display = 'none';
             });
         });
