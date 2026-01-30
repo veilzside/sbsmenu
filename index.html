@@ -281,37 +281,38 @@
     position: relative; /* Wajib ada agar pojoknya nempel */
 }
 
+/* --- UPDATE: DOG EAR LEBIH BESAR & POSISI (+) PAS --- */
+
+/* 1. Perbesar Segitiga */
 .corner-add-triangle {
     position: absolute;
     bottom: 0;
     right: 0;
     width: 0;
     height: 0;
-    /* TEKNIK MEMBUAT SEGITIGA DENGAN BORDER: */
     border-style: solid;
-    /* Ubah angka 45px ini jika ingin segitiga lebih besar/kecil */
-    border-width: 0 0 45px 45px; 
-    /* Tiga sisi transparan, sisi kanan-bawah hitam */
+    /* Ubah dari 45px ke 60px agar lebih besar sedikit */
+    border-width: 0 0 60px 60px; 
     border-color: transparent transparent var(--sbs-black) transparent;
     z-index: 10;
-    /* Agar klik pada segitiga tetap dianggap klik pada kartu */
     pointer-events: none; 
 }
 
-/* Tanda Plus (+) di dalam segitiga */
+/* 2. Atur Posisi Tanda (+) */
 .corner-add-triangle::after {
     content: '+';
     position: absolute;
-    /* Posisi diatur agar pas di tengah area hitam */
-    bottom: -43px; 
-    right: 2px;
+    /* Geser posisi agar lebih ke tengah area hitam (Up & Left) */
+    bottom: -50px; /* Naik sedikit dari ujung bawah */
+    right: 8px;    /* Geser ke kiri dari ujung kanan */
     color: #fff;
     font-weight: 900;
-    font-size: 18px;
+    font-size: 24px; /* Font diperbesar dikit biar imbang */
     font-family: 'Montserrat', sans-serif;
+    line-height: 1;
 }
 
-/* Efek saat kartu ditekan: segitiga berubah warna jadi oranye */
+/* Efek saat diketuk tetap sama */
 .menu-card:active .corner-add-triangle {
     border-color: transparent transparent var(--sbs-orange) transparent;
 }       
