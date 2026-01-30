@@ -59,40 +59,7 @@
         /* --- STYLE ICON TAP (+) BARU --- */
         .add-badge { 
             /* Tampilkan kembali (override display:none sebelumnya) */
-            display: flex !important; 
-            
-            /* Posisi di pojok kanan bawah foto */
-            position: absolute; bottom: 10px; right: 10px; 
-            
-            /* Hapus background warna (sesuai request: no fill) */
-            background: transparent; 
-            border: none; 
-            box-shadow: none;
-            
-            /* Ukuran container */
-            width: 40px; height: 40px;
-            align-items: center; justify-content: center;
-            z-index: 10;
-            opacity: 0.9;
-            transition: transform 0.2s;
-        }
-
-        /* Style untuk garis outline tipis */
-        .add-badge svg { 
-            width: 32px; height: 32px; 
-            fill: none; /* Tidak ada warna isi */
-            stroke: #fff; /* Warna garis Putih */
-            stroke-width: 1.5; /* Ketebalan garis tipis */
-            stroke-linecap: round; 
-            stroke-linejoin: round;
-            /* Bayangan hitam halus agar terlihat di background terang/gelap */
-            filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.6));
-        }
-
-        /* Efek saat diketuk */
-        .menu-card:active .add-badge { 
-            transform: scale(1.2) rotate(-10deg); 
-            opacity: 1;
+            display: none !important; 
         }
         
         /* ALCS Style */
