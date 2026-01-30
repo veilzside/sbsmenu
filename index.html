@@ -1078,10 +1078,11 @@
                 let finalTotal = data.total;
                 if(data.finalData && data.finalData.finalTotal) finalTotal = data.finalData.finalTotal;
 
+                // --- GANTI BAGIAN HTML CARD DI DALAM trackOrders() ---
                 const html = `
                     <div id="card-${orderId}" class="history-card" style="border-left:4px solid ${color}">
                         <div class="history-header">
-                            <span>Meja: ${data.tableNumber || '-'} (${data.paymentMethod === 'qris' ? 'QRIS' : 'TUNAI'})</span>
+                            <span style="font-size:11px;">Meja: ${data.tableNumber || '-'} - ${data.customerName || 'Pelanggan'} (${data.paymentMethod === 'qris' ? 'QRIS' : 'TUNAI'})</span>
                             <span style="font-family:monospace; color:#aaa;">#${orderId.slice(-4)}</span>
                         </div>
                         <div class="history-status" style="color:${color}; margin-bottom:5px;">${statusText}</div>
