@@ -273,7 +273,48 @@
     font-size: 11px; padding: 5px 10px; border-radius: 20px;
     cursor: pointer; margin-top: 10px; width: 100%;
 }
-        
+ /* --- GAYA "LIPATAN POJOK" SEGITIGA HITAM --- */
+
+/* Pastikan card bisa memotong sudut yang berlebih */
+.menu-card {
+    overflow: hidden; 
+    position: relative; /* Wajib ada agar pojoknya nempel */
+}
+
+.corner-add-triangle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    /* TEKNIK MEMBUAT SEGITIGA DENGAN BORDER: */
+    border-style: solid;
+    /* Ubah angka 45px ini jika ingin segitiga lebih besar/kecil */
+    border-width: 0 0 45px 45px; 
+    /* Tiga sisi transparan, sisi kanan-bawah hitam */
+    border-color: transparent transparent var(--sbs-black) transparent;
+    z-index: 10;
+    /* Agar klik pada segitiga tetap dianggap klik pada kartu */
+    pointer-events: none; 
+}
+
+/* Tanda Plus (+) di dalam segitiga */
+.corner-add-triangle::after {
+    content: '+';
+    position: absolute;
+    /* Posisi diatur agar pas di tengah area hitam */
+    bottom: -43px; 
+    right: 2px;
+    color: #fff;
+    font-weight: 900;
+    font-size: 18px;
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* Efek saat kartu ditekan: segitiga berubah warna jadi oranye */
+.menu-card:active .corner-add-triangle {
+    border-color: transparent transparent var(--sbs-orange) transparent;
+}       
     </style>
 </head>
 <body>
@@ -1182,23 +1223,21 @@
 </script>
     <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // SVG: Kursor Tangan Putih mengetuk Tombol Bulat Kuning berisi (+)
-        const tapIconSVG = `
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="16" cy="9" r="5" stroke="#FFD200" />
-              
-              <path d="M16 6.5v5 M13.5 9h5" stroke="#FFD200" />
+        // 1. Cari semua kartu menu (baik makanan maupun alkohol)
+        const allCards = document.querySelectorAll('.menu-card, .alcs-card');
 
-              <path d="M9.5 13L6 16.5c-1 1-1 2.5 0 3.5s2.5 1 3.5 0l3.5-3.5" stroke="white"/>
-              <path d="M13 16.5l2.5-2.5c.5-.5 1.5-.5 2 0l1 1" stroke="white"/>
-              <path d="M9.5 13l2.5-7.5c.3-.8 1.5-.8 1.8 0l2.5 7.5" stroke="white"/>
-            </svg>
-        `;
-
-        // Cari semua elemen badge lama dan ganti isinya dengan icon baru
-        const badges = document.querySelectorAll('.add-badge');
-        badges.forEach(badge => {
-            badge.innerHTML = tapIconSVG;
+        // 2. Loop untuk setiap kartu
+        allCards.forEach(card => {
+            // Periksa apakah kartu ini adalah kartu menu biasa (ada gambarnya)
+            // Kita tidak menambahkannya ke kartu alkohol (alcs-card) karena desainnya beda
+            if(card.classList.contains('menu-card')) {
+                // Buat elemen div baru untuk segitiga
+                const triangleDiv = document.createElement('div');
+                triangleDiv.className = 'corner-add-triangle';
+                
+                // Masukkan segitiga ke dalam kartu
+                card.appendChild(triangleDiv);
+            }
         });
     });
 </script>
