@@ -11,22 +11,26 @@
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
         
         .sidebar { width: 260px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
-        .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
+        /* Brand sekarang ada cursor pointer agar tau bisa diklik refresh */
+        .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; cursor: pointer; transition: 0.2s; }
+        .brand:active { transform: scale(0.95); opacity: 0.8; }
+
         .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
-        .menu-icon { font-size: 20px; }
+        .menu-icon { font-size: 20px; min-width: 25px; text-align: center; }
 
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; }
         .page-title { margin:0 0 20px 0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
 
         .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 50px; }
         
-        /* CARD STYLE (ORI CHECKPOINT) */
+        /* CARD STYLE (ORI CHECKPOINT - TIDAK DIUBAH) */
         .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 6px solid #555; position: relative; }
         .order-card.status-completed { border-left-color: var(--green); opacity: 1; }
         .order-card.status-rejected { border-left-color: #444; background: #222; opacity: 0.8; }
 
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .header-left { display: flex; flex-direction: column; }
         .cust-name { font-size: 16px; font-weight: 700; color: #fff; text-transform: uppercase; margin-bottom: 2px; }
         .order-id { font-size: 11px; color: #666; font-family: monospace; }
         
@@ -65,8 +69,10 @@
         .log-table td { padding: 10px; border-bottom: 1px solid #333; }
         .log-time { color: var(--accent); font-weight: 700; font-size: 11px; }
 
-        /* STYLE BARU UNTUK PEGAWAI */
+        /* STYLE PEGAWAI (FIXED FOR MOBILE) */
         .emp-form { background: var(--card-bg); padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #444; }
+        .emp-input-container { display: grid; gap: 10px; grid-template-columns: 2fr 1fr auto; }
+        
         .emp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .emp-table th { text-align: left; padding: 10px; background: #222; color: #888; }
         .emp-table td { padding: 10px; border-bottom: 1px solid #333; }
@@ -79,17 +85,22 @@
             .brand { display: none; }
             .menu-item { flex-direction: column; font-size: 10px; gap: 2px; padding: 5px; background: transparent !important; flex: 1; justify-content: center; }
             .main { padding-bottom: 80px; }
+            
+            /* FIX LAYOUT PEGAWAI DI HP */
+            .emp-input-container { grid-template-columns: 1fr; } 
+            .btn-add { width: 100%; margin-top: 5px; }
         }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="brand">SBS OWNER</div>
-        <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">腸</span><span>Keuangan</span></div>
+        <div class="brand" onclick="location.reload()" title="Klik untuk Refresh">SBS ADMIN ↻</div>
+        
+        <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">💰</span><span>Keuangan</span></div>
         <div class="menu-item" onclick="showPage('employees')"><span class="menu-icon">👥</span><span>Pegawai</span></div>
-        <div class="menu-item" onclick="showPage('logs')"><span class="menu-icon">搭</span><span>Audit Log Stok</span></div>
-        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">糖</span><span>Riwayat Pesanan</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">📜</span><span>Riwayat</span></div>
+        <div class="menu-item" onclick="showPage('logs')"><span class="menu-icon">⚠️</span><span>Audit Log</span></div>
     </div>
 
     <div class="main" id="finance-page">
@@ -119,7 +130,7 @@
         <h2 class="page-title">MANAJEMEN PEGAWAI</h2>
         <div class="emp-form">
             <h4 style="margin-top:0; color:#aaa;">Tambah Pegawai Baru</h4>
-            <div style="display:grid; gap:10px; grid-template-columns: 2fr 1fr auto;">
+            <div class="emp-input-container">
                 <input type="text" id="emp-name" class="form-input" placeholder="Nama Lengkap">
                 <select id="emp-role" class="form-select">
                     <option value="Kasir">Kasir</option>
@@ -243,6 +254,7 @@
         return `${m}m ${rs}s`;
     }
 
+    // --- KEMBALI KE KODE RIWAYAT ASLI (CHECKPOINT) ---
     function createHistoryCard(order) {
         let displayName = "Pelanggan";
         if (order.tableNumber) {
@@ -319,6 +331,7 @@
 
         let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
         
+        // SUPPORT DATA LAMA & BARU (PAJAK)
         let totalVal = 0;
         if (order.finalData) totalVal = order.finalData.finalTotal;
         else { totalVal = Number(String(order.total).replace(/[^0-9]/g, '')) || 0; }
@@ -353,8 +366,8 @@
         const menus = document.querySelectorAll('.menu-item');
         if(p==='finance') menus[0].classList.add('active');
         else if(p==='employees') menus[1].classList.add('active');
-        else if(p==='logs') menus[2].classList.add('active');
-        else if(p==='history') menus[3].classList.add('active');
+        else if(p==='history') menus[2].classList.add('active');
+        else if(p==='logs') menus[3].classList.add('active');
 
         if(p==='finance') calculateFinance();
     }
