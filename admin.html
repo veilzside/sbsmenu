@@ -12,19 +12,60 @@
         
         .sidebar { width: 260px; background: #15151a; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #333; flex-shrink: 0; z-index: 100; }
         .brand { font-family: 'Bebas Neue'; font-size: 40px; color: var(--accent); margin-bottom: 40px; text-align: center; letter-spacing: 2px; }
-        
         .menu-item { padding: 15px; cursor: pointer; border-radius: 10px; margin-bottom: 10px; font-weight: 600; transition: 0.2s; color: #888; display: flex; align-items: center; gap: 10px; }
         .menu-item.active, .menu-item:hover { background: var(--card-bg); color: var(--accent); }
-        
+        .menu-icon { font-size: 20px; }
+
         .main { flex: 1; padding: 20px; overflow-y: auto; position: relative; }
         .page-title { margin:0 0 20px 0; font-family:'Bebas Neue'; color:var(--accent); font-size: 28px; }
 
-        /* Finance Stats */
-        .stat-card { background: var(--card-bg); padding: 25px; border-radius: 15px; border: 1px solid #444; margin-bottom: 20px; text-align: center; }
-        .filters { display: flex; gap: 10px; margin-bottom: 20px; }
-        .form-select, .form-input { padding: 10px; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 8px; font-family: 'Poppins'; }
+        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 50px; }
         
-        /* Employee & Tables */
+        /* CARD STYLE (ORI CHECKPOINT) */
+        .order-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border-left: 6px solid #555; position: relative; }
+        .order-card.status-completed { border-left-color: var(--green); opacity: 1; }
+        .order-card.status-rejected { border-left-color: #444; background: #222; opacity: 0.8; }
+
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .cust-name { font-size: 16px; font-weight: 700; color: #fff; text-transform: uppercase; margin-bottom: 2px; }
+        .order-id { font-size: 11px; color: #666; font-family: monospace; }
+        
+        .header-right { text-align: right; }
+        .meta-date { font-size: 13px; color: #ccc; margin-bottom: 2px; display: block; font-weight: 500; }
+        .meta-time-block { font-size: 11px; color: #aaa; line-height: 1.4; }
+        .time-label { color: #777; margin-right: 3px; }
+        .time-val { color: #ddd; font-weight: 600; }
+        .time-highlight { color: var(--green); font-weight: 700; }
+
+        .item-list { margin-bottom: 15px; max-height: 300px; overflow-y: auto; padding-right: 5px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
+        .item-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; align-items: flex-start; }
+        .item-name { font-weight: 600; color: #eee; }
+        .item-note { font-size: 11px; color: var(--accent); font-style: italic; display: block; margin-top: 2px; }
+        .item-price { font-weight: 700; color: #fff; }
+        .item-unit-price { font-size: 10px; color: #888; display: block; }
+
+        .duration-box { margin-bottom: 15px; font-size: 12px; color: #aaa; padding: 0 5px; }
+        .dur-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .dur-val { color: #fff; font-weight: 700; }
+        .dur-total-row { border-top: 1px dashed #666; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-size: 13px; }
+        .dur-total-val { color: var(--accent); font-weight: 900; }
+
+        .total-display { text-align: right; font-size: 18px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
+        .status-footer { text-align: center; margin-top: 10px; }
+        .status-text-done { color: var(--green); font-weight: 700; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; }
+        .stamp-rejected { border: 2px solid var(--red); color: var(--red); font-size: 20px; font-weight: 700; display: inline-block; padding: 8px 20px; transform: rotate(-5deg); letter-spacing: 1px; opacity: 0.9; margin-bottom: 10px; text-transform: uppercase; }
+
+        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #444; text-align: center; margin-bottom: 20px; }
+        .stat-val { font-size: 32px; font-weight: 700; color: var(--green); }
+        .filters { margin-bottom: 20px; display: flex; gap: 10px; }
+        .form-input, .form-select { background: #15151a; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; font-family: 'Poppins'; }
+
+        .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .log-table th { text-align: left; padding: 10px; background: #111; color: #888; }
+        .log-table td { padding: 10px; border-bottom: 1px solid #333; }
+        .log-time { color: var(--accent); font-weight: 700; font-size: 11px; }
+
+        /* STYLE BARU UNTUK PEGAWAI */
         .emp-form { background: var(--card-bg); padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #444; }
         .emp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .emp-table th { text-align: left; padding: 10px; background: #222; color: #888; }
@@ -32,287 +73,336 @@
         .btn-add { background: var(--green); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-del { background: var(--red); color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 10px; }
 
-        /* History Cards (Gaya Asli) */
-        .history-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
-        .order-card { background: var(--card-bg); border-radius: 10px; padding: 15px; border-left: 5px solid #555; font-size: 13px; }
-        .order-card.status-completed { border-left-color: var(--green); }
-        .order-card.status-rejected { border-left-color: var(--red); opacity: 0.7; }
-        .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px dashed #444; padding-bottom: 5px; }
-        
-        /* Logs Table */
-        .logs-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        .logs-table th { text-align: left; padding: 10px; background: #222; color: #888; }
-        .logs-table td { padding: 10px; border-bottom: 1px solid #333; }
-
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            .sidebar { width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 5px; }
+            .sidebar { width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 5px; border-right: none; border-top: 1px solid #333; }
             .brand { display: none; }
-            .menu-item { font-size: 10px; padding: 5px; text-align: center; justify-content: center; }
+            .menu-item { flex-direction: column; font-size: 10px; gap: 2px; padding: 5px; background: transparent !important; flex: 1; justify-content: center; }
+            .main { padding-bottom: 80px; }
         }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="brand">SBS ADMIN</div>
-        <div class="menu-item active" onclick="showPage('finance')">💰 Keuangan</div>
-        <div class="menu-item" onclick="showPage('employees')">👥 Pegawai</div>
-        <div class="menu-item" onclick="showPage('history')">📜 Riwayat</div>
-        <div class="menu-item" onclick="showPage('logs')">⚠️ Logs</div>
+        <div class="brand">SBS OWNER</div>
+        <div class="menu-item active" onclick="showPage('finance')"><span class="menu-icon">腸</span><span>Keuangan</span></div>
+        <div class="menu-item" onclick="showPage('employees')"><span class="menu-icon">👥</span><span>Pegawai</span></div>
+        <div class="menu-item" onclick="showPage('logs')"><span class="menu-icon">搭</span><span>Audit Log Stok</span></div>
+        <div class="menu-item" onclick="showPage('history')"><span class="menu-icon">糖</span><span>Riwayat Pesanan</span></div>
     </div>
 
-    <div class="main">
-        <div id="finance-page">
-            <h2 class="page-title">LAPORAN KEUANGAN</h2>
-            
-            <div class="filters">
-                <select id="finance-mode" class="form-select" onchange="toggleFinanceFilter()">
-                    <option value="daily">Harian</option>
-                    <option value="monthly">Bulanan</option>
+    <div class="main" id="finance-page">
+        <h2 class="page-title">LAPORAN OMZET</h2>
+        
+        <div class="filters">
+            <select id="finance-mode" class="form-select" onchange="toggleFinanceFilter()">
+                <option value="daily">Harian</option>
+                <option value="monthly">Bulanan</option>
+            </select>
+            <input type="date" id="finance-date" class="form-input" onchange="calculateFinance()">
+            <input type="month" id="finance-month" class="form-input" style="display:none;" onchange="calculateFinance()">
+        </div>
+
+        <div id="tax-control-container" style="background:#2b2b36; padding:15px; border-radius:10px; border:1px solid #444; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:14px; font-weight:bold; color:#ccc;">STATUS PAJAK (PPN)</div>
+            <div id="tax-ui-area">Loading...</div>
+        </div>
+
+        <div class="stat-card">
+            <div style="font-size:12px; color:#aaa; margin-bottom:5px;">TOTAL PENDAPATAN</div>
+            <div class="stat-val" id="main-stat-rev">Rp 0</div>
+        </div>
+    </div>
+
+    <div class="main" id="employees-page" style="display:none;">
+        <h2 class="page-title">MANAJEMEN PEGAWAI</h2>
+        <div class="emp-form">
+            <h4 style="margin-top:0; color:#aaa;">Tambah Pegawai Baru</h4>
+            <div style="display:grid; gap:10px; grid-template-columns: 2fr 1fr auto;">
+                <input type="text" id="emp-name" class="form-input" placeholder="Nama Lengkap">
+                <select id="emp-role" class="form-select">
+                    <option value="Kasir">Kasir</option>
+                    <option value="Dapur">Dapur</option>
+                    <option value="Server">Server</option>
+                    <option value="Admin">Admin</option>
                 </select>
-                <input type="date" id="finance-date" class="form-input" onchange="calculateFinance()">
-                <input type="month" id="finance-month" class="form-input" style="display:none;" onchange="calculateFinance()">
-            </div>
-
-            <div class="stat-card">
-                <div style="font-size:12px; color:#aaa;">TOTAL PENDAPATAN (OMZET)</div>
-                <div id="main-stat-rev" style="font-size:36px; color:var(--green); font-weight:bold;">Rp 0</div>
+                <button class="btn-add" onclick="addEmployee()">SIMPAN</button>
             </div>
         </div>
-
-        <div id="employees-page" style="display:none;">
-            <h2 class="page-title">MANAJEMEN PEGAWAI</h2>
-            
-            <div class="emp-form">
-                <h4 style="margin-top:0; color:#aaa;">Tambah Pegawai Baru</h4>
-                <div style="display:grid; gap:10px; grid-template-columns: 2fr 1fr auto;">
-                    <input type="text" id="emp-name" class="form-input" placeholder="Nama Lengkap">
-                    <select id="emp-role" class="form-select">
-                        <option value="Kasir">Kasir</option>
-                        <option value="Dapur">Dapur</option>
-                        <option value="Server">Server</option>
-                        <option value="Admin">Admin</option>
-                    </select>
-                    <button class="btn-add" onclick="addEmployee()">SIMPAN</button>
-                </div>
-            </div>
-
-            <table class="emp-table">
-                <thead><tr><th>Nama</th><th>Jabatan</th><th>Aksi</th></tr></thead>
-                <tbody id="emp-list"></tbody>
-            </table>
-        </div>
-
-        <div id="history-page" style="display:none;">
-            <h2 class="page-title">RIWAYAT PESANAN</h2>
-            <div style="margin-bottom:15px;">
-                <input type="date" id="history-date-picker" class="form-input" onchange="renderHistory()">
-            </div>
-            <div id="history-grid" class="history-grid"></div>
-        </div>
-
-        <div id="logs-page" style="display:none;">
-            <h2 class="page-title">ACTIVITY LOGS</h2>
-            <table class="logs-table">
-                <thead><tr><th>Waktu</th><th>Aktivitas</th></tr></thead>
-                <tbody id="logs-tbody"></tbody>
-            </table>
-        </div>
+        <table class="emp-table">
+            <thead><tr><th>Nama</th><th>Jabatan</th><th>Aksi</th></tr></thead>
+            <tbody id="emp-list"></tbody>
+        </table>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
-            authDomain: "sbs-menu-d1611.firebaseapp.com",
-            databaseURL: "https://sbs-menu-d1611-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "sbs-menu-d1611",
-            storageBucket: "sbs-menu-d1611.firebasestorage.app",
-            messagingSenderId: "530098727952",
-            appId: "1:530098727952:web:1bb3072d93be9564fbee95"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        let dbOrders = [];
-        let taxEnabled = false;
+    <div class="main" id="logs-page" style="display: none;">
+        <h2 class="page-title">LOG AKTIVITAS STOK</h2>
+        <table class="log-table">
+            <thead><tr><th width="120">Waktu</th><th>Aktivitas</th></tr></thead>
+            <tbody id="logs-tbody"></tbody>
+        </table>
+    </div>
 
-        // LOAD SETTING PAJAK
-        db.ref('settings/tax_enabled').on('value', (snap) => {
-            taxEnabled = snap.val() || false;
-            updateTaxButtonUI();
-            calculateFinance(); 
-        });
+    <div class="main" id="history-page" style="display: none;">
+        <h2 class="page-title">RIWAYAT PESANAN</h2>
+        <div class="filters">
+            <input type="date" id="history-date-picker" class="form-input" onchange="renderHistory()">
+        </div>
+        <div id="history-grid" class="orders-grid"></div>
+    </div>
 
-        // INIT DATES
-        document.getElementById('finance-date').valueAsDate = new Date();
-        document.getElementById('history-date-picker').valueAsDate = new Date();
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
-        // LOAD ORDERS
-        db.ref('orders').on('value', s => {
-            dbOrders = []; if(s.val()) Object.keys(s.val()).forEach(k=>dbOrders.push({id:k,...s.val()[k]}));
-            calculateFinance(); renderHistory();
-        });
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBSp5184dVTy-EER2qOfxeEA9KQOCMFpKo",
+        authDomain: "sbs-menu-d1611.firebaseapp.com",
+        databaseURL: "https://sbs-menu-d1611-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "sbs-menu-d1611",
+        storageBucket: "sbs-menu-d1611.firebasestorage.app",
+        messagingSenderId: "530098727952",
+        appId: "1:530098727952:web:1bb3072d93be9564fbee95"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let dbOrders = [];
+    let taxEnabled = false;
 
-        // LOAD EMPLOYEES (BARU)
-        db.ref('employees').on('value', s => {
-            const list = document.getElementById('emp-list');
-            list.innerHTML = '';
-            if(s.val()){
-                Object.keys(s.val()).forEach(key => {
-                    const emp = s.val()[key];
-                    list.innerHTML += `
-                        <tr>
-                            <td>${emp.name}</td>
-                            <td><span style="background:#444; padding:2px 6px; border-radius:4px; font-size:10px;">${emp.role}</span></td>
-                            <td><button class="btn-del" onclick="delEmployee('${key}')">Hapus</button></td>
-                        </tr>
-                    `;
-                });
-            } else {
-                list.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#666;">Belum ada data pegawai</td></tr>';
-            }
-        });
+    // --- LOGIC PAJAK ---
+    db.ref('settings/tax_enabled').on('value', (snap) => {
+        taxEnabled = snap.val() || false;
+        renderTaxUI();
+        calculateFinance(); 
+    });
 
-        function addEmployee() {
-            const name = document.getElementById('emp-name').value;
-            const role = document.getElementById('emp-role').value;
-            if(!name) return alert("Nama tidak boleh kosong!");
-            db.ref('employees').push({name, role});
-            document.getElementById('emp-name').value = '';
-        }
+    function toggleTaxSetting() {
+        const newState = !taxEnabled;
+        db.ref('settings/tax_enabled').set(newState);
+    }
 
-        function delEmployee(key) {
-            if(confirm("Hapus pegawai ini?")) db.ref('employees/'+key).remove();
-        }
+    function renderTaxUI() {
+        const area = document.getElementById('tax-ui-area');
+        const statusText = taxEnabled ? '<span style="color:#2ecc71; font-weight:bold; margin-right:10px;">AKTIF (10%)</span>' : '<span style="color:#e74c3c; font-weight:bold; margin-right:10px;">NON-AKTIF</span>';
+        const btnColor = taxEnabled ? '#e74c3c' : '#2ecc71';
+        const btnText = taxEnabled ? 'Matikan Pajak' : 'Hidupkan Pajak';
+        area.innerHTML = `${statusText}<button onclick="toggleTaxSetting()" style="background:${btnColor}; border:none; padding:8px 15px; border-radius:5px; color:#fff; font-weight:bold; cursor:pointer;">${btnText}</button>`;
+    }
 
-        // LOAD LOGS
-        db.ref('activity_logs').limitToLast(50).on('value', snap => {
-            const tbody = document.getElementById('logs-tbody');
-            tbody.innerHTML = '';
-            const logs = [];
-            if(snap.val()) Object.keys(snap.val()).forEach(k => logs.push(snap.val()[k]));
-            logs.sort((a,b) => b.timestamp - a.timestamp);
-            logs.forEach(log => {
-                tbody.innerHTML += `<tr><td><div class="log-time">${log.timeString || '-'}</div></td><td><b>${log.action}</b><br><small>${log.details}</small></td></tr>`;
+    document.getElementById('finance-date').valueAsDate = new Date();
+    document.getElementById('history-date-picker').valueAsDate = new Date();
+
+    db.ref('orders').on('value', s => {
+        dbOrders = []; if(s.val()) Object.keys(s.val()).forEach(k=>dbOrders.push({id:k,...s.val()[k]}));
+        calculateFinance(); renderHistory();
+    });
+
+    // --- LOGIC PEGAWAI ---
+    db.ref('employees').on('value', s => {
+        const list = document.getElementById('emp-list');
+        list.innerHTML = '';
+        if(s.val()){
+            Object.keys(s.val()).forEach(key => {
+                const emp = s.val()[key];
+                list.innerHTML += `<tr><td>${emp.name}</td><td><span style="background:#444; padding:2px 6px; border-radius:4px; font-size:10px;">${emp.role}</span></td><td><button class="btn-del" onclick="delEmployee('${key}')">Hapus</button></td></tr>`;
             });
+        } else {
+            list.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#666;">Belum ada pegawai</td></tr>';
+        }
+    });
+
+    function addEmployee() {
+        const name = document.getElementById('emp-name').value;
+        const role = document.getElementById('emp-role').value;
+        if(!name) return alert("Nama wajib diisi");
+        db.ref('employees').push({name, role});
+        document.getElementById('emp-name').value = '';
+    }
+
+    function delEmployee(key) {
+        if(confirm("Hapus pegawai ini?")) db.ref('employees/'+key).remove();
+    }
+
+    db.ref('activity_logs').limitToLast(50).on('value', snap => {
+        const tbody = document.getElementById('logs-tbody');
+        tbody.innerHTML = '';
+        const logs = [];
+        if(snap.val()) Object.keys(snap.val()).forEach(k => logs.push(snap.val()[k]));
+        logs.sort((a,b) => b.timestamp - a.timestamp);
+        logs.forEach(log => {
+            tbody.innerHTML += `<tr><td><div class="log-time">${log.timeString || '-'}</div></td><td><b>${log.action}</b><br><small>${log.details}</small></td></tr>`;
         });
+    });
 
-        // UI KONTROL PAJAK
-        function toggleTaxSetting() {
-            const newState = !taxEnabled;
-            db.ref('settings/tax_enabled').set(newState).then(() => alert(newState ? "Pajak 10% DIAKTIFKAN" : "Pajak 10% DINONAKTIFKAN"));
+    function fmtDur(ms) {
+        if (!ms || ms < 0) return "-";
+        const s = Math.floor(ms / 1000);
+        const m = Math.floor(s / 60);
+        const rs = s % 60;
+        return `${m}m ${rs}s`;
+    }
+
+    function createHistoryCard(order) {
+        let displayName = "Pelanggan";
+        if (order.tableNumber) {
+            displayName = "MEJA " + order.tableNumber;
+            if (order.customerName) displayName += " - " + order.customerName.toUpperCase();
+        } else if (order.customer) {
+            if(!isNaN(order.customer)) displayName = "MEJA " + order.customer;
+            else displayName = order.customer;
         }
+        
+        const t1 = new Date(order.timestamp).getTime(); 
+        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; 
+        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; 
+        const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
 
-        function updateTaxButtonUI() {
-            let container = document.getElementById('tax-control-container');
-            if (!container) {
-                const page = document.getElementById('finance-page');
-                container = document.createElement('div');
-                container.id = 'tax-control-container';
-                container.style.cssText = 'margin-bottom:20px; padding:15px; background:#2b2b36; border-radius:10px; border:1px solid #444; display:flex; justify-content:space-between; align-items:center;';
-                const filters = page.querySelector('.filters');
-                filters.parentNode.insertBefore(container, filters.nextSibling);
-            }
-            const statusText = taxEnabled ? '<span style="color:#2ecc71; font-weight:bold;">AKTIF (10%)</span>' : '<span style="color:#e74c3c; font-weight:bold;">NON-AKTIF</span>';
-            const btnColor = taxEnabled ? '#e74c3c' : '#2ecc71';
-            const btnText = taxEnabled ? 'Matikan Pajak' : 'Hidupkan Pajak';
-            
-            container.innerHTML = `<div style="font-size:14px; font-weight:bold; color:#ccc;">STATUS PAJAK (PPN)</div><div style="display:flex; align-items:center; gap:15px;">${statusText}<button onclick="toggleTaxSetting()" style="background:${btnColor}; border:none; padding:8px 15px; border-radius:5px; color:#fff; font-weight:bold; cursor:pointer;">${btnText}</button></div>`;
-        }
-
-        // FINANCE FUNCTIONS
-        function calculateFinance() {
-            const mode = document.getElementById('finance-mode').value;
-            let totalRev = 0;
-            let targetDate, targetMonth;
-            if (mode === 'daily') targetDate = new Date(document.getElementById('finance-date').value);
-            else { const val = document.getElementById('finance-month').value; if(val) targetMonth = val; }
-
-            dbOrders.forEach(o => {
-                if (o.status !== 'completed' && o.status !== 'done') return;
-                const oDate = new Date(o.completedAt || o.timestamp);
-                let match = false;
-                if (mode === 'daily' && targetDate && oDate.toDateString() === targetDate.toDateString()) match = true;
-                if (mode === 'monthly' && targetMonth && oDate.toISOString().slice(0,7) === targetMonth) match = true;
-                
-                if(match) {
-                    let val = 0;
-                    if(o.finalData && o.finalData.finalTotal) val = o.finalData.finalTotal;
-                    else { let raw = String(o.total).replace(/[^0-9]/g, ''); val = Number(raw) || 0; }
-                    totalRev += val;
-                }
-            });
-            document.getElementById('main-stat-rev').innerText = "Rp " + totalRev.toLocaleString('id-ID');
-        }
-
-        function toggleFinanceFilter() {
-            const m = document.getElementById('finance-mode').value;
-            document.getElementById('finance-date').style.display = m === 'daily' ? 'block' : 'none';
-            document.getElementById('finance-month').style.display = m === 'monthly' ? 'block' : 'none';
-            calculateFinance();
-        }
-
-        function renderHistory() {
-            const grid = document.getElementById('history-grid');
-            grid.innerHTML = '';
-            const filterDate = new Date(document.getElementById('history-date-picker').value).toDateString();
-            const sorted = [...dbOrders].sort((a,b) => (b.completedAt ? new Date(b.completedAt) : 0) - (a.completedAt ? new Date(a.completedAt) : 0));
-            sorted.forEach(order => {
-                if (['completed', 'rejected', 'done'].includes(order.status)) {
-                    if (new Date(order.completedAt || order.timestamp).toDateString() === filterDate) {
-                        grid.appendChild(createHistoryCard(order));
-                    }
-                }
-            });
-        }
-
-        function createHistoryCard(order) {
-            let displayName = order.tableNumber ? ("MEJA " + order.tableNumber + (order.customerName ? " - " + order.customerName.toUpperCase() : "")) : order.customer || "Pelanggan";
-            const t1 = new Date(order.timestamp).getTime(); 
-            const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
-            
-            let itemsHtml = (order.items || []).map(item => {
-                const qty = parseInt(item.qty); const price = parseInt(item.price);
-                return `<div class="item-row"><div style="flex:1;"><span style="color:#fff;">${qty}x ${item.name}</span></div><div style="text-align:right;"><span style="color:#aaa;">${(qty * price).toLocaleString()}</span></div></div>`;
-            }).join('');
-
-            const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday:'short', day:'numeric', month:'short'});
-            const timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) : '-';
-            
-            let totalVal = 0;
-            if (order.finalData) totalVal = order.finalData.finalTotal;
-            else { totalVal = Number(String(order.total).replace(/[^0-9]/g, '')) || 0; }
-
-            const div = document.createElement('div');
-            div.className = `order-card status-${order.status}`;
-            div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #444; padding-bottom:5px;">
-                    <div><span style="font-weight:bold; color:var(--accent);">${displayName}</span><br><small style="color:#666;">ID: ...${order.id.slice(-4)}</small></div>
-                    <div style="text-align:right;"><small>${dateStr}</small><br><strong style="color:#fff;">${timeOut}</strong></div>
+        const div = document.createElement('div');
+        div.className = `order-card status-${order.status}`;
+        
+        let itemsHtml = (order.items || []).map(item => {
+            const qty = parseInt(item.qty);
+            const price = parseInt(item.price);
+            const subtotal = qty * price;
+            const unitPriceHtml = qty > 1 ? `<span class="item-unit-price">(${qty} x ${price.toLocaleString()})</span>` : '';
+            return `
+            <div class="item-row">
+                <div style="flex:1;">
+                    <span class="item-name">${qty}x ${item.name}</span>
+                    ${unitPriceHtml}
+                    ${item.note ? `<span class="item-note">📝 ${item.note}</span>` : ''}
                 </div>
-                <div class="item-list">${itemsHtml}</div>
-                <div style="text-align:right; font-size:16px; font-weight:bold; color:#fff; margin-top:5px;">Rp ${totalVal.toLocaleString()}</div>
-                <div style="text-align:center; margin-top:10px; color:${order.status==='rejected'?'var(--red)':'var(--green)'}; font-weight:bold;">${order.status==='rejected'?'DITOLAK':'SELESAI'}</div>
-            `;
-            return div;
+                <div style="text-align:right;">
+                    <span class="item-price">${subtotal.toLocaleString()}</span>
+                </div>
+            </div>`;
+        }).join('');
+
+        const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday: 'short', day: 'numeric', month: 'short'});
+        const timeIn = new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false});
+        let timeOut = t4 > 0 ? new Date(t4).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12: false}) : '-';
+
+        let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
+        if (order.status === 'completed') {
+            if (order.paymentMethod === 'qris') {
+                if(t2 && t1) durPesan = t2 - t1;
+                if(t3 && t2) durRespon = t3 - t2;
+                if(t4 && t3) durMasak = t4 - t3;
+            } else {
+                if(t3 && t1) durPesan = t3 - t1;
+                durRespon = 0; 
+                if(t4 && t3) durMasak = t4 - t3;
+            }
+            if(t4 && t1) durTotal = t4 - t1;
         }
 
-        function showPage(p) {
-            document.querySelectorAll('.main > div').forEach(e=>e.style.display='none');
-            document.getElementById(p+'-page').style.display='block';
-            document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active'));
+        let kpiHtml = '';
+        if (order.status === 'completed') {
+            const responColor = durRespon > 180000 ? '#e74c3c' : '#fff';
+            kpiHtml = `
+            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #555; font-size:11px;">
+                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Pesan - Bayar (Cust):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durPesan)}</span>
+                </div>
+                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor}; font-weight:600;">${fmtDur(durRespon)}</span>
+                </div>
+                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Masak (Dapur):</span> <span style="color:#ddd; font-weight:600;">${fmtDur(durMasak)}</span>
+                </div>
+                <div class="dur-total-row" style="margin-top:6px; padding-top:6px; border-top:1px solid #444; display:flex; justify-content:space-between; font-size:12px; font-weight:700;">
+                    <span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:var(--accent);">${fmtDur(durTotal)}</span>
+                </div>
+            </div>`;
+        }
+
+        let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
+        
+        let totalVal = 0;
+        if (order.finalData) totalVal = order.finalData.finalTotal;
+        else { totalVal = Number(String(order.total).replace(/[^0-9]/g, '')) || 0; }
+
+        div.innerHTML = `
+            <div class="card-header">
+                <div class="header-left">
+                    <span class="cust-name">${displayName}</span>
+                    <span class="order-id">ID: ...${order.id.slice(-4)}</span>
+                </div>
+                <div class="header-right">
+                    <span class="meta-date">${dateStr}</span>
+                    <div class="meta-time-block">
+                        <span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span><br>
+                        <span class="time-label">Selesai:</span> <span class="time-highlight">${timeOut}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="item-list">${itemsHtml}</div>
+            <div class="total-display" style="margin-bottom:5px;">Total: Rp ${totalVal.toLocaleString()}</div>
+            ${kpiHtml}
+            ${statusFooter}
+        `;
+        return div;
+    }
+
+    function showPage(p) {
+        document.querySelectorAll('.main').forEach(e=>e.style.display='none');
+        document.getElementById(p+'-page').style.display='block';
+        document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active'));
+        
+        const menus = document.querySelectorAll('.menu-item');
+        if(p==='finance') menus[0].classList.add('active');
+        else if(p==='employees') menus[1].classList.add('active');
+        else if(p==='logs') menus[2].classList.add('active');
+        else if(p==='history') menus[3].classList.add('active');
+
+        if(p==='finance') calculateFinance();
+    }
+
+    function calculateFinance() {
+        const mode = document.getElementById('finance-mode').value;
+        let totalRev = 0;
+        let targetDate, targetMonth;
+        if (mode === 'daily') targetDate = new Date(document.getElementById('finance-date').value);
+        else { const val = document.getElementById('finance-month').value; if(val) targetMonth = val; }
+
+        dbOrders.forEach(o => {
+            if (o.status !== 'completed' && o.status !== 'done') return;
+            const oDate = new Date(o.completedAt || o.timestamp);
+            let match = false;
+            if (mode === 'daily' && targetDate && oDate.toDateString() === targetDate.toDateString()) match = true;
+            if (mode === 'monthly' && targetMonth && oDate.toISOString().slice(0,7) === targetMonth) match = true;
             
-            // Re-index active menu class
-            const menus = document.querySelectorAll('.menu-item');
-            if(p==='finance') menus[0].classList.add('active');
-            else if(p==='employees') menus[1].classList.add('active');
-            else if(p==='history') menus[2].classList.add('active');
-            else if(p==='logs') menus[3].classList.add('active');
+            if(match) {
+                let val = 0;
+                if(o.finalData && o.finalData.finalTotal) val = o.finalData.finalTotal;
+                else { let raw = String(o.total).replace(/[^0-9]/g, ''); val = Number(raw) || 0; }
+                totalRev += val;
+            }
+        });
+        document.getElementById('main-stat-rev').innerText = "Rp " + totalRev.toLocaleString('id-ID');
+    }
 
-            if(p==='finance') calculateFinance();
-        }
-    </script>
+    function toggleFinanceFilter() {
+        const m = document.getElementById('finance-mode').value;
+        document.getElementById('finance-date').style.display = m === 'daily' ? 'block' : 'none';
+        document.getElementById('finance-month').style.display = m === 'monthly' ? 'block' : 'none';
+        calculateFinance();
+    }
+
+    function renderHistory() {
+        const grid = document.getElementById('history-grid');
+        grid.innerHTML = '';
+        const filterDate = new Date(document.getElementById('history-date-picker').value).toDateString();
+        const sorted = [...dbOrders].sort((a,b) => (b.completedAt ? new Date(b.completedAt) : 0) - (a.completedAt ? new Date(a.completedAt) : 0));
+        sorted.forEach(order => {
+            if (['completed', 'rejected', 'done'].includes(order.status)) {
+                if (new Date(order.completedAt || order.timestamp).toDateString() === filterDate) {
+                    grid.appendChild(createHistoryCard(order));
+                }
+            }
+        });
+    }
+</script>
 </body>
 </html>
