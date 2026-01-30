@@ -243,9 +243,6 @@
         renderOrders(); 
     });
 
-    // IDENTITAS KASIR LOCAL
-    let localCashierName = localStorage.getItem('sbs_cashier_name'); 
-
     const soundNew = document.getElementById('sound-new');
     const soundNag = document.getElementById('sound-nag');
     const btnAudio = document.getElementById('btn-audio');
@@ -387,7 +384,7 @@
         return (index + 1).toString().padStart(2, '0');
     }
 
-    // --- KALKULASI & LIVE UPDATE ---
+    // --- KALKULASI ---
     function calculateTotals(order, overrideDisc = null) {
         let subtotal = 0;
         if (order.items) {
@@ -430,9 +427,12 @@
         return leftStr + " ".repeat(space) + rightStr;
     }
 
-    // --- FUNGSI PILIH KASIR (TOMBOL) ---
+    // --- FUNGSI PILIH KASIR (FIXED: SAVE TO MEMORY) ---
     function selectCashier(orderId, name) {
+        // 1. Update Input Hidden agar terbaca saat Print/Proses
         document.getElementById(`selected-cashier-${orderId}`).value = name;
+        
+        // 2. Update Visual Tombol
         const container = document.getElementById(`cashier-btn-container-${orderId}`);
         const buttons = container.getElementsByClassName('btn-cashier-select');
         for (let btn of buttons) {
@@ -448,6 +448,10 @@
                 btn.style.fontWeight = 'normal';
             }
         }
+
+        // 3. SIMPAN KE MEMORI (KUNCI PERBAIKAN)
+        // Agar pesanan berikutnya (atau saat refresh) otomatis memilih nama ini
+        localStorage.setItem('sbs_cashier_name', name);
     }
 
     // --- PRINTING ---
@@ -459,12 +463,14 @@
         const currentDisc = inputEl ? (parseInt(inputEl.value) || 0) : (o.discount || 0);
 
         const hiddenCashier = document.getElementById(`selected-cashier-${id}`);
+        
         let selectedCashier = o.cashier; 
         if (!selectedCashier && hiddenCashier && hiddenCashier.value) {
             selectedCashier = hiddenCashier.value; 
         }
+        // Fallback: Ambil dari memory jika di DB belum ada
         if (!selectedCashier) {
-            selectedCashier = localCashierName || 'Staff'; 
+            selectedCashier = localStorage.getItem('sbs_cashier_name') || 'Staff'; 
         }
 
         const q = getDailyQueueNumber(id);
@@ -551,13 +557,15 @@
         const inputEl = document.getElementById(`disc-input-${key}`);
         const discountVal = inputEl ? (parseInt(inputEl.value) || 0) : 0;
         
+        // Ambil nama dari tombol, atau fallback ke memory
         const hiddenCashier = document.getElementById(`selected-cashier-${key}`);
-        const selectedCashier = (hiddenCashier && hiddenCashier.value) ? hiddenCashier.value : (localCashierName || 'Staff');
+        const selectedCashier = (hiddenCashier && hiddenCashier.value) ? hiddenCashier.value : (localStorage.getItem('sbs_cashier_name') || 'Staff');
 
         const currentData = calculateTotals(order, discountVal);
         const card = btn.closest('.order-card');
         if (card) card.classList.add('fade-out');
         
+        // Pastikan memori terupdate
         localStorage.setItem('sbs_cashier_name', selectedCashier);
 
         setTimeout(() => { 
@@ -595,7 +603,6 @@
     }
     
     function confirmReject(key) { 
-        // Ambil nama kasir saat ini dari tombol, atau default
         const hiddenCashier = document.getElementById(`selected-cashier-${key}`);
         const selectedCashier = (hiddenCashier && hiddenCashier.value) ? hiddenCashier.value : (localStorage.getItem('sbs_cashier_name') || 'Staff');
 
@@ -727,8 +734,24 @@
             
             inputsHtml += `<div style="margin-top:10px;"><div style="font-size:12px; color:#aaa; margin-bottom:3px;">PILIH KASIR:</div><div id="cashier-btn-container-${order.id}" style="display:flex; gap:5px; flex-wrap:wrap;">`;
             
-            cashierList.forEach(name => {
-                const isActive = (order.cashier === name) || (localCashierName === name && !order.cashier);
+            // LOGIKA PENTING: BACA MEMORY (localStorage)
+            const memoryCashier = localStorage.getItem('sbs_cashier_name');
+
+            cashierList.forEach((name, index) => {
+                // Tentukan siapa yang aktif:
+                // 1. Jika order sudah punya cashier (di DB) -> Pakai itu
+                // 2. Jika belum, cek Memory -> Pakai itu
+                // 3. Jika memory kosong -> Pakai Index 0 (tombol pertama)
+                let isActive = false;
+                
+                if (order.cashier) {
+                    isActive = (order.cashier === name);
+                } else if (memoryCashier) {
+                    isActive = (memoryCashier === name);
+                } else {
+                    isActive = (index === 0);
+                }
+
                 const bg = isActive ? 'var(--accent)' : '#333';
                 const col = isActive ? '#000' : '#ccc';
                 const border = isActive ? 'var(--accent)' : '#555';
@@ -737,7 +760,9 @@
                 inputsHtml += `<button class="btn-cashier-select" data-name="${name}" onclick="selectCashier('${order.id}', '${name}')" style="background:${bg}; color:${col}; border:1px solid ${border}; padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; flex:1; font-weight:${fw};">${name}</button>`;
             });
             
-            inputsHtml += `</div><input type="hidden" id="selected-cashier-${order.id}" value="${order.cashier || localCashierName || ''}"></div></div>`;
+            // Set value input hidden sesuai logika di atas
+            let defaultVal = order.cashier || memoryCashier || (cashierList.length > 0 ? cashierList[0] : '');
+            inputsHtml += `</div><input type="hidden" id="selected-cashier-${order.id}" value="${defaultVal}"></div></div>`;
 
         } else if (finance.discount > 0) {
              inputsHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin-bottom:5px;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
