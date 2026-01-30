@@ -14,19 +14,6 @@
         .logo-container img { width: 100%; height: auto; }
         .header-title h1 { font-family: 'Bebas Neue', cursive; font-size: 55px; margin: 0; line-height: 0.8; letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff; }
 
-        /* --- TRACKING STATUS BAR (UPDATED) --- */
-        #status-tracker {
-            position: fixed; top: 0; left: 0; width: 100%; 
-            background: var(--sbs-black); color: #fff; padding: 10px; 
-            z-index: 2000; text-align: center; font-size: 14px; 
-            font-weight: bold; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            cursor: pointer; /* Menandakan bisa diklik */
-        }
-        .status-badge { 
-            background: var(--sbs-orange); color: #fff; padding: 3px 10px; 
-            border-radius: 5px; margin-left: 10px; text-transform: uppercase; 
-        }
-        
         /* Search & Tabs */
         .search-wrapper { position: relative; margin-bottom: 20px; z-index: 101; }
         .search-box { width: 100%; box-sizing: border-box; background: #fff; border: 3px solid var(--sbs-black); border-radius: 50px; padding: 12px 20px 12px 45px; font-family: 'Montserrat', sans-serif; font-weight: 700; text-transform: uppercase; outline: none; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); }
@@ -43,215 +30,136 @@
         .search-mode-active .content { display: grid !important; animation: none; }
         .card-hidden, .section-hidden { display: none !important; }
         
-        .menu-card { background: #fff; border: 3px solid var(--sbs-black); border-radius: 25px; overflow: hidden; box-shadow: 10px 10px 0px var(--sbs-black); position: relative; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.1s; }
-        .menu-card:active { transform: scale(0.98); }
+        .menu-card { background: #fff; border: 3px solid var(--sbs-black); border-radius: 25px; overflow: hidden; box-shadow: 8px 8px 0px var(--sbs-black); position: relative; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.1s; }
+        .menu-card:active { transform: scale(0.97); border-color: var(--sbs-orange); }
         .card-img-box { width: 100%; height: auto; aspect-ratio: 1 / 1; position: relative; background: #eee; border-bottom: 3px solid var(--sbs-black); }
         .card-img-box img { width: 100%; height: 100%; object-fit: cover; }
-        .best-rec { border-color: var(--sbs-orange); box-shadow: 10px 10px 0px var(--sbs-orange); }
+        .best-rec { border-color: var(--sbs-orange); box-shadow: 8px 8px 0px var(--sbs-orange); }
 
-        /* --- NEW ADD BUTTON (CART ICON) --- */
-        .add-badge { 
-            position: absolute; bottom: 15px; right: 15px; 
-            background: var(--sbs-orange); color: #fff; 
-            width: 50px; height: 50px; border-radius: 50%; 
-            border: 3px solid var(--sbs-black); 
-            display: flex; align-items: center; justify-content: center; 
-            box-shadow: 3px 3px 0px var(--sbs-black); 
-            transition: 0.2s; z-index: 10;
-            opacity: 0.9; 
+        /* MODIFIKASI CARD INFO (Solusi UX) */
+        .card-info { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+        .card-title { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 16px; text-transform: uppercase; line-height: 1.1; margin-bottom: 2px; }
+        
+        /* Tombol Harga & Add (+) */
+        .price-btn { 
+            background: var(--sbs-black); color: #fff; 
+            padding: 5px 12px; border-radius: 20px; 
+            font-size: 13px; font-weight: 700; 
+            display: flex; align-items: center; gap: 5px;
+            transition: 0.2s; box-shadow: 2px 2px 0px rgba(0,0,0,0.2);
         }
-        .add-badge svg { width: 24px; height: 24px; fill: white; }
-        .menu-card:active .add-badge { transform: scale(1.1); background: var(--sbs-black); opacity: 1; }
+        .price-btn span.plus { color: var(--sbs-yellow); font-size: 16px; font-weight: 900; }
+        .menu-card:active .price-btn { background: var(--sbs-orange); transform: translateY(2px); box-shadow: none; }
+
+        /* HAPUS GAMBAR KERANJANG DI FOTO (Request 1) */
+        .add-badge { display: none !important; }
         
         /* ALCS Style */
         .alcs-card { background: #fff; border: 3px solid var(--sbs-black); box-shadow: 8px 8px 0px var(--sbs-black); border-radius: 20px; padding: 20px; margin-bottom: 0; position: relative; }
         .alcs-brand { font-family: 'Montserrat', sans-serif; font-size: 26px; text-transform: uppercase; font-weight: 900; border-bottom: 3px solid #eee; padding-bottom: 8px; margin-bottom: 15px;}
-        .alcs-row { display: flex; justify-content: space-between; font-size: 16px; border-bottom: 1px dashed #ddd; padding: 5px 0; cursor: pointer;}
-        .alcs-variant { font-weight: 500; }
-        .alcs-price-tag { font-family: 'Montserrat', sans-serif; font-weight: 800; }
+        .alcs-row { display: flex; justify-content: space-between; font-size: 16px; border-bottom: 1px dashed #ddd; padding: 10px 0; cursor: pointer; align-items: center; }
+        .alcs-row:active { background: #f0f0f0; }
+        .alcs-variant { font-weight: 600; color: #444; }
+        .alcs-price-tag { font-family: 'Montserrat', sans-serif; font-weight: 800; background: #eee; padding: 4px 8px; border-radius: 8px; font-size: 12px; }
 
-        /* --- CART FLOATING BAR --- */
-        #cart-bar {
-            position: fixed; bottom: 20px; left: 20px; right: 20px;
-            background: var(--sbs-black); color: #fff;
-            padding: 15px 25px; border-radius: 50px;
-            display: none; justify-content: space-between; align-items: center;
-            box-shadow: 0px 10px 20px rgba(0,0,0,0.5); z-index: 999;
-            font-family: 'Montserrat', sans-serif; cursor: pointer; border: 2px solid #fff;
-            animation: slideUp 0.3s ease-out;
-        }
-        .cart-left { display: flex; flex-direction: column; }
-        .cart-hint { font-size: 10px; color: var(--sbs-yellow); text-transform: uppercase; font-weight: bold; margin-bottom: -2px; }
-        #cart-info { font-weight: bold; font-size: 15px; }
-        .cart-right { text-align: right; }
-        #cart-total { color: #fff; font-size: 16px; font-weight: 900; }
-        .view-btn { font-size: 10px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; margin-top: 2px; display: inline-block; }
-
-        /* --- MODAL ORDER & SUCCESS --- */
-       /* --- MODAL FIX (SCROLL & POSISI) --- */
-        body.noscroll { overflow: hidden; } /* Pengunci Scroll Background */
-        
-        .modal { 
-            display: none; position: fixed; z-index: 9999; 
-            left: 0; top: 0; width: 100%; height: 100%; 
-            background-color: rgba(0,0,0,0.85); 
-            backdrop-filter: blur(3px); /* Efek blur biar fokus */
-            align-items: center; justify-content: center; /* Wajib Flexbox biar tengah */
-            overscroll-behavior: contain;
-        }
-        .modal-content { 
-            background-color: #fff; width: 90%; max-width: 400px; 
-            border-radius: 20px; padding: 25px; 
-            border: 4px solid var(--sbs-black); 
-            max-height: 85vh; overflow-y: auto; position: relative; 
-        }
-
-        /* --- PILIHAN PEMBAYARAN (MODEL TOMBOL) --- */
-        .payment-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
-        .p-option { cursor: pointer; position: relative; }
-        .p-option input { display: none; } /* Sembunyikan radio asli */
-        /* UPDATE: Tombol Pembayaran Lebih Kecil */
-        .p-label {
-            display: flex; flex-direction: row; /* Icon sebelah teks (Horizontal) */
-            align-items: center; justify-content: center; gap: 8px;
-            padding: 10px; border: 2px solid var(--sbs-black); border-radius: 10px;
-            font-weight: bold; font-size: 12px; color: #666; transition: 0.2s;
-            text-align: center; height: auto; background: #fff;
-        }
-        .p-label span { font-size: 18px; margin: 0; display: block; } /* Icon ukurannya pas */
-        
-        /* Pastikan input HP tidak tertutup */
-        #cart-modal .modal-content { padding-bottom: 20px; }
-        /* Efek saat dipilih */
-        .p-option input:checked + .p-label {
-            border-color: var(--sbs-orange);
-            background-color: #fff8f0;
-            color: var(--sbs-orange);
-            box-shadow: 0 4px 10px rgba(255, 102, 0, 0.2);
-        }
-        
-        .cart-item { margin-bottom: 15px; border-bottom: 1px dashed #ddd; padding-bottom: 10px; }
-        .item-main { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; }
-        .item-note-input { width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 8px; margin-top: 8px; font-size: 12px; font-family: 'Poppins'; outline: none; box-sizing: border-box; }
-        .item-note-input:focus { border-color: var(--sbs-orange); background: #fffdf9; }
-        
-        .cart-actions button { background: #ddd; border: none; padding: 2px 8px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-left: 5px;}
-        
-        .total-row { display: flex; justify-content: space-between; margin-top: 20px; font-weight: bold; font-size: 18px; border-top: 2px solid var(--sbs-black); padding-top: 10px; }
-        
-        /* NEW FORM STYLES */
-        .input-group { margin-top: 15px; }
-        .input-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #666; }
-        .input-group input, .input-group select { width: 100%; padding: 10px; border: 2px solid var(--sbs-black); border-radius: 10px; box-sizing: border-box; font-family: 'Poppins'; font-size: 14px; background: #fff; }
-        .input-group input:focus, .input-group select:focus { border-color: var(--sbs-orange); outline: none; background: #fffdf9; }
-        
-        .btn-order { background: var(--sbs-orange); color: #fff; border: 3px solid var(--sbs-black); width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; margin-top: 20px; cursor: pointer; font-size: 16px; }
-        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; font-weight: bold; }
-
-        /* Success Message */
-        #success-modal .modal-content { text-align: center; border-color: #28a745; }
-        .success-icon { font-size: 60px; color: #28a745; margin-bottom: 15px; }
-        .success-msg { font-size: 16px; line-height: 1.6; color: #444; margin-bottom: 20px; }
-        .btn-close-final { background: var(--sbs-black); color: #fff; padding: 12px 30px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; width: 100%; }
-
-        /* --- HISTORY MODAL (NEW) --- */
-        .history-card { border: 2px solid #eee; border-radius: 10px; padding: 10px; margin-bottom: 10px; background: #f9f9f9; }
-        .history-header { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; color: #666; margin-bottom: 5px; }
-        .history-status { font-size: 14px; font-weight: 900; color: var(--sbs-black); text-transform: uppercase; }
-        .history-items { font-size: 13px; margin-top: 5px; border-top: 1px dashed #ddd; padding-top: 5px; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideUp { from { transform: translateY(100px); } to { transform: translateY(0); } }
-
-        /* --- UI BARU: FLOATING BUTTONS (REVISI) --- */
-/* Sembunyikan elemen lama */
-#status-tracker, #cart-bar { display: none !important; }
-
+        /* --- UI FLOATING BUTTONS (REVISI POSISI - Request 2) --- */
         .floating-container {
-            position: absolute; /* Agar ikut scroll & tidak menutupi search bar terus */
-            top: 10px; 
-            right: 15px; 
-            z-index: 200; /* Di atas elemen lain tapi di bawah modal */
+            position: fixed; 
+            bottom: 30px; /* Jarak dari bawah diperbesar */
+            right: 25px;  /* Jarak dari kanan diperbesar (tidak mepet) */
+            z-index: 200; 
             display: flex; 
-            flex-direction: column; /* Susunan Vertikal */
-            gap: 8px; /* Jarak antar tombol */
+            flex-direction: column-reverse; /* Cart paling bawah (utama) */
+            gap: 15px; 
             align-items: center;
         }
 
-        /* Base Button */
         .fab-btn {
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             cursor: pointer; position: relative;
             transition: transform 0.1s;
-            border: 2px solid var(--sbs-black);
+            border: 3px solid var(--sbs-black);
         }
         .fab-btn:active { transform: scale(0.90); }
 
-        /* 1. KERANJANG (POSISI ATAS - UTAMA) */
+        /* Cart Button (Besar) */
         .fab-cart { 
-            width: 42px; height: 42px; /* Ukuran Pas (Tidak terlalu besar) */
+            width: 60px; height: 60px; 
             background: var(--sbs-yellow);
-            order: 1; /* Pastikan di urutan pertama (Atas) */
-            z-index: 2;
         }
-        .fab-cart.has-items { background: var(--sbs-orange); border-color: #fff; }
-        .fab-cart svg { width: 20px; height: 20px; fill: var(--sbs-black); }
+        .fab-cart.has-items { background: var(--sbs-orange); border-color: #fff; animation: bounce 0.3s; }
+        .fab-cart svg { width: 28px; height: 28px; fill: var(--sbs-black); }
         .fab-cart.has-items svg { fill: #fff; }
 
-        /* 2. RIWAYAT (POSISI BAWAH - MINI) */
+        /* History Button (Kecil) */
         .fab-history { 
-            width: 32px; height: 32px; /* Lebih kecil */
+            width: 45px; height: 45px; 
             background: #fff; 
-            display: none; /* Muncul via JS */
-            order: 2; /* Di urutan kedua (Bawah) */
-            border-width: 1px;
+            display: none; 
         }
-        .fab-history svg { width: 16px; height: 16px; fill: #555; }
-        
+        .fab-history svg { width: 22px; height: 22px; fill: #555; }
         .fab-history.active-order { background: #2ecc71; border-color: #fff; }
         .fab-history.active-order svg { fill: #fff; }
 
-        /* Badge Counter */
         .fab-badge {
-            position: absolute; top: -5px; right: -5px;
-            background-color: #ff0000 !important; color: #fff !important;
-            font-size: 10px; font-weight: 900;
-            min-width: 16px; height: 16px; padding: 2px;
+            position: absolute; top: -2px; right: -2px;
+            background-color: red; color: #fff;
+            font-size: 11px; font-weight: 900;
+            min-width: 20px; height: 20px; padding: 2px;
             border-radius: 50%; border: 2px solid #fff;
             display: flex; align-items: center; justify-content: center;
             opacity: 0; transform: scale(0); transition: 0.2s;
         }
         .fab-badge.show { opacity: 1; transform: scale(1); }
 
-        /* FIX SCROLL LOCK */
-        body.noscroll { overflow: hidden !important; height: 100vh; }
+        @keyframes bounce { 0%, 100% {transform: scale(1);} 50% {transform: scale(1.1);} }
 
-/* --- PENTING: PERBAIKAN POPUP (MODAL) --- */
-/* Ini memaksa popup muncul DI DEPAN tombol floating */
-.modal { 
-    z-index: 9999 !important; 
-    backdrop-filter: blur(2px); /* Efek blur di belakang popup agar fokus */
-}
+        /* --- MODAL --- */
+        body.noscroll { overflow: hidden; }
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
+        .modal-content { background-color: #fff; width: 90%; max-width: 400px; border-radius: 20px; padding: 25px; border: 4px solid var(--sbs-black); max-height: 85vh; overflow-y: auto; position: relative; }
 
-/* Style tambahan riwayat */
-.history-section-title {
-    font-size: 14px; font-weight: 900; color: var(--sbs-black);
-    margin: 15px 0 10px 0; border-bottom: 2px solid var(--sbs-yellow);
-    display: inline-block; padding-bottom: 2px;
-}
-.btn-clear-history {
-    background: transparent; color: #888; border: 1px solid #ccc;
-    font-size: 11px; padding: 5px 10px; border-radius: 20px;
-    cursor: pointer; margin-top: 10px; width: 100%;
-}
+        .cart-item { margin-bottom: 15px; border-bottom: 1px dashed #ddd; padding-bottom: 10px; }
+        .item-main { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; }
+        .item-note-input { width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 8px; margin-top: 8px; font-size: 12px; font-family: 'Poppins'; outline: none; box-sizing: border-box; }
+        .cart-actions button { background: #ddd; border: none; padding: 2px 8px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-left: 5px;}
+        .total-row { display: flex; justify-content: space-between; margin-top: 20px; font-weight: bold; font-size: 18px; border-top: 2px solid var(--sbs-black); padding-top: 10px; }
         
+        /* Payment Options */
+        .input-group { margin-top: 15px; }
+        .input-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #666; }
+        .input-group input { width: 100%; padding: 10px; border: 2px solid var(--sbs-black); border-radius: 10px; box-sizing: border-box; font-family: 'Poppins'; font-size: 14px; }
+        .payment-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .p-option input { display: none; }
+        .p-label { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; border: 2px solid var(--sbs-black); border-radius: 10px; font-weight: bold; font-size: 12px; color: #666; cursor: pointer; background: #fff; transition: 0.2s; }
+        .p-label span { font-size: 18px; }
+        .p-option input:checked + .p-label { border-color: var(--sbs-orange); background-color: #fff8f0; color: var(--sbs-orange); box-shadow: 0 4px 10px rgba(255, 102, 0, 0.2); }
+        
+        .btn-order { background: var(--sbs-orange); color: #fff; border: 3px solid var(--sbs-black); width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; margin-top: 20px; cursor: pointer; font-size: 16px; }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; font-weight: bold; }
+        .btn-close-final { background: var(--sbs-black); color: #fff; padding: 12px 30px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; width: 100%; }
+
+        /* --- HISTORY DETAIL (REVISI - Request 3) --- */
+        .history-card { border: 1px solid #ddd; border-radius: 12px; padding: 15px; margin-bottom: 15px; background: #fcfcfc; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .h-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 8px; margin-bottom: 8px; }
+        .h-id { font-size: 12px; color: #888; font-family: monospace; }
+        .h-status { font-size: 11px; font-weight: 900; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+        
+        /* List Item Detail */
+        .h-item { display: flex; justify-content: space-between; font-size: 13px; color: #444; margin-bottom: 4px; }
+        .h-item-name { font-weight: 500; }
+        .h-item-price { font-family: 'Montserrat', sans-serif; font-size: 12px; color: #666; }
+        
+        .h-total { border-top: 1px dashed #ccc; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-size: 14px; font-weight: 900; color: var(--sbs-black); }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <div class="floating-container">
+<div class="floating-container">
     <div id="fab-cart" class="fab-btn fab-cart" onclick="openCart()">
         <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11v-2H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
         <div id="badge-cart" class="fab-badge">0</div>
@@ -261,11 +169,6 @@
         <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
         <div id="badge-history" class="fab-badge">0</div>
     </div>
-</div>
-
-<div id="status-tracker" onclick="openHistory()">
-    <span id="tracker-summary">Pesananmu Sedang Diproses</span> 
-    <span class="status-badge" style="font-size:10px;">LIHAT DETAIL ></span>
 </div>
 
 <div class="top-bar">
@@ -295,174 +198,177 @@
     <div id="makan" class="content active">
         <div class="menu-card" onclick="addToCart('Kalter', 20000)" data-name="Kalter" data-price="20000" data-tags="nasi tahu telor rice tofu egg telur vegetarian kalter">
             <div class="card-img-box"><img src="img/kalter.webp" alt="Kalter"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info">
+                <div class="card-title">Kalter</div>
+                <div class="price-btn">20K <span class="plus">+</span></div>
+            </div>
         </div>
         <div class="menu-card" onclick="addToCart('Obama', 25000)" data-name="Obama" data-price="25000" data-tags="nasi ayam geprek sambal matah rice chicken pedas spicy hot chili obama">
             <div class="card-img-box"><img src="img/obama.webp" alt="Obama"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Obama</div><div class="price-btn">25K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card best-rec" onclick="addToCart('Mangku Koe', 28000)" data-name="Mangku Koe" data-price="28000" data-tags="nasi chicken katsu kari rice ayam curry japanese food mangku koe">
             <div class="card-img-box"><img src="img/mangkukoe.webp" alt="Mangku Koe"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Mangku Koe</div><div class="price-btn">28K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card best-rec" onclick="addToCart('Mangku Ayang', 25000)" data-name="Mangku Ayang" data-price="25000" data-tags="nasi ayam siram rice chicken gravy sauce mangku ayang">
             <div class="card-img-box"><img src="img/mangkuayang.webp" alt="Mangku Ayang"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Mangku Ayang</div><div class="price-btn">25K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card best-rec" onclick="addToCart('Barudak', 20000)" data-name="Barudak" data-price="20000" data-tags="bakmie katsu sambal matah mie noodle noodles ayam chicken pedas spicy hot barudak">
             <div class="card-img-box"><img src="img/barudak.webp" alt="Barudak"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Barudak</div><div class="price-btn">20K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Sekena Gomes', 22000)" data-name="Sekena Gomes" data-price="22000" data-tags="nasgor merah katsu sambal matah nasi goreng fried rice red ayam chicken pedas spicy hot sekena gomes">
             <div class="card-img-box"><img src="img/sekenagomes.webp" alt="Sekena Gomes"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Sekena Gomes</div><div class="price-btn">22K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Sekena Goput', 22000)" data-name="Sekena Goput" data-price="22000" data-tags="nasgor putih katsu sambal matah nasi goreng fried rice white ayam chicken pedas spicy hot sekena goput">
             <div class="card-img-box"><img src="img/sekenagoput.webp" alt="Sekena Goput"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Sekena Goput</div><div class="price-btn">22K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card best-rec" onclick="addToCart('Sekena Keren', 25000)" data-name="Sekena Keren" data-price="25000" data-tags="nasgor kari katsu sambal matah nasi goreng fried rice curry ayam chicken pedas spicy hot sekena keren">
             <div class="card-img-box"><img src="img/sekenakeren.webp" alt="Sekena Keren"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Sekena Keren</div><div class="price-btn">25K <span class="plus">+</span></div></div>
         </div>
     </div>
 
     <div id="cemil" class="content">
         <div class="menu-card best-rec" onclick="addToCart('Paket Sambat', 35000)" data-name="Paket Sambat" data-price="35000" data-tags="aneka camilan snack platter sosis sausage kentang fries gorengan paket sambat">
             <div class="card-img-box"><img src="img/paketsambat.webp" alt="Paket Sambat"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Paket Sambat</div><div class="price-btn">35K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Cricket', 25000)" data-name="Cricket" data-price="25000" data-tags="chicken fillet lava ayam boneless pedas spicy hot snack cricket">
             <div class="card-img-box"><img src="img/cricket.webp" alt="Cricket"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Cricket</div><div class="price-btn">25K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Potato Freak', 17000)" data-name="Potato Freak" data-price="17000" data-tags="french fries kentang goreng potato chips asin salty snack potato freak">
             <div class="card-img-box"><img src="img/potatofreak.webp" alt="Potato Freak"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Potato Freak</div><div class="price-btn">17K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Uhat Lawik', 17000)" data-name="Uhat Lawik" data-price="17000" data-tags="tahu walik tofu aci goreng crispy snack uhat lawik">
             <div class="card-img-box"><img src="img/uhatlawik.webp" alt="Uhat Lawik"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Uhat Lawik</div><div class="price-btn">17K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Gyozable', 18000)" data-name="Gyozable" data-price="18000" data-tags="gyoza dimsum dumpling ayam chicken kukus steam goreng fried gyozable">
             <div class="card-img-box"><img src="img/gyozable.webp" alt="Gyozable"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Gyozable</div><div class="price-btn">18K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card best-rec" onclick="addToCart('Tahu Julit', 19000)" data-name="Tahu Julit" data-price="19000" data-tags="tahu cabe garam tofu chili salt pedas spicy hot asin snack tahu julit">
             <div class="card-img-box"><img src="img/tahujulit.webp" alt="Tahu Julit"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Tahu Julit</div><div class="price-btn">19K <span class="plus">+</span></div></div>
         </div>
     </div>
 
     <div id="black" class="content">
         <div class="menu-card best-rec" onclick="addToCart('Fressa', 25000)" data-name="Fressa" data-price="25000" data-tags="berry soda coffee kopi buah segar fizz fressa">
             <div class="card-img-box"><img src="img/fressa.webp" alt="Fressa"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Fressa</div><div class="price-btn">25K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Americano', 16000)" data-name="Americano" data-price="16000" data-tags="americano kopi hitam black coffee pahit bitter no sugar">
             <div class="card-img-box"><img src="img/americano.webp" alt="Americano"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Americano</div><div class="price-btn">16K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card best-rec" onclick="addToCart('Dark Freshly', 19000)" data-name="Dark Freshly" data-price="19000" data-tags="americano lemon kopi coffee citrus segar fresh dark freshly">
             <div class="card-img-box"><img src="img/darkfreshly.webp" alt="Dark Freshly"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Dark Freshly</div><div class="price-btn">19K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Darkberry', 19000)" data-name="Darkberry" data-price="19000" data-tags="americano berry kopi coffee strawberry fruity darkberry">
             <div class="card-img-box"><img src="img/darkberry.webp" alt="Darkberry"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Darkberry</div><div class="price-btn">19K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Tubruk Syari', 13000)" data-name="Tubruk Syari" data-price="13000" data-tags="kopi tubruk traditional black coffee ampas tubruk syari">
             <div class="card-img-box"><img src="img/tubruksyari.webp" alt="Tubruk Syari"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Tubruk Syari</div><div class="price-btn">13K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Hanoi Tears', 15000)" data-name="Hanoi Tears" data-price="15000" data-tags="vietnam drip kopi susu milk condensed manis sweet hanoi tears">
             <div class="card-img-box"><img src="img/hanoitears.webp" alt="Hanoi Tears"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Hanoi Tears</div><div class="price-btn">15K <span class="plus">+</span></div></div>
         </div>
     </div>
 
     <div id="white" class="content">
         <div class="menu-card best-rec" onclick="addToCart('Penkopi', 23000)" data-name="Penkopi" data-price="23000" data-tags="creamy coffee kopi susu milk latte palm sugar gula aren penkopi">
             <div class="card-img-box"><img src="img/penkopi.webp" alt="Penkopi"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Penkopi</div><div class="price-btn">23K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Macch Favorito', 20000)" data-name="Macch Favorito" data-price="20000" data-tags="caramel macchiato kopi coffee susu milk karamel manis sweet macch favorito">
             <div class="card-img-box"><img src="img/macchfavorito.webp" alt="Macch Favorito"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Macch Favorito</div><div class="price-btn">20K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Specta', 25000)" data-name="Specta" data-price="25000" data-tags="peanut coffee kopi kacang skippy jam susu milk specta">
             <div class="card-img-box"><img src="img/specta.webp" alt="Specta"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Specta</div><div class="price-btn">25K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Comica', 22000)" data-name="Comica" data-price="22000" data-tags="hazelnut coffee kopi susu milk kacang wangi comica">
             <div class="card-img-box"><img src="img/comica.webp" alt="Comica"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Comica</div><div class="price-btn">22K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Rhumpee', 20000)" data-name="Rhumpee" data-price="20000" data-tags="rhum coffee rum non alkohol kopi susu milk wangi rhumpee">
             <div class="card-img-box"><img src="img/rhumpee.webp" alt="Rhumpee"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Rhumpee</div><div class="price-btn">20K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Crush', 22000)" data-name="Crush" data-price="22000" data-tags="rhum regal coffee rum biskuit biscuit marie susu milk crush">
             <div class="card-img-box"><img src="img/crush.webp" alt="Crush"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Crush</div><div class="price-btn">22K <span class="plus">+</span></div></div>
         </div>
     </div>
 
     <div id="comfy" class="content">
         <div class="menu-card best-rec" onclick="addToCart('Mammy', 18000)" data-name="Mammy" data-price="18000" data-tags="matcha latte green tea teh hijau susu milk japanese mammy">
             <div class="card-img-box"><img src="img/mammy.webp" alt="Mammy"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Mammy</div><div class="price-btn">18K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Deep Choc', 18000)" data-name="Deep Choc" data-price="18000" data-tags="chocolate coklat cocoa susu milk manis sweet deep choc">
             <div class="card-img-box"><img src="img/deepchoc.webp" alt="Deep Choc"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Deep Choc</div><div class="price-btn">18K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Schopea', 25000)" data-name="Schopea" data-price="25000" data-tags="peanut chocolate coklat kacang susu milk schopea">
             <div class="card-img-box"><img src="img/schopea.webp" alt="Schopea"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Schopea</div><div class="price-btn">25K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Creamberry', 23000)" data-name="Creamberry" data-price="23000" data-tags="berry latte strawberry susu milk fruity creamberry">
             <div class="card-img-box"><img src="img/creamberry.webp" alt="Creamberry"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Creamberry</div><div class="price-btn">23K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Jandu', 18000)" data-name="Jandu" data-price="18000" data-tags="jahe madu ginger honey hangat warm herbal wedang jandu">
             <div class="card-img-box"><img src="img/jandu.webp" alt="Jandu"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Jandu</div><div class="price-btn">18K <span class="plus">+</span></div></div>
         </div>
     </div>
 
     <div id="refresh" class="content">
         <div class="menu-card" onclick="addToCart('Threepi', 15000)" data-name="Threepi" data-price="15000" data-tags="tropical tea teh buah fruit segar fresh threepi">
             <div class="card-img-box"><img src="img/threepi.webp" alt="Threepi"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Threepi</div><div class="price-btn">15K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Teh Gelies', 10000)" data-name="Teh Gelies" data-price="10000" data-tags="jasmine tea teh melati manis sweet es ice teh gelies">
             <div class="card-img-box"><img src="img/tehgelies.webp" alt="Teh Gelies"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Teh Gelies</div><div class="price-btn">10K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card best-rec" onclick="addToCart('Red Bloom', 18000)" data-name="Red Bloom" data-price="18000" data-tags="yakult berry yogurt strawberry probiotik asam manis sour sweet red bloom">
             <div class="card-img-box"><img src="img/redbloom.webp" alt="Red Bloom"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Red Bloom</div><div class="price-btn">18K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Yagustea', 15000)" data-name="Yagustea" data-price="15000" data-tags="yakult sugus grape anggur permen candy ungu purple yagustea">
             <div class="card-img-box"><img src="img/yagustea.webp" alt="Yagustea"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Yagustea</div><div class="price-btn">15K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Chenteal', 15000)" data-name="Chenteal" data-price="15000" data-tags="yakult lychee tea leci teh fruit chenteal">
             <div class="card-img-box"><img src="img/chenteal.webp" alt="Chenteal"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Chenteal</div><div class="price-btn">15K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Trustey', 18000)" data-name="Trustey" data-price="18000" data-tags="honey yuzu madu jeruk citrus orange lemon segar trustey">
             <div class="card-img-box"><img src="img/trustey.webp" alt="Trustey"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Trustey</div><div class="price-btn">18K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Rindu', 15000)" data-name="Rindu" data-price="15000" data-tags="winter melon kundur buah manis segar rindu">
             <div class="card-img-box"><img src="img/rindu.webp" alt="Rindu"></div>
-            <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+            <div class="card-info"><div class="card-title">Rindu</div><div class="price-btn">15K <span class="plus">+</span></div></div>
         </div>
         <div class="menu-card" onclick="addToCart('Literally Water', 5000)" data-name="Literally Water" data-price="5000" data-tags="air mineral water bening tawar literally water">
              <div class="card-img-box"><img src="img/literallywater.webp" alt="Literally Water"></div>
-             <div class="add-badge"><svg viewBox="0 0 24 24"><path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4l-3.87 7H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2z"/></svg></div>
+             <div class="card-info"><div class="card-title">Literally Water</div><div class="price-btn">5K <span class="plus">+</span></div></div>
         </div>
     </div>
 
@@ -470,65 +376,54 @@
         <div class="alcs-card" data-tags="bintang beer bir pilsener alkohol alcohol">
             <div class="alcs-brand">BINTANG</div>
             <div class="alcs-list">
-                <div class="alcs-row" onclick="addToCart('Bintang Small', 32000)"><span class="alcs-variant">Small</span><span class="alcs-price-tag">32K</span></div>
-                <div class="alcs-row" onclick="addToCart('Bintang Radler', 32000)"><span class="alcs-variant">Radler</span><span class="alcs-price-tag">32K</span></div>
-                <div class="alcs-row" onclick="addToCart('Bintang Large', 50000)"><span class="alcs-variant">Large</span><span class="alcs-price-tag">50K</span></div>
+                <div class="alcs-row" onclick="addToCart('Bintang Small', 32000)"><span class="alcs-variant">Small</span><span class="alcs-price-tag">32K +</span></div>
+                <div class="alcs-row" onclick="addToCart('Bintang Radler', 32000)"><span class="alcs-variant">Radler</span><span class="alcs-price-tag">32K +</span></div>
+                <div class="alcs-row" onclick="addToCart('Bintang Large', 50000)"><span class="alcs-variant">Large</span><span class="alcs-price-tag">50K +</span></div>
             </div>
         </div>
         <div class="alcs-card" data-tags="anker beer bir lychee leci pineapple nanas alkohol alcohol">
             <div class="alcs-brand">ANKER</div>
             <div class="alcs-list">
-                <div class="alcs-row" onclick="addToCart('Anker Lychee', 29000)"><span class="alcs-variant">Lychee</span><span class="alcs-price-tag">29K</span></div>
-                <div class="alcs-row" onclick="addToCart('Anker Pineapple', 29000)"><span class="alcs-variant">Pineapple</span><span class="alcs-price-tag">29K</span></div>
+                <div class="alcs-row" onclick="addToCart('Anker Lychee', 29000)"><span class="alcs-variant">Lychee</span><span class="alcs-price-tag">29K +</span></div>
+                <div class="alcs-row" onclick="addToCart('Anker Pineapple', 29000)"><span class="alcs-variant">Pineapple</span><span class="alcs-price-tag">29K +</span></div>
             </div>
         </div>
         <div class="alcs-card" data-tags="smirnoff vodka raspberry berry green apple apel hijau lemon lychee leci pink lemonade alkohol alcohol">
             <div class="alcs-brand">SMIRNOFF</div>
             <div class="alcs-list">
-                <div class="alcs-row" onclick="addToCart('Smirnoff Raspberry', 33000)"><span class="alcs-variant">Raspberry</span><span class="alcs-price-tag">33K</span></div>
-                <div class="alcs-row" onclick="addToCart('Smirnoff Green Apple', 33000)"><span class="alcs-variant">Green Apple</span><span class="alcs-price-tag">33K</span></div>
-                <div class="alcs-row" onclick="addToCart('Smirnoff Lemon Lyc', 33000)"><span class="alcs-variant">Lemon Lychee</span><span class="alcs-price-tag">33K</span></div>
-                <div class="alcs-row" onclick="addToCart('Smirnoff Pink Lem', 33000)"><span class="alcs-variant">Pink Lemonade</span><span class="alcs-price-tag">33K</span></div>
+                <div class="alcs-row" onclick="addToCart('Smirnoff Raspberry', 33000)"><span class="alcs-variant">Raspberry</span><span class="alcs-price-tag">33K +</span></div>
+                <div class="alcs-row" onclick="addToCart('Smirnoff Green Apple', 33000)"><span class="alcs-variant">Green Apple</span><span class="alcs-price-tag">33K +</span></div>
+                <div class="alcs-row" onclick="addToCart('Smirnoff Lemon Lyc', 33000)"><span class="alcs-variant">Lemon Lychee</span><span class="alcs-price-tag">33K +</span></div>
+                <div class="alcs-row" onclick="addToCart('Smirnoff Pink Lem', 33000)"><span class="alcs-variant">Pink Lemonade</span><span class="alcs-price-tag">33K +</span></div>
             </div>
         </div>
         <div class="alcs-card" data-tags="mix max vodka anggur merah red grape exotic blue biru alkohol alcohol">
             <div class="alcs-brand">MIX MAX</div>
             <div class="alcs-list">
-                <div class="alcs-row" onclick="addToCart('Mix Max Anggur', 34000)"><span class="alcs-variant">Anggur Merah</span><span class="alcs-price-tag">34K</span></div>
-                <div class="alcs-row" onclick="addToCart('Mix Max Blue', 34000)"><span class="alcs-variant">Exotic Blue</span><span class="alcs-price-tag">34K</span></div>
+                <div class="alcs-row" onclick="addToCart('Mix Max Anggur', 34000)"><span class="alcs-variant">Anggur Merah</span><span class="alcs-price-tag">34K +</span></div>
+                <div class="alcs-row" onclick="addToCart('Mix Max Blue', 34000)"><span class="alcs-variant">Exotic Blue</span><span class="alcs-price-tag">34K +</span></div>
             </div>
         </div>
         <div class="alcs-card" data-tags="iceland vodka lychee leci long island alkohol alcohol">
             <div class="alcs-brand">ICELAND</div>
             <div class="alcs-list">
-                <div class="alcs-row" onclick="addToCart('Iceland Lychee', 34000)"><span class="alcs-variant">Lychee</span><span class="alcs-price-tag">34K</span></div>
-                <div class="alcs-row" onclick="addToCart('Iceland L. Island', 34000)"><span class="alcs-variant">Long Island</span><span class="alcs-price-tag">34K</span></div>
+                <div class="alcs-row" onclick="addToCart('Iceland Lychee', 34000)"><span class="alcs-variant">Lychee</span><span class="alcs-price-tag">34K +</span></div>
+                <div class="alcs-row" onclick="addToCart('Iceland L. Island', 34000)"><span class="alcs-variant">Long Island</span><span class="alcs-price-tag">34K +</span></div>
             </div>
         </div>
         <div class="alcs-card" data-tags="api anggur hijau green grape kawa kawi arak bali alkohol alcohol">
             <div class="alcs-brand">API</div>
             <div class="alcs-list">
-                <div class="alcs-row" onclick="addToCart('Api Anggur Hijau', 106000)"><span class="alcs-variant">Anggur Hijau</span><span class="alcs-price-tag">106K</span></div>
+                <div class="alcs-row" onclick="addToCart('Api Anggur Hijau', 106000)"><span class="alcs-variant">Anggur Hijau</span><span class="alcs-price-tag">106K +</span></div>
             </div>
         </div>
-    </div>
-</div>
-
-<div id="cart-bar" onclick="openCart()">
-    <div class="cart-left">
-        <span class="cart-hint">Pesanan Kamu</span>
-        <span id="cart-info">0 ITEM</span>
-    </div>
-    <div class="cart-right">
-        <span id="cart-total">Rp 0</span><br>
-        <span class="view-btn">Lihat Detail &gt;</span>
     </div>
 </div>
 
 <div id="cart-modal" class="modal">
     <div class="modal-content">
         <div class="close-modal" onclick="closeCart()">&times;</div>
-        <div class="modal-header">PESANANMU</div>
+        <div class="modal-header" style="font-weight:900; font-size:20px; text-align:center; margin-bottom:20px;">PESANANMU</div>
         <div id="cart-items-container"></div>
         
         <div class="total-row">
@@ -587,12 +482,12 @@
 <div id="history-modal" class="modal">
     <div class="modal-content">
         <div class="close-modal" onclick="closeHistory()">&times;</div>
-        <div class="modal-header">RIWAYAT PESANAN</div>
-        <div id="history-container" style="padding-bottom:10px;">
-            </div>
+        <div class="modal-header" style="text-align:center; margin-bottom:15px; font-weight:900;">RIWAYAT PESANAN</div>
+        <div id="history-container" style="padding-bottom:10px;"></div>
         <button class="btn-close-final" onclick="closeHistory()">TUTUP</button>
     </div>
 </div>
+
 <div id="clear-history-modal" class="modal">
     <div class="modal-content" style="text-align:center;">
         <div class="success-icon" style="color:red; font-size:50px; margin-bottom:10px;">🗑</div>
@@ -613,6 +508,7 @@
         </div>
     </div>
 </div>
+
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
@@ -658,7 +554,6 @@
             tableInput.placeholder = "Ketik Nomor Meja...";
         }
 
-        // AUTO-RESTORE QRIS POPUP (Anti-Refresh Loss)
         checkPendingQRIS();
         updateCartUI();
         trackOrders();
@@ -672,11 +567,10 @@
             cart.push({ name: name, price: price, qty: 1, note: '' });
         }
         updateCartUI();
-        localStorage.setItem('sbs_cart', JSON.stringify(cart)); // SIMPAN KE MEMORI
+        localStorage.setItem('sbs_cart', JSON.stringify(cart));
         if (navigator.vibrate) navigator.vibrate(50);
     }
 
-    // --- 1. UPDATE LOGIC KERANJANG (FLOATING) ---
     function updateCartUI() {
         let totalQty = 0;
         cart.forEach(item => totalQty += item.qty);
@@ -688,7 +582,6 @@
             fabCart.classList.add('has-items');
             badgeCart.innerText = totalQty;
             badgeCart.classList.add('show');
-            // Efek getar HP saat nambah item
             if (navigator.vibrate) navigator.vibrate(50); 
         } else {
             fabCart.classList.remove('has-items');
@@ -696,17 +589,15 @@
         }
     }
 
-    // --- FUNGSI MEMBUKA & RENDER KERANJANG (YANG HILANG) ---
-    // --- FUNGSI MEMBUKA & RENDER KERANJANG (FIXED) ---
     function openCart() {
         renderCart();
-        document.getElementById('cart-modal').style.display = 'flex'; // Pakai Flex biar centering jalan
-        document.body.classList.add('noscroll'); // KUNCI SCROLL BACKGROUND
+        document.getElementById('cart-modal').style.display = 'flex';
+        document.body.classList.add('noscroll');
     }
 
     function closeCart() {
         document.getElementById('cart-modal').style.display = 'none';
-        document.body.classList.remove('noscroll'); // BUKA KUNCI SCROLL
+        document.body.classList.remove('noscroll');
     }
 
     function renderCart() {
@@ -722,8 +613,6 @@
 
         cart.forEach((item, index) => {
             total += item.price * item.qty;
-            
-            // LOGIKA DETAIL HARGA (Hanya muncul jika qty > 1)
             let priceDetail = '';
             if (item.qty > 1) {
                 priceDetail = `<div style="font-size:11px; color:#888; margin-top:2px; font-weight:normal;">(${item.qty} x Rp ${item.price.toLocaleString('id-ID')})</div>`;
@@ -755,30 +644,18 @@
         }
         updateCartUI();
         renderCart();
-        localStorage.setItem('sbs_cart', JSON.stringify(cart)); // SIMPAN KE MEMORI
+        localStorage.setItem('sbs_cart', JSON.stringify(cart));
         if (cart.length === 0) closeCart();
     }
-  /*  function changeQty(index, delta) {
-        cart[index].qty += delta;
-        if (cart[index].qty <= 0) {
-            cart.splice(index, 1); // Hapus jika 0
-        }
-        updateCartUI(); // Update badge merah
-        renderCart();   // Update tampilan modal
-        if (cart.length === 0) closeCart(); // Tutup jika kosong
-    } */
 
     function updateItemNote(index, value) {
         cart[index].note = value;
     }
     
-    // --- FUNGSI KIRIM PESANAN ---
     function submitOrder() {
         const tableNum = document.getElementById('table-number').value;
         const custName = document.getElementById('customer-real-name').value;
         const custPhone = document.getElementById('customer-phone').value;
-        
-        // Ambil nilai dari Radio Button yang terpilih (Bukan ID dropdown lagi)
         const paymentRadio = document.querySelector('input[name="payment_method"]:checked');
         const paymentMethod = paymentRadio ? paymentRadio.value : 'tunai';
 
@@ -789,9 +666,6 @@
         let totalPrice = 0;
         cart.forEach(item => totalPrice += (item.price * item.qty));
 
-        // LOGIKA STATUS: 
-        // Tunai -> 'new'
-        // QRIS -> 'qris_unpaid' (Belum boleh diproses dapur)
         let initialStatus = (paymentMethod === 'tunai') ? 'new' : 'qris_unpaid';
 
         const orderData = {
@@ -803,7 +677,7 @@
             total: totalPrice,
             timestamp: new Date().toISOString(),
             status: initialStatus,
-            clientPaidAt: null // Placeholder untuk KPI
+            clientPaidAt: null
         };
 
         const newOrderRef = db.ref().child('orders').push();
@@ -811,7 +685,6 @@
         .then(() => {
             saveOrderToHistory(newOrderRef.key);
             
-            // Simpan state QRIS ke LocalStorage untuk auto-restore
             if(paymentMethod === 'qris') {
                 localStorage.setItem('sbs_pending_qris', JSON.stringify({
                     id: newOrderRef.key,
@@ -840,11 +713,9 @@
         });
     }
 
-    // --- MANAJEMEN QRIS & AUTO RESTORE ---
     function checkPendingQRIS() {
         const pending = JSON.parse(localStorage.getItem('sbs_pending_qris'));
         if (pending) {
-            // Cek status ke DB, jangan sampai pop up kalau sudah dibayar/ditolak
             db.ref('orders/' + pending.id).once('value').then(snapshot => {
                 const data = snapshot.val();
                 if (data && data.status === 'qris_unpaid') {
@@ -877,15 +748,11 @@
     }
 
     function confirmQRISPayment(orderId) {
-        // Update status ke pending_payment
         db.ref('orders/' + orderId).update({
             status: 'pending_payment',
             clientPaidAt: new Date().toISOString()
         }).then(() => {
             localStorage.removeItem('sbs_pending_qris');
-            
-            // GANTI ALERT DENGAN MODAL CANTIK
-            // Kita pinjam modal success yang sudah ada, tapi ubah teksnya
             const modal = document.getElementById('success-modal');
             modal.querySelector('.modal-content').innerHTML = `
                 <div class="success-icon">⏳</div>
@@ -896,11 +763,9 @@
                 </div>
                 <button class="btn-close-final" onclick="closeSuccess()">OK, MENGERTI</button>
             `;
-            // Paksa modal tampil
             modal.style.display = 'flex'; 
-
         }).catch(err => {
-            alert("Error: " + err.message); // Kalau error teknis biarkan alert
+            alert("Error: " + err.message);
         });
     }
     function showSuccessModal() {
@@ -921,8 +786,7 @@
         document.getElementById('success-modal').style.display = 'none';
     }
 
-    // --- RIWAYAT & TRACKING SISTEM BARU ---
-    const AUTO_CLEAR_TIME = 6 * 60 * 60 * 1000; // 6 Jam
+    const AUTO_CLEAR_TIME = 6 * 60 * 60 * 1000; 
 
     function saveOrderToHistory(orderId) {
         let history = JSON.parse(localStorage.getItem('sbs_order_history')) || [];
@@ -939,16 +803,13 @@
         const badgeHistory = document.getElementById('badge-history');
         const container = document.getElementById('history-container');
         
-        // 1. Jika tidak ada riwayat sama sekali, sembunyikan tombol hijau
         if (history.length === 0) {
             fabHistory.style.display = 'none';
+            container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">Belum ada riwayat pesanan</div>';
             return;
         }
 
-        // 2. Jika ada, munculkan tombol
         fabHistory.style.display = 'flex';
-
-        // 3. Siapkan wadah untuk "Aktif" dan "Selesai"
         container.innerHTML = `
             <div id="active-orders-section" style="display:none;">
                 <div class="history-section-title" style="color:var(--sbs-orange)">SEDANG BERJALAN</div>
@@ -970,19 +831,13 @@
         history.forEach(orderId => {
             db.ref('orders/' + orderId).on('value', (snapshot) => {
                 const data = snapshot.val();
-                
-                // Cek jika data sudah dihapus di database tapi masih ada di HP
                 if (!data) return;
 
-                // LOGIKA AUTO-DELETE: Jika status selesai/tolak DAN sudah > 6 jam, jangan tampilkan
                 if (['completed', 'rejected'].includes(data.status)) {
                     const orderTime = new Date(data.completedAt || data.timestamp).getTime();
-                    if (now - orderTime > AUTO_CLEAR_TIME) {
-                        return; // Skip (Hilang dari pandangan)
-                    }
+                    if (now - orderTime > AUTO_CLEAR_TIME) return;
                 }
 
-                // Tentukan Warna & Teks Status
                 let statusText = 'MENUNGGU';
                 let color = '#888';
                 let isActive = false;
@@ -995,24 +850,32 @@
                 else if(data.status === 'completed') { statusText = 'SELESAI'; color = '#2ecc71'; isActive = false; }
                 else if(data.status === 'rejected') { statusText = 'DITOLAK / BATAL'; color = 'red'; isActive = false; }
 
-                // Buat Kartu HTML
-                // Cek agar tidak duplikat
                 if(document.getElementById('card-'+orderId)) return;
 
-                const itemNames = (data.items || []).map(i => i.qty + 'x ' + i.name).join(', ');
+                // ITEM LIST DETAIL (Request 3)
+                let itemRows = '';
+                (data.items || []).forEach(i => {
+                    itemRows += `<div class="h-item"><span class="h-item-name">${i.qty}x ${i.name}</span><span class="h-item-price">${(i.qty * i.price).toLocaleString()}</span></div>`;
+                });
+
+                // TOTAL CALCULATION (Termasuk Pajak/Diskon jika ada di finalData)
+                let finalTotal = data.total;
+                if(data.finalData && data.finalData.finalTotal) finalTotal = data.finalData.finalTotal;
+
                 const html = `
                     <div id="card-${orderId}" class="history-card" style="border-left:4px solid ${color}">
-                        <div class="history-header">
-                            <span>Meja: ${data.tableNumber || '-'}</span>
-                            <span>${data.paymentMethod === 'qris' ? 'QRIS' : 'TUNAI'}</span>
+                        <div class="h-header">
+                            <span class="h-status" style="background:${color}; color:#fff;">${statusText}</span>
+                            <span class="h-id">#${orderId.slice(-4)}</span>
                         </div>
-                        <div class="history-status" style="color:${color}">${statusText}</div>
-                        <div class="history-items">${itemNames}</div>
-                        <div style="font-size:10px; color:#ccc; margin-top:5px; text-align:right;">ID: ...${orderId.slice(-4)}</div>
+                        <div style="margin-bottom:8px;">${itemRows}</div>
+                        <div class="h-total">
+                            <span>TOTAL</span>
+                            <span>Rp ${parseInt(finalTotal).toLocaleString('id-ID')}</span>
+                        </div>
                     </div>
                 `;
 
-                // Masukkan ke kategori yang benar
                 if (isActive) {
                     listActive.insertAdjacentHTML('beforeend', html);
                     activeCount++;
@@ -1023,7 +886,6 @@
                     document.getElementById('past-orders-section').style.display = 'block';
                 }
 
-                // Update Badge di Tombol Hijau
                 if (activeCount > 0) {
                     fabHistory.classList.add('active-order');
                     badgeHistory.innerText = activeCount;
@@ -1033,14 +895,12 @@
                     badgeHistory.classList.remove('show');
                 }
                 
-                // Jika semua pesanan expired/kosong
                 if(activeCount === 0 && pastCount === 0) fabHistory.style.display = 'none';
             });
         });
     }
 
     function manualClearHistory() {
-        // Jangan pakai confirm() biasa, panggil modal baru
         document.getElementById('clear-history-modal').style.display = 'flex';
     }
 
@@ -1050,18 +910,18 @@
 
     function executeClearHistory() {
         localStorage.removeItem('sbs_order_history');
-        location.reload(); // Refresh halaman agar bersih
+        location.reload(); 
     }
 
     function openHistory() { 
         trackOrders();
         document.getElementById('history-modal').style.display = 'flex'; 
-        document.body.classList.add('noscroll'); // KUNCI LAYAR
+        document.body.classList.add('noscroll'); 
     }
     
     function closeHistory() { 
         document.getElementById('history-modal').style.display = 'none'; 
-        document.body.classList.remove('noscroll'); // BUKA KUNCI
+        document.body.classList.remove('noscroll'); 
     }
 
     // --- TAB & SWIPE & SEARCH LOGIC ---
