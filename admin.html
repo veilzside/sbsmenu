@@ -272,7 +272,7 @@
         return `${m}m ${rs}s`;
     }
 
-    // --- KEMBALI KE KODE RIWAYAT ASLI (FIXED) ---
+    // --- FUNGSI CREATE HISTORY CARD (YANG SUDAH DIPERBAIKI) ---
     function createHistoryCard(order) {
         let displayName = "Pelanggan";
         if (order.tableNumber) {
@@ -286,6 +286,8 @@
         let cashierDisplay = order.cashier ? `<div style="font-size:11px; color:#aaa; margin-top:2px;">Cashier: ${order.cashier}</div>` : '';
 
         const t1 = new Date(order.timestamp).getTime(); 
+        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0;
+        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0;
         const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
 
         const div = document.createElement('div');
@@ -315,6 +317,41 @@
 
         let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
         
+        // --- LOGIKA KPI DURASI (YANG SEMPAT HILANG) DIKEMBALIKAN ---
+        let kpiHtml = '';
+        if (order.status === 'completed') {
+            let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
+
+            if (order.paymentMethod === 'qris') {
+                if(t2 && t1) durPesan = t2 - t1;
+                if(t3 && t2) durRespon = t3 - t2;
+                if(t4 && t3) durMasak = t4 - t3;
+            } else {
+                if(t3 && t1) durPesan = t3 - t1;
+                durRespon = 0; 
+                if(t4 && t3) durMasak = t4 - t3;
+            }
+            if(t4 && t1) durTotal = t4 - t1;
+
+            const responColor = durRespon > 180000 ? '#e74c3c' : '#aaa'; 
+
+            kpiHtml = `
+            <div class="duration-box" style="margin-top:10px; padding-top:10px; border-top:1px dashed #555;">
+                <div class="dur-row">
+                    <span style="color:#777;">Pesan - Bayar:</span> <span class="dur-val">${fmtDur(durPesan)}</span>
+                </div>
+                <div class="dur-row">
+                    <span style="color:#777;">Respon Kasir:</span> <span class="dur-val" style="color:${responColor}">${fmtDur(durRespon)}</span>
+                </div>
+                <div class="dur-row">
+                    <span style="color:#777;">Masak / Siapkan:</span> <span class="dur-val">${fmtDur(durMasak)}</span>
+                </div>
+                <div class="dur-total-row">
+                    <span style="color:#aaa;">TOTAL DURASI:</span> <span class="dur-total-val">${fmtDur(durTotal)}</span>
+                </div>
+            </div>`;
+        }
+        
         let totalVal = 0;
         if (order.finalData) totalVal = order.finalData.finalTotal;
         else { totalVal = Number(String(order.total).replace(/[^0-9]/g, '')) || 0; }
@@ -336,6 +373,7 @@
             </div>
             <div class="item-list">${itemsHtml}</div>
             <div class="total-display" style="margin-bottom:5px;">Total: Rp ${totalVal.toLocaleString()}</div>
+            ${kpiHtml}
             ${statusFooter}
         `;
         return div;
