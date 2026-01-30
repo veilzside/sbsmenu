@@ -218,8 +218,8 @@
     let realActiveCount = 0;
     let realHistoryCount = 0;
     
-    // Data Kasir dari Admin
-    let cashierList = [];
+    // Data Kasir (Default 3 tombol dummy jika DB kosong)
+    let cashierList = ['Kasir 1', 'Kasir 2', 'Kasir 3'];
 
     // GLOBAL TAX SETTING
     let isTaxEnabled = false;
@@ -228,21 +228,27 @@
         renderOrders();
     });
 
-    // LOAD EMPLOYEES (Untuk Dropdown Kasir)
+    // LOAD EMPLOYEES (Live dari Admin)
     db.ref('employees').on('value', snap => {
-        cashierList = [];
+        const fetched = [];
         if(snap.val()){
             Object.keys(snap.val()).forEach(k => {
                 const emp = snap.val()[k];
-                // Ambil semua role yang mengandung kata 'Kasir' (case insensitive) atau jika user salah input role
-                // Tapi sesuai instruksi: "yang jabatannya kasir akan muncul"
                 if(emp.role && emp.role.toLowerCase() === 'kasir') {
-                    cashierList.push(emp.name);
+                    fetched.push(emp.name);
                 }
             });
         }
-        renderOrders(); // Re-render agar dropdown terisi
+        // Jika ada data dari DB, pakai itu. Jika tidak, tetap pakai dummy 3 tombol.
+        if(fetched.length > 0) {
+            cashierList = fetched;
+        }
+        renderOrders(); 
     });
+
+    // IDENTITAS KASIR (Auto-select tombol nanti)
+    let localCashierName = localStorage.getItem('sbs_cashier_name'); 
+    // Kita tidak pakai prompt lagi, tapi default ke tombol pertama atau local storage
 
     const soundNew = document.getElementById('sound-new');
     const soundNag = document.getElementById('sound-nag');
@@ -310,7 +316,6 @@
             });
         }
         
-        // LOGIKA BADGE
         realActiveCount = allOrders.filter(o => ['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(o.status)).length;
         const todayStr = new Date().toDateString();
         realHistoryCount = allOrders.filter(o => 
@@ -352,18 +357,13 @@
         badgeHis.style.display = (unreadHistoryCount > 0) ? 'flex' : 'none';
     }
 
-    // FUNGSI UPDATE BADGE TAB (WARNA MERAH / ABU)
     function updateTabBadges() {
         const countKasir = realActiveCount;
         const countDapur = allOrders.filter(o => o.status === 'processing').length;
-        
         const badgeK = document.getElementById('badge-kasir');
         const badgeD = document.getElementById('badge-dapur');
-        
         badgeK.innerText = countKasir;
         badgeD.innerText = countDapur;
-
-        // Logic Warna: 0 = Abu (#555), >0 = Merah (var(--red))
         badgeK.style.backgroundColor = (countKasir > 0) ? 'var(--red)' : '#555';
         badgeD.style.backgroundColor = (countDapur > 0) ? 'var(--red)' : '#555';
     }
@@ -373,7 +373,6 @@
         if (pageId === 'orders') { unreadOrdersCount = 0; localStorage.setItem('sbs_seen_orders', realActiveCount); }
         if (pageId === 'history') { unreadHistoryCount = 0; localStorage.setItem('sbs_seen_history', realHistoryCount); }
         updateNavBadges();
-
         document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
         document.getElementById(pageId + '-page').style.display = 'block';
         document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
@@ -435,6 +434,29 @@
         return leftStr + " ".repeat(space) + rightStr;
     }
 
+    // --- FUNGSI PILIH KASIR (TOMBOL) ---
+    function selectCashier(orderId, name) {
+        // Update input hidden
+        document.getElementById(`selected-cashier-${orderId}`).value = name;
+        
+        // Update visual tombol
+        const container = document.getElementById(`cashier-btn-container-${orderId}`);
+        const buttons = container.getElementsByClassName('btn-cashier-select');
+        for (let btn of buttons) {
+            if (btn.getAttribute('data-name') === name) {
+                btn.style.background = 'var(--accent)';
+                btn.style.color = '#000';
+                btn.style.borderColor = 'var(--accent)';
+                btn.style.fontWeight = 'bold';
+            } else {
+                btn.style.background = '#333';
+                btn.style.color = '#ccc';
+                btn.style.borderColor = '#555';
+                btn.style.fontWeight = 'normal';
+            }
+        }
+    }
+
     // --- PRINTING ---
     function printDirect(id, type) {
         const o = allOrders.find(x => x.id === id); 
@@ -443,12 +465,11 @@
         const inputEl = document.getElementById(`disc-input-${id}`);
         const currentDisc = inputEl ? (parseInt(inputEl.value) || 0) : (o.discount || 0);
 
-        // Ambil nama kasir dari Dropdown (jika ada input dropdown di DOM)
-        // Jika tidak ada (misal di history), ambil dari data order
-        const cashierSelect = document.getElementById(`cashier-select-${id}`);
+        // Ambil nama kasir dari Hidden Input (karena sekarang pakai tombol)
+        const hiddenCashier = document.getElementById(`selected-cashier-${id}`);
         let selectedCashier = o.cashier || 'Staff';
-        if (cashierSelect && cashierSelect.value) {
-            selectedCashier = cashierSelect.value;
+        if (hiddenCashier && hiddenCashier.value) {
+            selectedCashier = hiddenCashier.value;
         }
 
         const q = getDailyQueueNumber(id);
@@ -536,9 +557,9 @@
         const inputEl = document.getElementById(`disc-input-${key}`);
         const discountVal = inputEl ? (parseInt(inputEl.value) || 0) : 0;
         
-        // Ambil KASIR dari Dropdown
-        const cashierSelect = document.getElementById(`cashier-select-${key}`);
-        const selectedCashier = cashierSelect ? cashierSelect.value : 'Staff';
+        // Ambil KASIR dari Tombol yang dipilih
+        const hiddenCashier = document.getElementById(`selected-cashier-${key}`);
+        const selectedCashier = (hiddenCashier && hiddenCashier.value) ? hiddenCashier.value : (localCashierName || 'Staff');
 
         // Hitung ulang
         const currentData = calculateTotals(order, discountVal);
@@ -547,11 +568,14 @@
         const card = btn.closest('.order-card');
         if (card) card.classList.add('fade-out');
         
+        // Simpan nama kasir terakhir ke local storage agar next order otomatis terpilih
+        localStorage.setItem('sbs_cashier_name', selectedCashier);
+
         setTimeout(() => { 
             db.ref('orders/' + key).update({
                 status: 'processing',
                 paidAt: new Date().toISOString(),
-                cashier: selectedCashier, // SIMPAN NAMA KASIR YG DIPILIH
+                cashier: selectedCashier,
                 discount: discountVal,
                 finalData: {
                     subtotal: currentData.subtotal,
@@ -696,30 +720,34 @@
 
         let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : (order.status === 'completed' ? `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>` : '');
 
-        // INPUT DISKON & KASIR (Dropdown)
         const isEditable = ['new', 'unpaid', 'pending_payment'].includes(order.status);
         
+        // INPUT DISKON
         let inputsHtml = '';
         if(isEditable) {
-            // Generate opsi kasir
-            let cashierOptions = '<option value="">-- Pilih Kasir --</option>';
-            cashierList.forEach(c => {
-                cashierOptions += `<option value="${c}">${c}</option>`;
-            });
-
-            inputsHtml = `
+            inputsHtml += `
             <div style="margin:5px 0; border-top:1px dashed #444; padding-top:5px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                     <span style="font-size:12px; color:#aaa;">Disc (Rp):</span>
                     <input type="number" id="disc-input-${order.id}" value="${order.discount||0}" oninput="updateLiveTotal('${order.id}')" style="width:100px; background:#222; border:1px solid #555; color:#fff; padding:4px; border-radius:4px; text-align:right;">
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; color:#aaa;">Kasir:</span>
-                    <select id="cashier-select-${order.id}" style="width:140px; background:#222; border:1px solid #555; color:#fff; padding:4px; border-radius:4px;">
-                        ${cashierOptions}
-                    </select>
-                </div>
-            </div>`;
+                </div>`;
+            
+            // TOMBOL KASIR
+            inputsHtml += `<div style="margin-top:10px;"><div style="font-size:12px; color:#aaa; margin-bottom:3px;">Pilih Kasir:</div><div id="cashier-btn-container-${order.id}" style="display:flex; gap:5px; flex-wrap:wrap;">`;
+            
+            // Generate tombol dari cashierList
+            cashierList.forEach(name => {
+                const isActive = (order.cashier === name) || (localCashierName === name && !order.cashier);
+                const bg = isActive ? 'var(--accent)' : '#333';
+                const col = isActive ? '#000' : '#ccc';
+                const border = isActive ? 'var(--accent)' : '#555';
+                const fw = isActive ? 'bold' : 'normal';
+                
+                inputsHtml += `<button class="btn-cashier-select" data-name="${name}" onclick="selectCashier('${order.id}', '${name}')" style="background:${bg}; color:${col}; border:1px solid ${border}; padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; flex:1; font-weight:${fw};">${name}</button>`;
+            });
+            
+            inputsHtml += `</div><input type="hidden" id="selected-cashier-${order.id}" value="${order.cashier || localCashierName || ''}"></div></div>`;
+
         } else if (finance.discount > 0) {
              inputsHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin:5px 0;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
         }
