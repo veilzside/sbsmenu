@@ -228,7 +228,7 @@
         renderOrders();
     });
 
-    // LOAD EMPLOYEES (Live dari Admin)
+    // LOAD EMPLOYEES
     db.ref('employees').on('value', snap => {
         const fetched = [];
         if(snap.val()){
@@ -243,7 +243,7 @@
         renderOrders(); 
     });
 
-    // IDENTITAS KASIR LOCAL (Hanya untuk default tombol, bukan untuk display header)
+    // IDENTITAS KASIR LOCAL
     let localCashierName = localStorage.getItem('sbs_cashier_name'); 
 
     const soundNew = document.getElementById('sound-new');
@@ -459,18 +459,12 @@
         const currentDisc = inputEl ? (parseInt(inputEl.value) || 0) : (o.discount || 0);
 
         const hiddenCashier = document.getElementById(`selected-cashier-${id}`);
-        
-        // LOGIKA PENTING: Saat Print, prioritas nama kasir:
-        // 1. Yang sudah tersimpan di DB (order.cashier)
-        // 2. Yang dipilih via tombol (hiddenCashier)
-        // 3. Default LocalStorage
-        
-        let selectedCashier = o.cashier; // Coba ambil dari DB dulu
+        let selectedCashier = o.cashier; 
         if (!selectedCashier && hiddenCashier && hiddenCashier.value) {
-            selectedCashier = hiddenCashier.value; // Kalau DB kosong, ambil dari pilihan tombol
+            selectedCashier = hiddenCashier.value; 
         }
         if (!selectedCashier) {
-            selectedCashier = localCashierName || 'Staff'; // Fallback
+            selectedCashier = localCashierName || 'Staff'; 
         }
 
         const q = getDailyQueueNumber(id);
@@ -557,7 +551,6 @@
         const inputEl = document.getElementById(`disc-input-${key}`);
         const discountVal = inputEl ? (parseInt(inputEl.value) || 0) : 0;
         
-        // Ambil KASIR dari Tombol
         const hiddenCashier = document.getElementById(`selected-cashier-${key}`);
         const selectedCashier = (hiddenCashier && hiddenCashier.value) ? hiddenCashier.value : (localCashierName || 'Staff');
 
@@ -565,7 +558,6 @@
         const card = btn.closest('.order-card');
         if (card) card.classList.add('fade-out');
         
-        // Update LocalStorage agar pilihan kasir terakhir diingat
         localStorage.setItem('sbs_cashier_name', selectedCashier);
 
         setTimeout(() => { 
@@ -589,21 +581,34 @@
     function finishOrder(key, btn) {
         const card = btn.closest('.order-card');
         if (card) card.classList.add('fade-out');
-        setTimeout(() => { updateStatus(key, 'completed'); }, 500);
+        setTimeout(() => { 
+            updateStatus(key, 'completed'); 
+        }, 500);
     }
 
-    function updateStatus(key, status) {
+    // UPDATE STATUS + CASHIER (PERBAIKAN UTAMA)
+    function updateStatus(key, status, cashierName = null) {
         const updates = { status: status };
         const now = new Date().toISOString(); 
         if(status === 'unpaid') updates.acceptedAt = now; 
         if(status === 'processing') updates.paidAt = now; 
         if(status === 'completed' || status === 'rejected') updates.completedAt = now; 
+        
+        // Simpan nama kasir jika ada (misal dari reject)
+        if(cashierName) updates.cashier = cashierName;
+
         db.ref('orders/' + key).update(updates);
     }
     
+    // CONFIRM REJECT (PERBAIKAN UTAMA: AMBIL NAMA KASIR)
     function confirmReject(key) { 
+        // 1. Ambil nama kasir dari tombol
+        const hiddenCashier = document.getElementById(`selected-cashier-${key}`);
+        const selectedCashier = (hiddenCashier && hiddenCashier.value) ? hiddenCashier.value : (localStorage.getItem('sbs_cashier_name') || 'Staff');
+
         document.getElementById('confirm-msg').innerText = "Yakin tolak pesanan ini?";
-        confirmCallback = () => updateStatus(key, 'rejected');
+        // 2. Pass nama kasir ke updateStatus
+        confirmCallback = () => updateStatus(key, 'rejected', selectedCashier);
         document.getElementById('custom-confirm-modal').style.display = 'flex';
     }
 
@@ -719,7 +724,6 @@
 
         const isEditable = ['new', 'unpaid', 'pending_payment'].includes(order.status);
         
-        // INPUT DISKON
         let inputsHtml = '';
         if(isEditable) {
             inputsHtml += `
@@ -728,14 +732,9 @@
                     <span style="font-size:12px; color:#aaa;">Disc (Rp):</span>
                     <input type="number" id="disc-input-${order.id}" value="${order.discount||0}" oninput="updateLiveTotal('${order.id}')" style="width:100px; background:#222; border:1px solid #555; color:#fff; padding:4px; border-radius:4px; text-align:right;">
                 </div>`;
-        } else if (finance.discount > 0) {
-             inputsHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin-bottom:5px;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
-        }
-
-        // TOMBOL KASIR (Hanya Muncul Jika Editable)
-        let cashierHtml = '';
-        if(isEditable) {
-            let cashierBtns = '';
+            
+            inputsHtml += `<div style="margin-top:10px;"><div style="font-size:12px; color:#aaa; margin-bottom:3px;">PILIH KASIR:</div><div id="cashier-btn-container-${order.id}" style="display:flex; gap:5px; flex-wrap:wrap;">`;
+            
             cashierList.forEach(name => {
                 const isActive = (order.cashier === name) || (localCashierName === name && !order.cashier);
                 const bg = isActive ? 'var(--accent)' : '#333';
@@ -743,17 +742,13 @@
                 const border = isActive ? 'var(--accent)' : '#555';
                 const fw = isActive ? 'bold' : 'normal';
                 
-                cashierBtns += `<button class="btn-cashier-select" data-name="${name}" onclick="selectCashier('${order.id}', '${name}')" style="background:${bg}; color:${col}; border:1px solid ${border}; padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; flex:1; font-weight:${fw};">${name}</button>`;
+                inputsHtml += `<button class="btn-cashier-select" data-name="${name}" onclick="selectCashier('${order.id}', '${name}')" style="background:${bg}; color:${col}; border:1px solid ${border}; padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; flex:1; font-weight:${fw};">${name}</button>`;
             });
+            
+            inputsHtml += `</div><input type="hidden" id="selected-cashier-${order.id}" value="${order.cashier || localCashierName || ''}"></div></div>`;
 
-            cashierHtml = `
-            <div style="margin-top:15px; border-top:1px dashed #444; padding-top:10px;">
-                <div style="font-size:11px; color:#aaa; margin-bottom:5px;">PILIH KASIR:</div>
-                <div id="cashier-btn-container-${order.id}" style="display:flex; gap:5px; flex-wrap:wrap;">
-                    ${cashierBtns}
-                </div>
-                <input type="hidden" id="selected-cashier-${order.id}" value="${order.cashier || localCashierName || ''}">
-            </div>`;
+        } else if (finance.discount > 0) {
+             inputsHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin-bottom:5px;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
         }
 
         let totalDisplayHtml = `
@@ -773,7 +768,7 @@
             headerCashierHtml = `<div style="font-size:11px; color:#888; margin-top:2px;">Cashier: ${order.cashier}</div>`;
         }
 
-        div.innerHTML = `<div class="card-header"><div class="header-left"><span class="cust-name">${displayName}</span><div style="margin-top:4px; display:flex; align-items:center;">${paymentBadge}<span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span></div><div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">Queue No : ${getDailyQueueNumber(order.id)}</div>${headerCashierHtml}</div>${headerRight}</div><div class="item-list">${itemsHtml}</div>${totalDisplayHtml}${cashierHtml}${statusFooter}${printButtons}<div class="actions" style="display:block;">${buttonsHtml}</div>`;
+        div.innerHTML = `<div class="card-header"><div class="header-left"><span class="cust-name">${displayName}</span><div style="margin-top:4px; display:flex; align-items:center;">${paymentBadge}<span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span></div><div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">Queue No : ${getDailyQueueNumber(order.id)}</div>${headerCashierHtml}</div>${headerRight}</div><div class="item-list">${itemsHtml}</div>${totalDisplayHtml}${statusFooter}${printButtons}<div class="actions" style="display:block;">${buttonsHtml}</div>`;
         return div;
     }
     
