@@ -247,7 +247,6 @@
     const soundNag = document.getElementById('sound-nag');
     const btnAudio = document.getElementById('btn-audio');
 
-    // FUNGSI FORMAT DURASI (PENTING UTK RIWAYAT)
     function fmtDur(ms) {
         if (!ms || ms < 0) return "-";
         const s = Math.floor(ms / 1000);
@@ -446,7 +445,6 @@
                 btn.style.fontWeight = 'normal';
             }
         }
-        // SIMPAN KE MEMORI
         localStorage.setItem('sbs_cashier_name', name);
     }
 
@@ -770,7 +768,7 @@
             headerCashierHtml = `<div style="font-size:11px; color:#888; margin-top:2px;">Cashier: ${order.cashier}</div>`;
         }
 
-        // --- TAMBAHKAN LOGIKA KPI DURASI (YANG SEMPAT HILANG) ---
+        // --- TAMBAHAN LOGIKA KPI DURASI (YANG SEMPAT HILANG) ---
         let kpiHtml = '';
         if (order.status === 'completed') {
             const t1 = new Date(order.timestamp).getTime();
@@ -804,10 +802,12 @@
                 <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
                     <span style="color:#777;">Masak / Siapkan:</span> <span style="color:#ddd;">${fmtDur(durMasak)}</span>
                 </div>
-                <div style="margin-top:5px; padding-top:5px; border-top:1px solid #333; display:flex; justify-content:space-between; font-weight:bold;">
-                    <span style="color:#aaa;">TOTAL DURASI:</span> <span style="color:#FFD200;">${fmtDur(durTotal)}</span>
+                <div style="margin-top:5px; padding:5px 0; border-top:1px solid #444; border-bottom:1px solid #444; display:flex; justify-content:space-between; font-size:12px;">
+                    <span style="color:#aaa; font-weight:bold;">TOTAL DURASI:</span>
+                    <span style="color:#FFD200; font-weight:bold;">${fmtDur(durTotal)}</span>
                 </div>
-            </div>`;
+            </div>
+            <div style="height:15px;"></div>`;
         }
 
         div.innerHTML = `<div class="card-header"><div class="header-left"><span class="cust-name">${displayName}</span><div style="margin-top:4px; display:flex; align-items:center;">${paymentBadge}<span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span></div><div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">Queue No : ${getDailyQueueNumber(order.id)}</div>${headerCashierHtml}</div>${headerRight}</div><div class="item-list">${itemsHtml}</div>${totalDisplayHtml}${kpiHtml}${statusFooter}${printButtons}<div class="actions" style="display:block;">${buttonsHtml}</div>`;
