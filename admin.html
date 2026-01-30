@@ -24,12 +24,19 @@
         .filters { display: flex; gap: 10px; margin-bottom: 20px; }
         .form-select, .form-input { padding: 10px; background: #15151a; border: 1px solid #444; color: #fff; border-radius: 8px; font-family: 'Poppins'; }
         
+        /* Employee & Tables */
+        .emp-form { background: var(--card-bg); padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #444; }
+        .emp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .emp-table th { text-align: left; padding: 10px; background: #222; color: #888; }
+        .emp-table td { padding: 10px; border-bottom: 1px solid #333; }
+        .btn-add { background: var(--green); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-del { background: var(--red); color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 10px; }
+
         /* History Cards (Gaya Asli) */
         .history-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
         .order-card { background: var(--card-bg); border-radius: 10px; padding: 15px; border-left: 5px solid #555; font-size: 13px; }
         .order-card.status-completed { border-left-color: var(--green); }
         .order-card.status-rejected { border-left-color: var(--red); opacity: 0.7; }
-        
         .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px dashed #444; padding-bottom: 5px; }
         
         /* Logs Table */
@@ -50,6 +57,7 @@
     <div class="sidebar">
         <div class="brand">SBS ADMIN</div>
         <div class="menu-item active" onclick="showPage('finance')">💰 Keuangan</div>
+        <div class="menu-item" onclick="showPage('employees')">👥 Pegawai</div>
         <div class="menu-item" onclick="showPage('history')">📜 Riwayat</div>
         <div class="menu-item" onclick="showPage('logs')">⚠️ Logs</div>
     </div>
@@ -71,6 +79,29 @@
                 <div style="font-size:12px; color:#aaa;">TOTAL PENDAPATAN (OMZET)</div>
                 <div id="main-stat-rev" style="font-size:36px; color:var(--green); font-weight:bold;">Rp 0</div>
             </div>
+        </div>
+
+        <div id="employees-page" style="display:none;">
+            <h2 class="page-title">MANAJEMEN PEGAWAI</h2>
+            
+            <div class="emp-form">
+                <h4 style="margin-top:0; color:#aaa;">Tambah Pegawai Baru</h4>
+                <div style="display:grid; gap:10px; grid-template-columns: 2fr 1fr auto;">
+                    <input type="text" id="emp-name" class="form-input" placeholder="Nama Lengkap">
+                    <select id="emp-role" class="form-select">
+                        <option value="Kasir">Kasir</option>
+                        <option value="Dapur">Dapur</option>
+                        <option value="Server">Server</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                    <button class="btn-add" onclick="addEmployee()">SIMPAN</button>
+                </div>
+            </div>
+
+            <table class="emp-table">
+                <thead><tr><th>Nama</th><th>Jabatan</th><th>Aksi</th></tr></thead>
+                <tbody id="emp-list"></tbody>
+            </table>
         </div>
 
         <div id="history-page" style="display:none;">
@@ -107,7 +138,7 @@
         let dbOrders = [];
         let taxEnabled = false;
 
-        // LOAD SETTING PAJAK (Hanya untuk toggle button, tidak mengganggu history)
+        // LOAD SETTING PAJAK
         db.ref('settings/tax_enabled').on('value', (snap) => {
             taxEnabled = snap.val() || false;
             updateTaxButtonUI();
@@ -124,6 +155,38 @@
             calculateFinance(); renderHistory();
         });
 
+        // LOAD EMPLOYEES (BARU)
+        db.ref('employees').on('value', s => {
+            const list = document.getElementById('emp-list');
+            list.innerHTML = '';
+            if(s.val()){
+                Object.keys(s.val()).forEach(key => {
+                    const emp = s.val()[key];
+                    list.innerHTML += `
+                        <tr>
+                            <td>${emp.name}</td>
+                            <td><span style="background:#444; padding:2px 6px; border-radius:4px; font-size:10px;">${emp.role}</span></td>
+                            <td><button class="btn-del" onclick="delEmployee('${key}')">Hapus</button></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                list.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#666;">Belum ada data pegawai</td></tr>';
+            }
+        });
+
+        function addEmployee() {
+            const name = document.getElementById('emp-name').value;
+            const role = document.getElementById('emp-role').value;
+            if(!name) return alert("Nama tidak boleh kosong!");
+            db.ref('employees').push({name, role});
+            document.getElementById('emp-name').value = '';
+        }
+
+        function delEmployee(key) {
+            if(confirm("Hapus pegawai ini?")) db.ref('employees/'+key).remove();
+        }
+
         // LOAD LOGS
         db.ref('activity_logs').limitToLast(50).on('value', snap => {
             const tbody = document.getElementById('logs-tbody');
@@ -136,7 +199,7 @@
             });
         });
 
-        // UI KONTROL PAJAK (FITUR BARU)
+        // UI KONTROL PAJAK
         function toggleTaxSetting() {
             const newState = !taxEnabled;
             db.ref('settings/tax_enabled').set(newState).then(() => alert(newState ? "Pajak 10% DIAKTIFKAN" : "Pajak 10% DINONAKTIFKAN"));
@@ -159,7 +222,7 @@
             container.innerHTML = `<div style="font-size:14px; font-weight:bold; color:#ccc;">STATUS PAJAK (PPN)</div><div style="display:flex; align-items:center; gap:15px;">${statusText}<button onclick="toggleTaxSetting()" style="background:${btnColor}; border:none; padding:8px 15px; border-radius:5px; color:#fff; font-weight:bold; cursor:pointer;">${btnText}</button></div>`;
         }
 
-        // --- FUNGSI ORIGINAL (TIDAK DIUTAK-ATIK) ---
+        // FINANCE FUNCTIONS
         function calculateFinance() {
             const mode = document.getElementById('finance-mode').value;
             let totalRev = 0;
@@ -175,7 +238,6 @@
                 if (mode === 'monthly' && targetMonth && oDate.toISOString().slice(0,7) === targetMonth) match = true;
                 
                 if(match) {
-                    // Gunakan data final jika ada (support pajak), fallback ke total lama
                     let val = 0;
                     if(o.finalData && o.finalData.finalTotal) val = o.finalData.finalTotal;
                     else { let raw = String(o.total).replace(/[^0-9]/g, ''); val = Number(raw) || 0; }
@@ -192,7 +254,6 @@
             calculateFinance();
         }
 
-        // LOGIKA RIWAYAT ASLI (Tanpa KPI, Tanpa Durasi Detail)
         function renderHistory() {
             const grid = document.getElementById('history-grid');
             grid.innerHTML = '';
@@ -242,8 +303,14 @@
             document.querySelectorAll('.main > div').forEach(e=>e.style.display='none');
             document.getElementById(p+'-page').style.display='block';
             document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active'));
-            const idx = p === 'finance' ? 0 : (p === 'history' ? 1 : 2);
-            document.querySelectorAll('.menu-item')[idx].classList.add('active');
+            
+            // Re-index active menu class
+            const menus = document.querySelectorAll('.menu-item');
+            if(p==='finance') menus[0].classList.add('active');
+            else if(p==='employees') menus[1].classList.add('active');
+            else if(p==='history') menus[2].classList.add('active');
+            else if(p==='logs') menus[3].classList.add('active');
+
             if(p==='finance') calculateFinance();
         }
     </script>
