@@ -272,7 +272,7 @@
         return `${m}m ${rs}s`;
     }
 
-    // --- FUNGSI CREATE HISTORY CARD (YANG SUDAH DIPERBAIKI + STYLE BARU) ---
+    // --- FUNGSI CREATE HISTORY CARD (UPDATED: FONT SAMA PERSIS DAPUR) ---
     function createHistoryCard(order) {
         let displayName = "Pelanggan";
         if (order.tableNumber) {
@@ -317,7 +317,7 @@
 
         let statusFooter = order.status === 'rejected' ? `<div class="status-footer"><div class="stamp-rejected">DITOLAK ✕</div></div>` : `<div class="status-footer"><div class="status-text-done">SELESAI</div></div>`;
         
-        // --- LOGIKA KPI DURASI (DIKEMBALIKAN + STYLING BARU) ---
+        // --- LOGIKA KPI DURASI (STYLE FIX: SAMA PERSIS DAPUR) ---
         let kpiHtml = '';
         if (order.status === 'completed') {
             let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
@@ -336,19 +336,19 @@
             const responColor = durRespon > 180000 ? '#e74c3c' : '#aaa'; 
 
             kpiHtml = `
-            <div class="duration-box" style="margin-top:10px; padding-top:10px; border-top:1px dashed #555;">
-                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                    <span style="color:#777;">Pesan - Bayar:</span> <span class="dur-val" style="color:#ddd;">${fmtDur(durPesan)}</span>
+            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #444; font-size:11px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Pesan - Bayar:</span> <span style="color:#ddd;">${fmtDur(durPesan)}</span>
                 </div>
-                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                    <span style="color:#777;">Respon Kasir:</span> <span class="dur-val" style="color:${responColor}">${fmtDur(durRespon)}</span>
+                <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor};">${fmtDur(durRespon)}</span>
                 </div>
-                <div class="dur-row" style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                    <span style="color:#777;">Masak / Siapkan:</span> <span class="dur-val" style="color:#ddd;">${fmtDur(durMasak)}</span>
+                <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Masak / Siapkan:</span> <span style="color:#ddd;">${fmtDur(durMasak)}</span>
                 </div>
-                <div class="dur-total-row" style="margin-top:5px; padding:5px 0; border-top:1px solid #444; border-bottom:1px solid #444; display:flex; justify-content:space-between; font-size:12px;">
+                <div style="margin-top:5px; padding:5px 0; border-top:1px solid #444; border-bottom:1px solid #444; display:flex; justify-content:space-between; font-size:12px;">
                     <span style="color:#aaa; font-weight:bold;">TOTAL DURASI:</span>
-                    <span class="dur-total-val" style="color:#FFD200; font-weight:bold;">${fmtDur(durTotal)}</span>
+                    <span style="color:#FFD200; font-weight:bold;">${fmtDur(durTotal)}</span>
                 </div>
             </div>
             <div style="height:15px;"></div>`;
