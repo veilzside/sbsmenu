@@ -588,6 +588,34 @@
         }
         if (totalEl) totalEl.innerText = `Rp ${totals.finalTotal.toLocaleString()}`;
     }
+
+    function saveOrderDiscount(orderId) {
+        const order = allOrders.find(o => o.id === orderId);
+        if (!order) return;
+
+        const inputEl = document.getElementById(`disc-input-${orderId}`);
+        const typeEl = document.getElementById(`disc-type-${orderId}`);
+
+        if (inputEl && typeEl) {
+            const rawVal = parseFloat(inputEl.value) || 0;
+            const type = typeEl.value;
+
+            // Hitung Rupiah untuk disimpan di field 'discount' (biar kompatibel)
+            let subtotal = 0;
+            if (order.items) order.items.forEach(i => subtotal += (i.price * i.qty));
+            
+            let finalDiscRp = rawVal;
+            if (type === 'percent') {
+                finalDiscRp = Math.ceil(subtotal * (rawVal / 100));
+            }
+
+            // Update ke Firebase (Hanya field diskon)
+            db.ref('orders/' + orderId).update({
+                discount: finalDiscRp,
+                discountMeta: { type: type, value: rawVal }
+            });
+        }
+    }
     
     function padRow(leftStr, rightStr) {
         const width = 32; 
@@ -623,43 +651,42 @@
         const o = allOrders.find(x => x.id === id); 
         if (!o) return;
 
-        // Update Status Print
-        if (type === 'bill') db.ref('orders/' + id).update({ isBillPrinted: true });
-        if (type === 'invoice') db.ref('orders/' + id).update({ isReceiptPrinted: true });
-
-        // --- LOGIKA DISKON UNTUK PRINT ---
-        let discLabel = "Disc";
-        let discAmountRp = 0;
-
-        // Cek Input HTML (Kalau sedang diedit/aktif)
+        // --- UPDATE 1: AMBIL DATA DISKON DARI INPUT SEKARANG ---
+        // Kita paksa ambil dari layar, jaga-jaga user belum sempat tekan enter/save
         const inputEl = document.getElementById(`disc-input-${id}`);
         const typeEl = document.getElementById(`disc-type-${id}`);
+        
+        let discountVal = o.discount || 0;     // Default DB
+        let metaType = o.discountMeta ? o.discountMeta.type : 'percent';
+        let metaVal = o.discountMeta ? o.discountMeta.value : 0;
 
         if (inputEl && typeEl) {
-            // Ambil dari input langsung
-            let val = parseFloat(inputEl.value) || 0;
-            let dType = typeEl.value;
+            // Jika input ada, kita update variabel di atas
+            metaVal = parseFloat(inputEl.value) || 0;
+            metaType = typeEl.value;
             
-            // Hitung ulang subtotal untuk dapat nominal
             let sub = 0;
             if (o.items) o.items.forEach(i => sub += (i.price * i.qty));
 
-            if (dType === 'percent') {
-                discLabel = `Disc (${val}%)`;
-                discAmountRp = Math.ceil(sub * (val / 100));
+            if (metaType === 'percent') {
+                discountVal = Math.ceil(sub * (metaVal / 100));
             } else {
-                discLabel = "Disc";
-                discAmountRp = val;
+                discountVal = metaVal;
             }
-        } else {
-            // Kalau input tidak ada (misal dari History), ambil dari database
-            // Kita simpan data ini di fungsi verifyAndPrint nanti
-            if (o.discountMeta && o.discountMeta.type === 'percent') {
-                discLabel = `Disc (${o.discountMeta.value}%)`;
-            }
-            discAmountRp = o.discount || 0;
         }
-        // ----------------------------------
+        // -------------------------------------------------------
+
+        // --- UPDATE 2: SIMPAN STATUS PRINT + DISKON SEKALIGUS ---
+        let updates = {};
+        if (type === 'bill') updates.isBillPrinted = true;
+        if (type === 'invoice') updates.isReceiptPrinted = true;
+        
+        // PENTING: Ikut simpan diskonnya biar PERMANEN
+        updates.discount = discountVal;
+        updates.discountMeta = { type: metaType, value: metaVal };
+        
+        db.ref('orders/' + id).update(updates);
+        // -------------------------------------------------------
 
         const hiddenCashier = document.getElementById(`selected-cashier-${id}`);
         let selectedCashier = o.cashier; 
@@ -667,7 +694,7 @@
         if (!selectedCashier) { selectedCashier = localStorage.getItem('sbs_cashier_name') || 'Staff'; }
 
         const q = getDailyQueueNumber(id);
-        const totals = calculateTotals(o, discAmountRp); 
+        const totals = calculateTotals(o, discountVal); // Pakai discountVal yang baru dihitung
         const d = new Date(o.timestamp);
         const dateStr = d.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'}) + " " + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
         
@@ -721,9 +748,12 @@
             } else {
                 txt += padRow("Subtotal", totals.subtotal.toLocaleString('id-ID')) + "\n";
                 
-                // TAMPILKAN DISKON SESUAI FORMAT (Disc 10% atau Disc Biasa)
+                // Tampilan Diskon di Struk
+                let labelDisc = "Disc";
+                if (metaType === 'percent') labelDisc = `Disc (${metaVal}%)`; // Label %
+                
                 if (totals.discount > 0) {
-                    txt += padRow(discLabel, "- " + totals.discount.toLocaleString('id-ID')) + "\n";
+                    txt += padRow(labelDisc, "- " + totals.discount.toLocaleString('id-ID')) + "\n";
                 }
 
                 if (totals.tax > 0) txt += padRow("Tax (10%)", totals.tax.toLocaleString('id-ID')) + "\n";
@@ -893,7 +923,7 @@
     function createCard(order) {
         let displayName = order.tableNumber ? ("MEJA " + order.tableNumber + (order.customerName ? " - " + order.customerName.toUpperCase() : "")) : order.customer;
         
-        // LOGIKA WAKTU (ANTI GAGAL)
+        // --- LOGIKA WAKTU (ANTI GAGAL) ---
         const t1 = new Date(order.timestamp).getTime(); 
         const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; 
         const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; 
@@ -913,6 +943,7 @@
         if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; 
         if(order.status === 'unpaid') div.style.borderLeftColor = '#FF6600'; 
         
+        // ITEM LIST
         let itemsHtml = (order.items || []).map((item, idx) => {
             const qty = parseInt(item.qty); const price = parseInt(item.price);
             const trashBtn = !['completed', 'rejected', 'processing'].includes(order.status) ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
@@ -1002,7 +1033,7 @@
 
         const isEditable = ['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status);
         
-        // --- INPUTS DISKON (LOGIKA LEBAR DINAMIS) ---
+        // --- INPUTS DISKON (DENGAN AUTO-SAVE ONCHANGE) ---
         let discInputHtml = '';
         let cashierInputHtml = '';
         
@@ -1012,8 +1043,8 @@
 
             let selPercent = (savedType === 'percent') ? 'selected' : '';
             let selRp = (savedType === 'rp') ? 'selected' : '';
-
-            // Tentukan lebar awal berdasarkan tipe yang tersimpan
+            
+            // Lebar Awal
             let initialWidth = (savedType === 'percent') ? '50px' : '110px';
 
             discInputHtml = `
@@ -1021,7 +1052,9 @@
                 <div style="display:flex; align-items:center; gap:5px;">
                     <span style="font-size:12px; color:#aaa;">Disc:</span>
                     
-                    <select id="disc-type-${order.id}" onchange="updateLiveTotal('${order.id}')" style="width:60px; background:#333; border:1px solid #555; color:#fff; padding:5px; border-radius:6px; font-size:13px; font-weight:bold;">
+                    <select id="disc-type-${order.id}" 
+                        onchange="updateLiveTotal('${order.id}'); saveOrderDiscount('${order.id}')" 
+                        style="width:60px; background:#333; border:1px solid #555; color:#fff; padding:5px; border-radius:6px; font-size:13px; font-weight:bold;">
                         <option value="percent" ${selPercent}>%</option>
                         <option value="rp" ${selRp}>Rp</option>
                     </select>
@@ -1032,6 +1065,7 @@
                         onfocus="if(this.value=='0') this.value=''" 
                         onblur="if(this.value=='') this.value='0'"
                         oninput="updateLiveTotal('${order.id}')" 
+                        onchange="saveOrderDiscount('${order.id}')"
                         style="width: ${initialWidth}; background:#222; border:1px solid #555; color:#fff; padding:5px; border-radius:6px; text-align:right; font-weight:bold; font-size:14px; transition: width 0.2s;">
                     
                     <div id="disc-calc-${order.id}" style="flex:1; text-align:right; font-size:11px; color:#e74c3c; font-weight:bold; display:${(savedType==='percent' && savedVal > 0) ? 'block' : 'none'};">
