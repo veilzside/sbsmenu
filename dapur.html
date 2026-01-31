@@ -857,57 +857,6 @@
         `;
         return div;
     }
-
-        let headerCashierHtml = '';
-        if(order.cashier) {
-            headerCashierHtml = `<div style="font-size:11px; color:#888; margin-top:2px;">Cashier: ${order.cashier}</div>`;
-        }
-
-        // --- TAMBAHAN LOGIKA KPI DURASI (YANG SEMPAT HILANG) ---
-        let kpiHtml = '';
-        if (order.status === 'completed') {
-            const t1 = new Date(order.timestamp).getTime();
-            const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0;
-            const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0;
-            const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
-
-            let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
-
-            if (order.paymentMethod === 'qris') {
-                if(t2 && t1) durPesan = t2 - t1;
-                if(t3 && t2) durRespon = t3 - t2;
-                if(t4 && t3) durMasak = t4 - t3;
-            } else {
-                if(t3 && t1) durPesan = t3 - t1;
-                durRespon = 0; 
-                if(t4 && t3) durMasak = t4 - t3;
-            }
-            if(t4 && t1) durTotal = t4 - t1;
-
-            const responColor = durRespon > 180000 ? '#e74c3c' : '#aaa'; 
-
-            kpiHtml = `
-            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #444; font-size:11px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                    <span style="color:#777;">Pesan - Bayar:</span> <span style="color:#ddd;">${fmtDur(durPesan)}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                    <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor};">${fmtDur(durRespon)}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                    <span style="color:#777;">Masak / Siapkan:</span> <span style="color:#ddd;">${fmtDur(durMasak)}</span>
-                </div>
-                <div style="margin-top:5px; padding:5px 0; border-top:1px solid #444; border-bottom:1px solid #444; display:flex; justify-content:space-between; font-size:12px;">
-                    <span style="color:#aaa; font-weight:bold;">TOTAL DURASI:</span>
-                    <span style="color:#FFD200; font-weight:bold;">${fmtDur(durTotal)}</span>
-                </div>
-            </div>
-            <div style="height:15px;"></div>`;
-        }
-
-        div.innerHTML = `<div class="card-header"><div class="header-left"><span class="cust-name">${displayName}</span><div style="margin-top:4px; display:flex; align-items:center;">${paymentBadge}<span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span></div><div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">Queue No : ${getDailyQueueNumber(order.id)}</div>${headerCashierHtml}</div>${headerRight}</div><div class="item-list">${itemsHtml}</div>${totalDisplayHtml}${kpiHtml}${statusFooter}${printButtons}<div class="actions" style="display:block;">${buttonsHtml}</div>`;
-        return div;
-    }
     
     // START
     setupTabs();
