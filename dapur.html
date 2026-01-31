@@ -777,23 +777,16 @@ txt += padRow(leftText, rightText) + "\n";
     function createCard(order) {
         let displayName = order.tableNumber ? ("MEJA " + order.tableNumber + (order.customerName ? " - " + order.customerName.toUpperCase() : "")) : order.customer;
         
-        // --- 1. AMBIL SEMUA WAKTU YANG ADA ---
-        const t1 = new Date(order.timestamp).getTime();      // Jam Masuk Pesanan
-        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; // Jam Customer Bayar (Gateway)
-        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; // Jam Verifikasi Kasir
+        // --- 1. LOGIKA WAKTU (ANTI GAGAL) ---
+        const t1 = new Date(order.timestamp).getTime(); 
+        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; // Waktu Gateway
+        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; // Waktu Kasir
 
-        // --- 2. LOGIKA JAM MASUK (REVISI TOTAL) ---
-        // Prioritas:
-        // 1. Jika sudah diverifikasi Kasir -> Pakai t3
-        // 2. Jika belum, tapi Customer sudah bayar (Gateway) -> Pakai t2 (INI YANG SERING TERLEWAT)
-        // 3. Jika belum semua -> Pakai t1 (Jam Pesan)
+        // Priority Jam Masuk: Kasir > Gateway > Jam Pesan
         let entryTime = t1;
         if (t3 > 0) { entryTime = t3; }
         else if (t2 > 0) { entryTime = t2; }
 
-        // Timer Start Logic:
-        // Jika status Processing -> Hitung mundur dari Jam Verifikasi/Bayar
-        // Jika status lain -> Hitung dari Jam Pesan (biar tahu durasi total tunggu)
         let timerStart = (['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(order.status)) ? t1 : (order.status === 'processing' ? (t3 || t2) : 0);
         
         const finance = calculateTotals(order);
@@ -813,7 +806,6 @@ txt += padRow(leftText, rightText) + "\n";
         const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday:'short', day:'numeric', month:'short'});
         const timeInStr = new Date(entryTime).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
         
-        // Payment Badge (Huruf Kecil/Besar Aman)
         const pMethod = (order.paymentMethod || '').toLowerCase();
         const isQRIS = pMethod.indexOf('qris') > -1;
         let paymentBadge = isQRIS ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">QRIS</span>' : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">TUNAI</span>';
@@ -821,53 +813,71 @@ txt += padRow(leftText, rightText) + "\n";
         // --- HEADER KANAN ---
         let timeDisplayHtml = '';
         if (order.status === 'qris_unpaid') {
-            // Status Khusus: Menunggu Pembayaran
             timeDisplayHtml = `<div class="meta-time-block"><span style="color:#FFD200; font-size:11px; font-weight:700; letter-spacing:0.5px;">Menunggu Pembayaran</span></div>`;
         } else {
-            // Status Lain (Pending/Processing): Tampilkan Jam (Yang sudah dikoreksi di atas)
             timeDisplayHtml = `<div class="meta-time-block"><span class="time-label">Masuk:</span> <span class="time-val">${timeInStr}</span></div>`;
         }
-
         let headerRight = `<div class="header-right"><span class="meta-date">${dateStr}</span>${timeDisplayHtml}<div class="timer-badge live-timer" data-start="${timerStart}">--:--</div></div>`;
         
-        // Override Riwayat
         if(order.status === 'completed' || order.status === 'rejected') {
             const timeDoneStr = new Date(order.completedAt).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-            headerRight = `
-            <div class="header-right">
-                <span class="meta-date">${dateStr}</span>
-                <div class="meta-time-block"><span class="time-label">Masuk:</span> <span style="color:#ddd; font-weight:700;">${timeInStr}</span></div>
-                <div class="meta-time-block"><span class="time-label">Selesai:</span> <span class="time-highlight">${timeDoneStr}</span></div>
-            </div>`;
+            headerRight = `<div class="header-right"><span class="meta-date">${dateStr}</span><div class="meta-time-block"><span class="time-label">Masuk:</span> <span style="color:#ddd; font-weight:700;">${timeInStr}</span></div><div class="meta-time-block"><span class="time-label">Selesai:</span> <span class="time-highlight">${timeDoneStr}</span></div></div>`;
         }
 
-        // --- TOMBOL PRINT (Locked Logic) ---
+        // --- 2. TOMBOL PRINT (DENGAN LOGIKA URUTAN) ---
         let printButtons = '';
         if(order.status !== 'rejected') {
-            const isLocked = (order.status === 'qris_unpaid');
+            // Cek Status Lock (QRIS Unpaid)
+            const isUnpaidLock = (order.status === 'qris_unpaid');
+            
+            // Cek Status Print
+            const billDone = order.isBillPrinted ? true : false;
+            const receiptDone = order.isReceiptPrinted ? true : false;
+
+            // Style Definitions
             const baseStyle = "flex:1;";
             const lockedStyle = "flex:1; background:#333; color:#777; border-color:#444; cursor:not-allowed;";
-            const lockAttr = isLocked ? 'disabled' : '';
-            const commonBtnStyle = isLocked ? lockedStyle : baseStyle;
+            
+            // --- A. TOMBOL BILL ---
+            // Hanya terkunci jika QRIS belum bayar
+            const billBtnStyle = isUnpaidLock ? lockedStyle : `${baseStyle} background:#e67e22; border-color:#d35400;`;
+            const billAttr = isUnpaidLock ? 'disabled' : '';
+            const billIcon = billDone ? '✅' : '📄';
+            const btnBill = `<button class="btn-print" style="${billBtnStyle}" onclick="printDirect('${order.id}', 'bill')" ${billAttr}><span style="font-size:16px;">${billIcon}</span> BILL</button>`;
 
-            let btnBill = '';
-            let billDone = order.isBillPrinted ? '✅' : '';
-            let receiptDone = order.isReceiptPrinted ? '✅' : '';
+            // --- B. TOMBOL RECEIPT ---
+            // Terkunci jika: (QRIS belum bayar) ATAU (Bill BELUM diprint)
+            let receiptBtnStyle = baseStyle;
+            let receiptAction = `printDirect('${order.id}', 'invoice')`;
+            let receiptAttr = '';
 
-            if(['new', 'unpaid', 'pending_payment', 'qris_unpaid', 'processing'].includes(order.status)) {
-                const billStyle = isLocked ? lockedStyle : `${baseStyle} background:#e67e22; border-color:#d35400;`;
-                btnBill = `<button class="btn-print" style="${billStyle}" onclick="printDirect('${order.id}', 'bill')" ${lockAttr}><span style="font-size:16px;">📄</span> BILL ${billDone}</button>`;
+            if (isUnpaidLock) {
+                // Case 1: Terkunci karena belum bayar
+                receiptBtnStyle = lockedStyle;
+                receiptAttr = 'disabled';
+            } else if (!billDone) {
+                // Case 2: Terkunci karena Bill belum diprint
+                receiptBtnStyle = lockedStyle;
+                receiptAction = `showNiceAlert('lock', 'URUTAN SALAH', 'Harap Print BILL terlebih dahulu sebelum mencetak Receipt!')`;
             }
+            // Jika lolos kedua cek di atas, tombol aktif normal
+
+            const receiptIcon = receiptDone ? '✅' : '🧾';
+            const btnReceipt = `<button class="btn-print" style="${receiptBtnStyle}" onclick="${receiptAction}" ${receiptAttr}><span style="font-size:16px;">${receiptIcon}</span> RECEIPT</button>`;
+            
+            // --- C. TOMBOL CHECKER (Selalu Terbuka kecuali Unpaid) ---
+            const checkerStyle = isUnpaidLock ? lockedStyle : baseStyle;
+            const checkerAttr = isUnpaidLock ? 'disabled' : '';
 
             printButtons = `
             <div class="btn-print-group">
-                <button class="btn-print" style="${commonBtnStyle}" onclick="printDirect('${order.id}', 'checker')" ${lockAttr}><span style="font-size:16px;">🖨</span> CHECKER</button>
+                <button class="btn-print" style="${checkerStyle}" onclick="printDirect('${order.id}', 'checker')" ${checkerAttr}><span style="font-size:16px;">🖨</span> CHECKER</button>
                 ${btnBill}
-                <button class="btn-print" style="${commonBtnStyle}" onclick="printDirect('${order.id}', 'invoice')" ${lockAttr}><span style="font-size:16px;">🧾</span> RECEIPT ${receiptDone}</button>
+                ${btnReceipt}
             </div>`;
         }
 
-        // --- TOMBOL PROSES (Print Check Logic) ---
+        // --- 3. TOMBOL PROSES (Syarat: Bill & Receipt Harus Done) ---
         let buttonsHtml = '';
         const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">TOLAK</button>`;
         const canProcess = (order.isBillPrinted && order.isReceiptPrinted);
@@ -884,7 +894,6 @@ txt += padRow(leftText, rightText) + "\n";
             buttonsHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnTolak}<button class="btn btn-grey" disabled style="opacity:0.5;">MENUNGGU PEMBAYARAN</button></div><div style="text-align:center; font-size:10px; color:#FF6600; font-weight:bold; margin-top:5px;">⚠ CUSTOMER BELUM BAYAR</div>`;
         
         } else if (order.status === 'pending_payment') {
-            // VERIFIKASI & PROSES (Dengan Lock Print)
             let btnProcess = canProcess 
                 ? `<button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">VERIFIKASI & PROSES</button>` 
                 : lockedProcessBtn;
@@ -898,7 +907,7 @@ txt += padRow(leftText, rightText) + "\n";
 
         const isEditable = ['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status);
         
-        // --- INPUTS (Disc & Kasir) ---
+        // --- INPUTS ---
         let discInputHtml = '';
         let cashierInputHtml = '';
         
