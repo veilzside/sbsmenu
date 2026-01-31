@@ -131,6 +131,35 @@
             .status-tabs { position: sticky; top: 0; background: var(--bg-dark); z-index: 50; padding-top: 10px; margin-top: -10px; }
             .orders-grid { grid-template-columns: 1fr; gap: 20px; padding-bottom: 0; } 
         }
+
+        /* --- NICE MODAL STYLE --- */
+        .nice-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center; z-index: 9999;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .nice-modal-overlay.open { display: flex; opacity: 1; }
+        
+        .nice-modal-box {
+            background: #2b2b36; width: 85%; max-width: 380px;
+            border-radius: 20px; padding: 30px 25px; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            border: 1px solid #444;
+            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .nice-modal-overlay.open .nice-modal-box { transform: scale(1); }
+
+        .nm-icon { font-size: 50px; margin-bottom: 15px; display: block; text-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .nm-title { color: #fff; font-family: 'Bebas Neue'; font-size: 26px; margin: 0 0 10px 0; letter-spacing: 1px; }
+        .nm-msg { color: #aaa; font-size: 14px; line-height: 1.5; margin-bottom: 25px; font-weight: 500; }
+        
+        .nm-actions { display: flex; gap: 10px; justify-content: center; }
+        .nm-btn { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .nm-btn:active { transform: scale(0.95); }
+        .nm-btn-cancel { background: #333; color: #ccc; }
+        .nm-btn-confirm { background: var(--accent); color: #000; box-shadow: 0 5px 15px rgba(255, 210, 0, 0.3); }
+        .nm-btn-danger { background: var(--red); color: #fff; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4); }
     </style>
 </head>
 <body onclick="unlockAudio()">
@@ -172,17 +201,16 @@
         <div id="history-grid" class="orders-grid"></div>
     </div>
 
-    <div id="custom-confirm-modal" class="modal">
-        <div class="modal-content">
-            <h3 style="color:var(--accent); margin-top:0;">KONFIRMASI</h3>
-            <p id="confirm-msg">Apakah Anda yakin?</p>
-            <div class="actions" style="margin-top:20px;">
-                <button class="btn btn-grey" onclick="closeConfirm()">BATAL</button>
-                <button class="btn btn-red" id="btn-confirm-yes">YA, LANJUTKAN</button>
-            </div>
+    <div id="nice-modal" class="nice-modal-overlay">
+        <div class="nice-modal-box">
+            <span id="nm-icon" class="nm-icon">🔒</span>
+            <h3 id="nm-title" class="nm-title">PERINGATAN</h3>
+            <p id="nm-msg" class="nm-msg">Pesan notifikasi muncul di sini.</p>
+            <div id="nm-actions" class="nm-actions">
+                </div>
         </div>
     </div>
-
+    
     <audio id="sound-new" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
     <audio id="sound-nag" src="bell.wav" preload="auto"></audio>
 
@@ -228,6 +256,55 @@
         isTaxEnabled = snap.val() || false;
         renderOrders();
     });
+
+    // --- HELPER FUNGSI MODAL BARU (TAMBAHKAN INI) ---
+    let niceModalCallback = null;
+
+    function showNiceAlert(type, title, msg, callback = null) {
+        const modal = document.getElementById('nice-modal');
+        const iconEl = document.getElementById('nm-icon');
+        const titleEl = document.getElementById('nm-title');
+        const msgEl = document.getElementById('nm-msg');
+        const actionsEl = document.getElementById('nm-actions');
+
+        // Setup Icon & Warna
+        let icon = '🔔';
+        if (type === 'lock') icon = '🔒';
+        if (type === 'warning') icon = '⚠️';
+        if (type === 'danger') icon = '🗑️';
+        
+        iconEl.innerHTML = icon;
+        titleEl.innerText = title;
+        msgEl.innerText = msg;
+        actionsEl.innerHTML = ''; // Reset tombol
+
+        // Logika Tombol
+        if (callback) {
+            // Jika Mode Konfirmasi (Ya/Tidak)
+            niceModalCallback = callback;
+            let btnColor = (type === 'danger') ? 'nm-btn-danger' : 'nm-btn-confirm';
+            actionsEl.innerHTML = `
+                <button class="nm-btn nm-btn-cancel" onclick="closeNiceModal()">BATAL</button>
+                <button class="nm-btn ${btnColor}" onclick="confirmNiceModal()">YA, LANJUT</button>
+            `;
+        } else {
+            // Jika Mode Info (Hanya OK)
+            actionsEl.innerHTML = `<button class="nm-btn nm-btn-cancel" style="width:100%; background:#444; color:#fff;" onclick="closeNiceModal()">MENGERTI</button>`;
+        }
+
+        modal.classList.add('open');
+    }
+
+    function closeNiceModal() {
+        const modal = document.getElementById('nice-modal');
+        if(modal) modal.classList.remove('open');
+        niceModalCallback = null;
+    }
+
+    function confirmNiceModal() {
+        if (niceModalCallback) niceModalCallback();
+        closeNiceModal();
+    }
 
     // LOAD EMPLOYEES
     db.ref('employees').on('value', snap => {
@@ -623,23 +700,24 @@
         db.ref('orders/' + key).update(updates);
     }
     
+   // --- UPDATE FUNGSI INI (GANTI YANG LAMA) ---
     function confirmReject(key) { 
         const hiddenCashier = document.getElementById(`selected-cashier-${key}`);
         const selectedCashier = (hiddenCashier && hiddenCashier.value) ? hiddenCashier.value : (localStorage.getItem('sbs_cashier_name') || 'Staff');
-
-        document.getElementById('confirm-msg').innerText = "Yakin tolak pesanan ini?";
-        confirmCallback = () => updateStatus(key, 'rejected', selectedCashier);
-        document.getElementById('custom-confirm-modal').style.display = 'flex';
+        
+        showNiceAlert('danger', 'TOLAK PESANAN?', 'Yakin ingin menolak pesanan ini? Aksi tidak bisa dibatalkan.', () => {
+            updateStatus(key, 'rejected', selectedCashier);
+        });
     }
 
     function deleteOrderItem(orderKey, itemIndex) {
-        document.getElementById('confirm-msg').innerText = "Hapus item ini?";
-        confirmCallback = () => {
+        showNiceAlert('danger', 'HAPUS ITEM?', 'Yakin ingin menghapus menu ini dari pesanan?', () => {
             const order = allOrders.find(o => o.id === orderKey);
             const newItems = [...order.items];
             newItems.splice(itemIndex, 1);
             db.ref('orders/' + orderKey).update({ items: newItems });
-        };
+        });
+    }
         document.getElementById('custom-confirm-modal').style.display = 'flex';
     }
 
@@ -700,13 +778,13 @@
         });
     }
 
+    // --- UPDATE FUNGSI createCard (GANTI YANG LAMA) ---
     function createCard(order) {
         let displayName = order.tableNumber ? ("MEJA " + order.tableNumber + (order.customerName ? " - " + order.customerName.toUpperCase() : "")) : order.customer;
         
         const t1 = new Date(order.timestamp).getTime(); 
         const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; 
         
-        // Jam Masuk (QRIS = Jam Bayar, Lainnya = Jam Pesan)
         let entryTime = t1;
         if (order.paymentMethod === 'qris' && t3 > 0) { entryTime = t3; }
 
@@ -750,7 +828,7 @@
             </div>`;
         }
 
-        // 3. TOMBOL PRINT (Status Terkunci/Lock)
+        // 3. TOMBOL PRINT
         let printButtons = '';
         if(order.status !== 'rejected') {
             const isLocked = (order.status === 'qris_unpaid');
@@ -760,7 +838,6 @@
             const commonBtnStyle = isLocked ? lockedStyle : baseStyle;
 
             let btnBill = '';
-            // Indikator visual kalau sudah diprint
             let billDone = order.isBillPrinted ? '✅' : '';
             let receiptDone = order.isReceiptPrinted ? '✅' : '';
 
@@ -777,19 +854,20 @@
             </div>`;
         }
 
-        // 4. LOGIKA TOMBOL PROSES (Check Print Status)
+        // 4. LOGIKA TOMBOL PROSES (DENGAN MODAL ALERT BARU)
         let buttonsHtml = '';
         const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">TOLAK</button>`;
 
-        // Cek syarat print (Bill & Receipt harus True)
         const canProcess = (order.isBillPrinted && order.isReceiptPrinted);
-        const lockedProcessBtn = `<button class="btn btn-grey" onclick="alert('HARAP PRINT BILL & RECEIPT DULU!')" style="background:#444; color:#888; border:1px solid #555;">🔒 VERIFIKASI & PROSES</button>`;
+        
+        // Panggilan Modal Baru
+        const lockedAction = `showNiceAlert('lock', 'AKSES DITOLAK', 'Harap Print Bill & Receipt Terlebih Dahulu untuk melanjutkan!')`;
+        const lockedProcessBtn = `<button class="btn btn-grey" onclick="${lockedAction}" style="background:#444; color:#888; border:1px solid #555;">🔒 VERIFIKASI & PROSES</button>`;
 
         if (order.status === 'new') {
-            // Untuk New, mungkin aturannya sama atau bebas? Saya samakan biar aman.
             let btnProcess = canProcess 
                 ? `<button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">LUNAS & PROSES</button>` 
-                : `<button class="btn btn-grey" onclick="alert('HARAP PRINT BILL & RECEIPT DULU!')" style="background:#444; color:#888; border:1px solid #555;">🔒 LUNAS & PROSES</button>`;
+                : `<button class="btn btn-grey" onclick="${lockedAction}" style="background:#444; color:#888; border:1px solid #555;">🔒 LUNAS & PROSES</button>`;
             
             buttonsHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnTolak}${btnProcess}</div>`;
         
@@ -797,7 +875,6 @@
             buttonsHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnTolak}<button class="btn btn-grey" disabled style="opacity:0.5;">MENUNGGU PEMBAYARAN</button></div><div style="text-align:center; font-size:10px; color:#FF6600; font-weight:bold; margin-top:5px;">⚠ CUSTOMER BELUM BAYAR</div>`;
         
         } else if (order.status === 'pending_payment') {
-            // INI YANG DIMINTA USER: Verifikasi & Proses
             let btnProcess = canProcess 
                 ? `<button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">VERIFIKASI & PROSES</button>` 
                 : lockedProcessBtn;
