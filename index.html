@@ -14,6 +14,23 @@
         .logo-container img { width: 100%; height: auto; }
         .header-title h1 { font-family: 'Bebas Neue', cursive; font-size: 55px; margin: 0; line-height: 0.8; letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff; }
 
+        .nice-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px);
+    display: none; justify-content: center; align-items: center; 
+    z-index: 10000; /* Z-Index tinggi biar di atas semua */
+    opacity: 0; transition: opacity 0.3s ease;
+}
+.nice-modal-overlay.open { display: flex; opacity: 1; }
+
+.nice-modal-box {
+    background: #2b2b36; width: 85%; max-width: 350px;
+    border-radius: 20px; padding: 25px; text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6); border: 1px solid #444;
+    transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.nice-modal-overlay.open .nice-modal-box { transform: scale(1); }
+        
         /* --- TRACKING STATUS BAR (UPDATED) --- */
         #status-tracker {
             position: fixed; top: 0; left: 0; width: 100%; 
@@ -653,16 +670,6 @@
     </div>
 </div>
 
-<div id="history-modal" class="modal">
-    <div class="modal-content">
-        <div class="close-modal" onclick="closeHistory()">&times;</div>
-        <div class="modal-header">RIWAYAT PESANAN</div>
-        <div id="history-container" style="padding-bottom:10px;">
-            </div>
-        <button class="btn-close-final" onclick="closeHistory()">TUTUP</button>
-    </div>
-</div>  
-
     <div id="nice-modal" class="nice-modal-overlay">
     <div class="nice-modal-box">
         <span id="nm-icon" class="nm-icon">🔔</span>
@@ -711,16 +718,18 @@
         
         iconEl.innerHTML = icon;
         titleEl.innerText = title;
-        msgEl.innerText = msg;
+        msgEl.innerHTML = msg; // Pakai innerHTML agar bisa bold
         actionsEl.innerHTML = ''; 
 
         if (callback) {
+            // Mode Konfirmasi (Ada Callback)
             let btnClass = (type === 'danger') ? 'nm-btn-danger' : 'nm-btn-confirm';
             actionsEl.innerHTML = `
                 <button class="nm-btn nm-btn-cancel" onclick="closeNiceModal()">BATAL</button>
                 <button class="nm-btn ${btnClass}" onclick="confirmNiceModal()">YA, LANJUT</button>
             `;
         } else {
+            // Mode Info (Hanya Mengerti)
             actionsEl.innerHTML = `<button class="nm-btn nm-btn-cancel" style="width:100%; background:#333; color:#fff;" onclick="closeNiceModal()">MENGERTI</button>`;
         }
         modal.classList.add('open');
@@ -885,7 +894,7 @@
         const paymentRadio = document.querySelector('input[name="payment_method"]:checked');
         const paymentMethod = paymentRadio ? paymentRadio.value : 'tunai';
 
-        // GANTI ALERT BIASA JADI NICE MODAL
+        // VALIDASI PAKAI NICE MODAL (PASTIKAN FUNGSI showNiceAlert ADA)
         if (!tableNum) { 
             showNiceAlert('warning', 'DATA KURANG', 'Mohon isi <b>Nomor Meja</b> terlebih dahulu!'); 
             return; 
@@ -894,7 +903,10 @@
             showNiceAlert('warning', 'DATA KURANG', 'Mohon isi <b>Nama Kakak</b> agar kami tidak salah panggil.'); 
             return; 
         }
-        if (cart.length === 0) return;
+        if (cart.length === 0) {
+             showNiceAlert('warning', 'KERANJANG KOSONG', 'Pilih menu dulu ya kak!');
+             return;
+        }
 
         let totalPrice = 0;
         cart.forEach(item => totalPrice += (item.price * item.qty));
@@ -930,6 +942,7 @@
             updateCartUI();
             closeCart();
             
+            // Reset Form
             if(!document.getElementById('table-number').readOnly) {
                 document.getElementById('table-number').value = '';
             }
@@ -942,7 +955,6 @@
             }
         })
         .catch((error) => {
-            // GANTI ALERT ERROR JADI NICE MODAL
             showNiceAlert('danger', 'GAGAL KIRIM', "Terjadi kesalahan: " + error.message);
         });
     }
@@ -975,14 +987,11 @@
 
     // --- 3. UPDATE HAPUS RIWAYAT (UPDATE: PAKAI NICE MODAL) ---
     function manualClearHistory() {
-        // PANGGIL NICE MODAL KONFIRMASI (TIDAK PERLU HTML MODAL TAMBAHAN)
-        showNiceAlert('danger', 'HAPUS RIWAYAT?', 'Semua riwayat pesanan yang SUDAH SELESAI akan dihapus permanen dari memori HP ini.', () => {
+        // Panggil Nice Modal (BUKAN modal 'clear-history-modal' yang sudah dihapus)
+        showNiceAlert('danger', 'HAPUS RIWAYAT?', 'Semua riwayat pesanan yang SUDAH SELESAI akan dihapus dari HP ini.', () => {
             executeClearHistory();
         });
     }
-
-    // Hapus fungsi closeClearHistoryModal() karena sudah tidak dipakai
-    // function closeClearHistoryModal() { ... } 
 
     function executeClearHistory() {
         localStorage.removeItem('sbs_order_history');
