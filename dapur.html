@@ -211,6 +211,7 @@
     let allOrders = [];
     let activePage = 'orders'; 
     let audioUnlocked = false;
+    let hasInteracted = false;
     let isFirstLoad = true;
     
     let unreadOrdersCount = 0;
@@ -294,15 +295,60 @@
         }
     }
 
+    // --- LOGIKA AUDIO BARU (SAKLAR & KUNCI) ---
+
+    // 1. Fungsi Body (Hanya jalan 1x di awal)
     function unlockAudio() {
-        if (!audioUnlocked) {
+        // Cek: Apakah ini interaksi pertama?
+        if (!hasInteracted) {
             soundNew.play().then(() => {
                 soundNew.pause(); soundNew.currentTime = 0;
+                
+                // Nyalakan Audio & Kunci Interaksi Selanjutnya
                 audioUnlocked = true;
-                btnAudio.classList.remove('inactive');
-                btnAudio.classList.add('active');
-                btnAudio.innerHTML = "🔔";
-            }).catch(e => {});
+                hasInteracted = true; 
+                
+                updateAudioBtnUI();
+            }).catch(e => {
+                console.log("Audio belum diizinkan browser");
+            });
+        }
+    }
+
+    // 2. Fungsi Tombol (Saklar Manual ON/OFF)
+    function toggleAudio(e) {
+        if(e) e.stopPropagation(); // Wajib: Agar tidak dianggap klik body
+
+        // Tandai sudah interaksi (agar klik body tidak lagi berpengaruh)
+        hasInteracted = true; 
+
+        audioUnlocked = !audioUnlocked; // Balik Status
+
+        if (audioUnlocked) {
+            // -- NYALA --
+            soundNew.play().then(() => {
+                soundNew.pause(); soundNew.currentTime = 0;
+            }).catch(()=>{});
+        } else {
+            // -- MATI --
+            // Matikan paksa semua suara
+            if(soundNew) { soundNew.pause(); soundNew.currentTime = 0; }
+            if(soundNag) { soundNag.pause(); soundNag.currentTime = 0; }
+        }
+        updateAudioBtnUI();
+    }
+
+    // 3. Update Tampilan Icon
+    function updateAudioBtnUI() {
+        if(!btnAudio) return;
+        if (audioUnlocked) {
+            btnAudio.innerHTML = "🔔";
+            btnAudio.classList.remove('inactive');
+            btnAudio.classList.add('active');
+        } else {
+            btnAudio.innerHTML = "🔕";
+            btnAudio.classList.remove('active');
+            btnAudio.classList.add('inactive');
         }
     }
 
