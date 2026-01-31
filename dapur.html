@@ -218,7 +218,7 @@
     let realActiveCount = 0;
     let realHistoryCount = 0;
     
-    // Data Kasir (Default)
+    // Data Kasir
     let cashierList = ['Kasir 1', 'Kasir 2', 'Kasir 3'];
 
     // GLOBAL TAX SETTING
@@ -244,7 +244,12 @@
     });
 
     const soundNew = document.getElementById('sound-new');
+    // GANTI KE SUARA SERVICE BELL (TING!) ASLI
+    // Sumber: Mixkit Service Bell Ring
     const soundNag = document.getElementById('sound-nag');
+    soundNag.src = "https://assets.mixkit.co/active_storage/sfx/1468/1468-preview.mp3"; 
+    soundNag.volume = 1.5; 
+
     const btnAudio = document.getElementById('btn-audio');
 
     function fmtDur(ms) {
@@ -256,45 +261,6 @@
     }
 
     function toggleAudio() {
-      const soundNew = document.getElementById('sound-new');
-    const soundNag = document.getElementById('sound-nag');
-
-    // --- VOLUME LONCENG ---
-    soundNag.volume = 1.5; // Set 80% agar dentingannya "cling" jernih tapi tidak pecah
-    
-    // ... kode lain ...
-
-    // --- DI DALAM setInterval PALING BAWAH ---
-    if (audioUnlocked) {
-        const now = Date.now();
-        if (allOrders.some(order => {
-            if (['new', 'pending_payment'].includes(order.status)) {
-                const diff = (now - new Date(order.timestamp).getTime()) / 1000;
-                // Bunyi setiap 2 menit (120 detik)
-                return diff > 120 && (diff % 120) < 1.5;
-            }
-            return false;
-        })) { 
-            // LOGIKA "TING... TING..." (Service Bell Style)
-            soundNag.currentTime = 0; 
-            soundNag.play().then(() => {
-                // Bunyikan lagi setelah 0.4 detik (Ting.... Ting)
-                setTimeout(() => {
-                    soundNag.currentTime = 0;
-                    soundNag.play().catch(e=>{});
-                }, 400); 
-            }).catch(e => {}); 
-        }
-    } else {
-            audioUnlocked = false;
-            [soundNew, soundNag].forEach(audio => { audio.pause(); audio.currentTime = 0; });
-            btnAudio.classList.remove('active');
-            btnAudio.classList.add('inactive');
-            btnAudio.innerHTML = "🔕";
-        }
-    }
-
-    function unlockAudio() {
         if (!audioUnlocked) {
             soundNew.play().then(() => {
                 soundNew.pause(); soundNew.currentTime = 0;
@@ -303,6 +269,12 @@
                 btnAudio.classList.add('active');
                 btnAudio.innerHTML = "🔔";
             }).catch(e => {});
+        } else {
+            audioUnlocked = false;
+            [soundNew, soundNag].forEach(audio => { audio.pause(); audio.currentTime = 0; });
+            btnAudio.classList.remove('active');
+            btnAudio.classList.add('inactive');
+            btnAudio.innerHTML = "🔕";
         }
     }
 
@@ -448,7 +420,7 @@
         return leftStr + " ".repeat(space) + rightStr;
     }
 
-    // --- FUNGSI PILIH KASIR (TOMBOL) ---
+    // --- FUNGSI PILIH KASIR ---
     function selectCashier(orderId, name) {
         document.getElementById(`selected-cashier-${orderId}`).value = name;
         const container = document.getElementById(`cashier-btn-container-${orderId}`);
@@ -648,6 +620,7 @@
     function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
     document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
 
+    // --- ALARM LOGIC (TING TING) ---
     setInterval(() => {
         document.querySelectorAll('.live-timer').forEach(el => {
             const startTime = parseInt(el.getAttribute('data-start'));
@@ -657,15 +630,26 @@
             const min = Math.floor(elapsed / 60); const sec = elapsed % 60;
             el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
         });
+        
         if (audioUnlocked) {
             const now = Date.now();
             if (allOrders.some(order => {
                 if (['new', 'pending_payment'].includes(order.status)) {
                     const diff = (now - new Date(order.timestamp).getTime()) / 1000;
+                    // Bunyi setiap 2 menit (120 detik)
                     return diff > 120 && (diff % 120) < 1.5;
                 }
                 return false;
-            })) { soundNag.currentTime = 0; soundNag.play().catch(e => {}); }
+            })) { 
+                // TING... TING... (Service Bell)
+                soundNag.currentTime = 0; 
+                soundNag.play().then(() => {
+                    setTimeout(() => {
+                        soundNag.currentTime = 0;
+                        soundNag.play().catch(e=>{});
+                    }, 400); 
+                }).catch(e => {}); 
+            }
         }
     }, 1000);
 
@@ -734,49 +718,50 @@
 
         const isEditable = ['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status);
         
-        let inputsHtml = '';
+        // --- 1. PISAHKAN INPUT DISC & CASHIER ---
+        let discInputHtml = '';
+        let cashierInputHtml = '';
+        
         if(isEditable) {
-            inputsHtml += `
+            // A. Disc Input
+            discInputHtml = `
             <div style="margin:5px 0; border-top:1px dashed #444; padding-top:5px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span style="font-size:12px; color:#aaa;">Disc (Rp):</span>
                     <input type="number" id="disc-input-${order.id}" value="${order.discount||0}" oninput="updateLiveTotal('${order.id}')" style="width:100px; background:#222; border:1px solid #555; color:#fff; padding:4px; border-radius:4px; text-align:right;">
-                </div>`;
-            
-            inputsHtml += `<div style="margin-top:10px;"><div style="font-size:12px; color:#aaa; margin-bottom:3px;">PILIH KASIR:</div><div id="cashier-btn-container-${order.id}" style="display:flex; gap:5px; flex-wrap:wrap;">`;
-            
-            // BACA MEMORY
-            const memoryCashier = localStorage.getItem('sbs_cashier_name');
+                </div>
+            </div>`;
 
+            // B. Cashier Selection (LABEL GANTI JADI "KASIR:")
+            cashierInputHtml = `<div style="margin-top:10px; border-top:1px dashed #444; padding-top:10px;">
+                <div style="font-size:12px; color:#aaa; margin-bottom:3px;">KASIR:</div>
+                <div id="cashier-btn-container-${order.id}" style="display:flex; gap:5px; flex-wrap:wrap;">`;
+            
+            const memoryCashier = localStorage.getItem('sbs_cashier_name');
             cashierList.forEach((name, index) => {
                 let isActive = false;
-                if (order.cashier) {
-                    isActive = (order.cashier === name);
-                } else if (memoryCashier) {
-                    isActive = (memoryCashier === name);
-                } else {
-                    isActive = (index === 0);
-                }
+                if (order.cashier) { isActive = (order.cashier === name); }
+                else if (memoryCashier) { isActive = (memoryCashier === name); }
+                else { isActive = (index === 0); }
 
                 const bg = isActive ? 'var(--accent)' : '#333';
                 const col = isActive ? '#000' : '#ccc';
                 const border = isActive ? 'var(--accent)' : '#555';
                 const fw = isActive ? 'bold' : 'normal';
                 
-                inputsHtml += `<button class="btn-cashier-select" data-name="${name}" onclick="selectCashier('${order.id}', '${name}')" style="background:${bg}; color:${col}; border:1px solid ${border}; padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; flex:1; font-weight:${fw};">${name}</button>`;
+                cashierInputHtml += `<button class="btn-cashier-select" data-name="${name}" onclick="selectCashier('${order.id}', '${name}')" style="background:${bg}; color:${col}; border:1px solid ${border}; padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; flex:1; font-weight:${fw};">${name}</button>`;
             });
-            
             let defaultVal = order.cashier || memoryCashier || (cashierList.length > 0 ? cashierList[0] : '');
-            inputsHtml += `</div><input type="hidden" id="selected-cashier-${order.id}" value="${defaultVal}"></div></div>`;
+            cashierInputHtml += `</div><input type="hidden" id="selected-cashier-${order.id}" value="${defaultVal}"></div>`;
 
         } else if (finance.discount > 0) {
-             inputsHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin-bottom:5px;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
+             discInputHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin-bottom:5px;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
         }
 
         let totalDisplayHtml = `
             <div style="border-top:1px dashed #444; margin-top:10px; padding-top:5px; font-size:13px; color:#aaa;">
                 <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>${finance.subtotal.toLocaleString()}</span></div>
-                ${inputsHtml}
+                ${discInputHtml}
                 <div id="tax-row-${order.id}" style="display:${(isTaxEnabled && finance.tax > 0) ? 'flex' : 'none'}; justify-content:space-between;"><span>Tax (10%):</span><span>${finance.tax.toLocaleString()}</span></div>
                 <div style="display:flex; justify-content:space-between; margin-top:5px; font-weight:600; color:var(--accent); font-size:18px;">
                     <span>Total:</span><span id="total-val-${order.id}">Rp ${finance.finalTotal.toLocaleString()}</span>
@@ -789,7 +774,7 @@
             headerCashierHtml = `<div style="font-size:11px; color:#888; margin-top:2px;">Cashier: ${order.cashier}</div>`;
         }
 
-        // --- TAMBAHAN LOGIKA KPI DURASI (YANG SEMPAT HILANG) ---
+        // --- KPI DURASI ---
         let kpiHtml = '';
         if (order.status === 'completed') {
             const t1 = new Date(order.timestamp).getTime();
@@ -831,7 +816,28 @@
             <div style="height:15px;"></div>`;
         }
 
-        div.innerHTML = `<div class="card-header"><div class="header-left"><span class="cust-name">${displayName}</span><div style="margin-top:4px; display:flex; align-items:center;">${paymentBadge}<span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span></div><div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">Queue No : ${getDailyQueueNumber(order.id)}</div>${headerCashierHtml}</div>${headerRight}</div><div class="item-list">${itemsHtml}</div>${totalDisplayHtml}${kpiHtml}${statusFooter}${printButtons}<div class="actions" style="display:block;">${buttonsHtml}</div>`;
+        // --- SUSUNAN AKHIR (CASHIER DI BAWAH TOTAL) ---
+        div.innerHTML = `
+            <div class="card-header">
+                <div class="header-left">
+                    <span class="cust-name">${displayName}</span>
+                    <div style="margin-top:4px; display:flex; align-items:center;">
+                        ${paymentBadge}
+                        <span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span>
+                    </div>
+                    <div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">Queue No : ${getDailyQueueNumber(order.id)}</div>
+                    ${headerCashierHtml}
+                </div>
+                ${headerRight}
+            </div>
+            <div class="item-list">${itemsHtml}</div>
+            
+            ${totalDisplayHtml} 
+            ${cashierInputHtml}  ${kpiHtml}
+            ${statusFooter}
+            ${printButtons}
+            <div class="actions" style="display:block;">${buttonsHtml}</div>
+        `;
         return div;
     }
     
