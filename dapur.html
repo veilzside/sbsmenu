@@ -651,50 +651,41 @@
         const o = allOrders.find(x => x.id === id); 
         if (!o) return;
 
-        // --- UPDATE 1: AMBIL DATA DISKON DARI INPUT SEKARANG ---
-        // Kita paksa ambil dari layar, jaga-jaga user belum sempat tekan enter/save
+        // 1. UPDATE DB (Simpan Status & Data Diskon)
         const inputEl = document.getElementById(`disc-input-${id}`);
         const typeEl = document.getElementById(`disc-type-${id}`);
         
-        let discountVal = o.discount || 0;     // Default DB
+        let discountVal = o.discount || 0;
         let metaType = o.discountMeta ? o.discountMeta.type : 'percent';
         let metaVal = o.discountMeta ? o.discountMeta.value : 0;
 
         if (inputEl && typeEl) {
-            // Jika input ada, kita update variabel di atas
             metaVal = parseFloat(inputEl.value) || 0;
             metaType = typeEl.value;
-            
             let sub = 0;
             if (o.items) o.items.forEach(i => sub += (i.price * i.qty));
-
             if (metaType === 'percent') {
                 discountVal = Math.ceil(sub * (metaVal / 100));
             } else {
                 discountVal = metaVal;
             }
         }
-        // -------------------------------------------------------
 
-        // --- UPDATE 2: SIMPAN STATUS PRINT + DISKON SEKALIGUS ---
         let updates = {};
         if (type === 'bill') updates.isBillPrinted = true;
         if (type === 'invoice') updates.isReceiptPrinted = true;
-        
-        // PENTING: Ikut simpan diskonnya biar PERMANEN
         updates.discount = discountVal;
         updates.discountMeta = { type: metaType, value: metaVal };
-        
         db.ref('orders/' + id).update(updates);
-        // -------------------------------------------------------
 
+        // 2. PERSIAPAN DATA PRINT
         const hiddenCashier = document.getElementById(`selected-cashier-${id}`);
         let selectedCashier = o.cashier; 
         if (!selectedCashier && hiddenCashier && hiddenCashier.value) { selectedCashier = hiddenCashier.value; }
         if (!selectedCashier) { selectedCashier = localStorage.getItem('sbs_cashier_name') || 'Staff'; }
 
         const q = getDailyQueueNumber(id);
-        const totals = calculateTotals(o, discountVal); // Pakai discountVal yang baru dihitung
+        const totals = calculateTotals(o, discountVal); 
         const d = new Date(o.timestamp);
         const dateStr = d.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'}) + " " + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
         
@@ -702,6 +693,7 @@
         const custName = (o.customerName || "Customer").toUpperCase();
         const displayID = o.id.slice(-7).toUpperCase();
 
+        // 3. KONSTANTA ESC/POS
         const ESC = "\x1B"; const GS = "\x1D"; const INIT = ESC + "@";
         const ALIGN_CENTER = ESC + "a" + "\x01"; const ALIGN_LEFT = ESC + "a" + "\x00"; 
         const BOLD_ON = ESC + "E" + "\x01"; const BOLD_OFF = ESC + "E" + "\x00";
@@ -719,8 +711,15 @@
             txt += "\n\n\n";
 
         } else {
-            if (type === 'bill') { txt += ALIGN_CENTER + BOLD_ON + "THIS IS NOT A RECEIPT\n\n" + BOLD_OFF; }
-            txt += ALIGN_CENTER + TEXT_DOUBLE + "SBS CAFE\n" + TEXT_NORMAL + "Jl. Mundu 8, Kota Malang\nJawa Timur, 65116\n085159039877\n";
+            // --- HEADER BILL (MODIFIKASI DI SINI) ---
+            if (type === 'bill') {
+                // "THIS IS NOT A RECEIPT": Jadi Besar (Double) & Tebal
+                txt += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "THIS IS NOT A RECEIPT\n" + TEXT_NORMAL + "\n" + BOLD_OFF;
+            }
+
+            // "SBS CAFE": Jadi Normal (TEXT_NORMAL), Tetap Tebal (BOLD_ON) biar tegas
+            txt += ALIGN_CENTER + BOLD_ON + "SBS CAFE\n" + BOLD_OFF + TEXT_NORMAL + "Jl. Mundu 8, Kota Malang\nJawa Timur, 65116\n085159039877\n";
+            
             txt += ALIGN_LEFT + "--------------------------------\n";
             txt += BOLD_ON + "TABLE: " + (o.tableNumber || "TA") + BOLD_OFF + "\n"; 
             txt += "Queue Order: #" + q + "\n";
@@ -748,9 +747,8 @@
             } else {
                 txt += padRow("Subtotal", totals.subtotal.toLocaleString('id-ID')) + "\n";
                 
-                // Tampilan Diskon di Struk
                 let labelDisc = "Disc";
-                if (metaType === 'percent') labelDisc = `Disc (${metaVal}%)`; // Label %
+                if (metaType === 'percent') labelDisc = `Disc (${metaVal}%)`;
                 
                 if (totals.discount > 0) {
                     txt += padRow(labelDisc, "- " + totals.discount.toLocaleString('id-ID')) + "\n";
