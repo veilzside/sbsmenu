@@ -731,9 +731,6 @@
         if(activeEl) activeEl.classList.add('active');
     }
 
-    function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
-    document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
-
     setInterval(() => {
         document.querySelectorAll('.live-timer').forEach(el => {
             const startTime = parseInt(el.getAttribute('data-start'));
