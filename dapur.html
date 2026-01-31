@@ -777,19 +777,24 @@ txt += padRow(leftText, rightText) + "\n";
     function createCard(order) {
         let displayName = order.tableNumber ? ("MEJA " + order.tableNumber + (order.customerName ? " - " + order.customerName.toUpperCase() : "")) : order.customer;
         
-        // --- 1. DEFINISI WAKTU ---
-        const t1 = new Date(order.timestamp).getTime();      // Jam Pesan (Contoh: 10:00)
-        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; // Jam Bayar (Contoh: 10:03)
+        // --- 1. AMBIL SEMUA WAKTU YANG ADA ---
+        const t1 = new Date(order.timestamp).getTime();      // Jam Masuk Pesanan
+        const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; // Jam Customer Bayar (Gateway)
+        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; // Jam Verifikasi Kasir
 
-        // --- 2. LOGIKA JAM MASUK (UNIVERSAL) ---
-        // Aturan: Jika sudah ada Jam Bayar (t3), GUNAKAN ITU. Jika belum, pakai Jam Pesan (t1).
-        // Ini mengatasi masalah QRIS 10:00 -> Bayar 10:03 -> Tampil 10:03
-        let entryTime = (t3 > 0) ? t3 : t1;
+        // --- 2. LOGIKA JAM MASUK (REVISI TOTAL) ---
+        // Prioritas:
+        // 1. Jika sudah diverifikasi Kasir -> Pakai t3
+        // 2. Jika belum, tapi Customer sudah bayar (Gateway) -> Pakai t2 (INI YANG SERING TERLEWAT)
+        // 3. Jika belum semua -> Pakai t1 (Jam Pesan)
+        let entryTime = t1;
+        if (t3 > 0) { entryTime = t3; }
+        else if (t2 > 0) { entryTime = t2; }
 
-        // Timer Start:
-        // Kalau status Processing (Dapur) -> Hitung mulai dari Jam Bayar (t3)
-        // Kalau status lain -> Hitung mulai dari Jam Pesan (t1)
-        let timerStart = (['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(order.status)) ? t1 : (order.status === 'processing' ? t3 : 0);
+        // Timer Start Logic:
+        // Jika status Processing -> Hitung mundur dari Jam Verifikasi/Bayar
+        // Jika status lain -> Hitung dari Jam Pesan (biar tahu durasi total tunggu)
+        let timerStart = (['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(order.status)) ? t1 : (order.status === 'processing' ? (t3 || t2) : 0);
         
         const finance = calculateTotals(order);
         const div = document.createElement('div');
@@ -808,24 +813,24 @@ txt += padRow(leftText, rightText) + "\n";
         const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday:'short', day:'numeric', month:'short'});
         const timeInStr = new Date(entryTime).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
         
-        // Badge Payment (Lebih Aman: Cek apakah mengandung kata 'qris')
+        // Payment Badge (Huruf Kecil/Besar Aman)
         const pMethod = (order.paymentMethod || '').toLowerCase();
-        let isQRIS = pMethod.indexOf('qris') > -1; 
+        const isQRIS = pMethod.indexOf('qris') > -1;
         let paymentBadge = isQRIS ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">QRIS</span>' : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">TUNAI</span>';
 
         // --- HEADER KANAN ---
         let timeDisplayHtml = '';
         if (order.status === 'qris_unpaid') {
-            // Khusus QRIS Belum Bayar -> Teks Kuning
+            // Status Khusus: Menunggu Pembayaran
             timeDisplayHtml = `<div class="meta-time-block"><span style="color:#FFD200; font-size:11px; font-weight:700; letter-spacing:0.5px;">Menunggu Pembayaran</span></div>`;
         } else {
-            // Normal (Termasuk Pending Payment yang sudah bayar) -> Tampilkan Waktu
+            // Status Lain (Pending/Processing): Tampilkan Jam (Yang sudah dikoreksi di atas)
             timeDisplayHtml = `<div class="meta-time-block"><span class="time-label">Masuk:</span> <span class="time-val">${timeInStr}</span></div>`;
         }
 
         let headerRight = `<div class="header-right"><span class="meta-date">${dateStr}</span>${timeDisplayHtml}<div class="timer-badge live-timer" data-start="${timerStart}">--:--</div></div>`;
         
-        // Override untuk Riwayat
+        // Override Riwayat
         if(order.status === 'completed' || order.status === 'rejected') {
             const timeDoneStr = new Date(order.completedAt).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
             headerRight = `
@@ -836,7 +841,7 @@ txt += padRow(leftText, rightText) + "\n";
             </div>`;
         }
 
-        // --- TOMBOL PRINT (Lock jika QRIS Unpaid) ---
+        // --- TOMBOL PRINT (Locked Logic) ---
         let printButtons = '';
         if(order.status !== 'rejected') {
             const isLocked = (order.status === 'qris_unpaid');
@@ -862,7 +867,7 @@ txt += padRow(leftText, rightText) + "\n";
             </div>`;
         }
 
-        // --- TOMBOL PROSES (Lock jika belum print) ---
+        // --- TOMBOL PROSES (Print Check Logic) ---
         let buttonsHtml = '';
         const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">TOLAK</button>`;
         const canProcess = (order.isBillPrinted && order.isReceiptPrinted);
@@ -879,7 +884,7 @@ txt += padRow(leftText, rightText) + "\n";
             buttonsHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnTolak}<button class="btn btn-grey" disabled style="opacity:0.5;">MENUNGGU PEMBAYARAN</button></div><div style="text-align:center; font-size:10px; color:#FF6600; font-weight:bold; margin-top:5px;">⚠ CUSTOMER BELUM BAYAR</div>`;
         
         } else if (order.status === 'pending_payment') {
-            // KUNCI UTAMA: Jika pending_payment dan sudah bayar (t3 > 0), tombol proses normal
+            // VERIFIKASI & PROSES (Dengan Lock Print)
             let btnProcess = canProcess 
                 ? `<button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">VERIFIKASI & PROSES</button>` 
                 : lockedProcessBtn;
@@ -893,7 +898,7 @@ txt += padRow(leftText, rightText) + "\n";
 
         const isEditable = ['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status);
         
-        // --- INPUTS ---
+        // --- INPUTS (Disc & Kasir) ---
         let discInputHtml = '';
         let cashierInputHtml = '';
         
@@ -956,7 +961,7 @@ txt += padRow(leftText, rightText) + "\n";
 
             let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
 
-            if (isQRIS) { // Pakai flag isQRIS
+            if (isQRIS) {
                 if(t2 && t1) durPesan = t2 - t1;
                 if(t3 && t2) durRespon = t3 - t2;
                 if(t4 && t3) durMasak = t4 - t3;
