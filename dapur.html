@@ -184,7 +184,7 @@
     </div>
 
     <audio id="sound-new" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
-    <audio id="sound-nag" src="bell.wav" preload="auto"></audio>
+    <audio id="sound-nag" src="https://assets.mixkit.co/active_storage/sfx/1296/1296-preview.mp3" preload="auto"></audio>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -210,100 +210,25 @@
     let currentTab = localStorage.getItem('sbs_active_tab') || 'kasir';
     let allOrders = [];
     let activePage = 'orders'; 
-    let audioUnlocked = false; // Status Suara (False = Mati, True = Nyala)
+    let audioUnlocked = false;
     let isFirstLoad = true;
     
-    // Data Kasir
+    let unreadOrdersCount = 0;
+    let unreadHistoryCount = 0;
+    let realActiveCount = 0;
+    let realHistoryCount = 0;
+    
+    // Data Kasir (Default)
     let cashierList = ['Kasir 1', 'Kasir 2', 'Kasir 3'];
 
-    // --- SETUP AUDIO ---
-    // 1. Cek/Buat Elemen Audio
-    let soundNew = document.getElementById('sound-new');
-    if (!soundNew) {
-        soundNew = document.createElement('audio');
-        soundNew.id = 'sound-new';
-        soundNew.src = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
-        document.body.appendChild(soundNew);
-    }
-
-    let soundNag = document.getElementById('sound-nag');
-    if (!soundNag) {
-        soundNag = document.createElement('audio');
-        soundNag.id = 'sound-nag';
-        document.body.appendChild(soundNag);
-    }
-    // File lokal bell.mp3 (Sesuai request terakhir)
-    soundNag.src = "bell.mp3"; 
-    soundNag.volume = 1.0;
-
-    const btnAudio = document.getElementById('btn-audio');
-
-    // --- FUNGSI 1: UNLOCK AUDIO (Dipasang di Body) ---
-    // Gunanya: Memastikan audio nyala saat layar disentuh pertama kali
-    function unlockAudio() {
-        // Hanya jalan jika status masih OFF (False)
-        if (!audioUnlocked) {
-            soundNew.play().then(() => {
-                soundNew.pause(); soundNew.currentTime = 0;
-                
-                audioUnlocked = true; // Set status Nyala
-                updateAudioBtnUI();   // Update Icon
-            }).catch(e => {
-                console.log("Menunggu interaksi user...");
-            });
-        }
-    }
-
-    // --- FUNGSI 2: TOGGLE AUDIO (Dipasang di Tombol) ---
-    // Gunanya: Saklar Manual ON/OFF
-    function toggleAudio(e) {
-        // PENTING: Mencegah klik tembus ke Body (Stop Propagation)
-        if(e) e.stopPropagation(); 
-
-        audioUnlocked = !audioUnlocked; // Balik status
-
-        if (audioUnlocked) {
-            // Jika dinyalakan manual, pancing audio lagi
-            soundNew.play().then(() => {
-                soundNew.pause(); soundNew.currentTime = 0;
-            }).catch(()=>{});
-        } else {
-            // Jika dimatikan, stop semua suara yg sedang bunyi
-            soundNew.pause(); soundNew.currentTime = 0;
-            soundNag.pause(); soundNag.currentTime = 0;
-        }
-        updateAudioBtnUI();
-    }
-
-    // Fungsi Update Tampilan Tombol
-    function updateAudioBtnUI() {
-        if (audioUnlocked) {
-            btnAudio.innerHTML = "🔔";
-            btnAudio.classList.remove('inactive');
-            btnAudio.classList.add('active');
-        } else {
-            btnAudio.innerHTML = "🔕";
-            btnAudio.classList.remove('active');
-            btnAudio.classList.add('inactive');
-        }
-    }
-
-    // Pastikan tombol menggunakan event listener
-    if(btnAudio) {
-        // Kita pass 'event' ke dalam fungsi toggleAudio
-        btnAudio.onclick = function(event) {
-            toggleAudio(event);
-        };
-    }
-
-    // --- PAJAK ---
+    // GLOBAL TAX SETTING
     let isTaxEnabled = false;
     db.ref('settings/tax_enabled').on('value', snap => {
         isTaxEnabled = snap.val() || false;
         renderOrders();
     });
 
-    // --- PEGAWAI ---
+    // LOAD EMPLOYEES
     db.ref('employees').on('value', snap => {
         const fetched = [];
         if(snap.val()){
@@ -318,12 +243,67 @@
         renderOrders(); 
     });
 
+    const soundNew = document.getElementById('sound-new');
+    const soundNag = document.getElementById('sound-nag');
+    const btnAudio = document.getElementById('btn-audio');
+
     function fmtDur(ms) {
         if (!ms || ms < 0) return "-";
         const s = Math.floor(ms / 1000);
         const m = Math.floor(s / 60);
         const rs = s % 60;
         return `${m}m ${rs}s`;
+    }
+
+    function toggleAudio() {
+      const soundNew = document.getElementById('sound-new');
+    const soundNag = document.getElementById('sound-nag');
+
+    // --- VOLUME LONCENG ---
+    soundNag.volume = 1.5; // Set 80% agar dentingannya "cling" jernih tapi tidak pecah
+    
+    // ... kode lain ...
+
+    // --- DI DALAM setInterval PALING BAWAH ---
+    if (audioUnlocked) {
+        const now = Date.now();
+        if (allOrders.some(order => {
+            if (['new', 'pending_payment'].includes(order.status)) {
+                const diff = (now - new Date(order.timestamp).getTime()) / 1000;
+                // Bunyi setiap 2 menit (120 detik)
+                return diff > 120 && (diff % 120) < 1.5;
+            }
+            return false;
+        })) { 
+            // LOGIKA "TING... TING..." (Service Bell Style)
+            soundNag.currentTime = 0; 
+            soundNag.play().then(() => {
+                // Bunyikan lagi setelah 0.4 detik (Ting.... Ting)
+                setTimeout(() => {
+                    soundNag.currentTime = 0;
+                    soundNag.play().catch(e=>{});
+                }, 400); 
+            }).catch(e => {}); 
+        }
+    } else {
+            audioUnlocked = false;
+            [soundNew, soundNag].forEach(audio => { audio.pause(); audio.currentTime = 0; });
+            btnAudio.classList.remove('active');
+            btnAudio.classList.add('inactive');
+            btnAudio.innerHTML = "🔕";
+        }
+    }
+
+    function unlockAudio() {
+        if (!audioUnlocked) {
+            soundNew.play().then(() => {
+                soundNew.pause(); soundNew.currentTime = 0;
+                audioUnlocked = true;
+                btnAudio.classList.remove('inactive');
+                btnAudio.classList.add('active');
+                btnAudio.innerHTML = "🔔";
+            }).catch(e => {});
+        }
     }
 
     // --- LISTENER FIREBASE ---
@@ -341,7 +321,6 @@
                 allOrders.push(order);
                 currentStatuses[key] = order.status;
 
-                // Cek apakah harus bunyi "New Order"
                 if (!isFirstLoad && audioUnlocked) {
                     const currentStat = order.status;
                     const prevStat = previousOrderStatuses[key];
@@ -358,9 +337,9 @@
             (new Date(o.completedAt || o.timestamp).toDateString() === todayStr)
         ).length;
 
-        // Counter logic
         let seenOrd = parseInt(localStorage.getItem('sbs_seen_orders')) || 0;
         let seenHis = parseInt(localStorage.getItem('sbs_seen_history')) || 0;
+
         if (realActiveCount < seenOrd) { seenOrd = realActiveCount; localStorage.setItem('sbs_seen_orders', seenOrd); }
         if (realHistoryCount < seenHis) { seenHis = realHistoryCount; localStorage.setItem('sbs_seen_history', seenHis); }
 
@@ -373,11 +352,7 @@
         previousOrderStatuses = currentStatuses;
         if (isFirstLoad) isFirstLoad = false;
         
-        // Bunyikan Pesanan Baru (Hanya jika audioUnlocked TRUE)
-        if (shouldRing && audioUnlocked) {
-            soundNew.currentTime = 0;
-            soundNew.play().catch(e => {});
-        }
+        if (shouldRing) soundNew.play().catch(e => {});
         
         allOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         
@@ -390,14 +365,10 @@
     function updateNavBadges() {
         const badgeOrd = document.getElementById('badge-nav-orders');
         const badgeHis = document.getElementById('badge-nav-history');
-        if(badgeOrd) {
-            badgeOrd.innerText = unreadOrdersCount;
-            badgeOrd.style.display = (unreadOrdersCount > 0) ? 'flex' : 'none';
-        }
-        if(badgeHis) {
-            badgeHis.innerText = unreadHistoryCount;
-            badgeHis.style.display = (unreadHistoryCount > 0) ? 'flex' : 'none';
-        }
+        badgeOrd.innerText = unreadOrdersCount;
+        badgeOrd.style.display = (unreadOrdersCount > 0) ? 'flex' : 'none';
+        badgeHis.innerText = unreadHistoryCount;
+        badgeHis.style.display = (unreadHistoryCount > 0) ? 'flex' : 'none';
     }
 
     function updateTabBadges() {
@@ -405,14 +376,10 @@
         const countDapur = allOrders.filter(o => o.status === 'processing').length;
         const badgeK = document.getElementById('badge-kasir');
         const badgeD = document.getElementById('badge-dapur');
-        if(badgeK) {
-            badgeK.innerText = countKasir;
-            badgeK.style.backgroundColor = (countKasir > 0) ? 'var(--red)' : '#555';
-        }
-        if(badgeD) {
-            badgeD.innerText = countDapur;
-            badgeD.style.backgroundColor = (countDapur > 0) ? 'var(--red)' : '#555';
-        }
+        badgeK.innerText = countKasir;
+        badgeD.innerText = countDapur;
+        badgeK.style.backgroundColor = (countKasir > 0) ? 'var(--red)' : '#555';
+        badgeD.style.backgroundColor = (countDapur > 0) ? 'var(--red)' : '#555';
     }
 
     function showPage(pageId) {
@@ -438,7 +405,7 @@
         return (index + 1).toString().padStart(2, '0');
     }
 
-    // --- KALKULASI ---
+    // --- KALKULASI & LIVE UPDATE ---
     function calculateTotals(order, overrideDisc = null) {
         let subtotal = 0;
         if (order.items) {
@@ -481,7 +448,7 @@
         return leftStr + " ".repeat(space) + rightStr;
     }
 
-    // --- FUNGSI KASIR ---
+    // --- FUNGSI PILIH KASIR (TOMBOL) ---
     function selectCashier(orderId, name) {
         document.getElementById(`selected-cashier-${orderId}`).value = name;
         const container = document.getElementById(`cashier-btn-container-${orderId}`);
@@ -681,7 +648,6 @@
     function closeConfirm() { document.getElementById('custom-confirm-modal').style.display = 'none'; }
     document.getElementById('btn-confirm-yes').onclick = () => { confirmCallback(); closeConfirm(); };
 
-    // --- ALARM LOGIC (TING TING) ---
     setInterval(() => {
         document.querySelectorAll('.live-timer').forEach(el => {
             const startTime = parseInt(el.getAttribute('data-start'));
@@ -691,27 +657,15 @@
             const min = Math.floor(elapsed / 60); const sec = elapsed % 60;
             el.innerText = `⏱ ${min}:${sec < 10 ? '0'+sec : sec}`;
         });
-        
-        // HANYA BUNYI JIKA audioUnlocked = TRUE
         if (audioUnlocked) {
             const now = Date.now();
             if (allOrders.some(order => {
                 if (['new', 'pending_payment'].includes(order.status)) {
                     const diff = (now - new Date(order.timestamp).getTime()) / 1000;
-                    // Bunyi setiap 2 menit (120 detik)
                     return diff > 120 && (diff % 120) < 1.5;
                 }
                 return false;
-            })) { 
-                // TING... TING... (Service Bell)
-                soundNag.currentTime = 0; 
-                soundNag.play().then(() => {
-                    setTimeout(() => {
-                        soundNag.currentTime = 0;
-                        soundNag.play().catch(e=>{});
-                    }, 400); 
-                }).catch(e => {}); 
-            }
+            })) { soundNag.currentTime = 0; soundNag.play().catch(e => {}); }
         }
     }, 1000);
 
@@ -780,48 +734,49 @@
 
         const isEditable = ['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status);
         
-        let discInputHtml = '';
-        let cashierInputHtml = '';
-        
+        let inputsHtml = '';
         if(isEditable) {
-            discInputHtml = `
+            inputsHtml += `
             <div style="margin:5px 0; border-top:1px dashed #444; padding-top:5px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                     <span style="font-size:12px; color:#aaa;">Disc (Rp):</span>
                     <input type="number" id="disc-input-${order.id}" value="${order.discount||0}" oninput="updateLiveTotal('${order.id}')" style="width:100px; background:#222; border:1px solid #555; color:#fff; padding:4px; border-radius:4px; text-align:right;">
-                </div>
-            </div>`;
-
-            // LABEL: KASIR:
-            cashierInputHtml = `<div style="margin-top:10px; border-top:1px dashed #444; padding-top:10px;">
-                <div style="font-size:12px; color:#aaa; margin-bottom:3px;">KASIR:</div>
-                <div id="cashier-btn-container-${order.id}" style="display:flex; gap:5px; flex-wrap:wrap;">`;
+                </div>`;
             
+            inputsHtml += `<div style="margin-top:10px;"><div style="font-size:12px; color:#aaa; margin-bottom:3px;">PILIH KASIR:</div><div id="cashier-btn-container-${order.id}" style="display:flex; gap:5px; flex-wrap:wrap;">`;
+            
+            // BACA MEMORY
             const memoryCashier = localStorage.getItem('sbs_cashier_name');
+
             cashierList.forEach((name, index) => {
                 let isActive = false;
-                if (order.cashier) { isActive = (order.cashier === name); }
-                else if (memoryCashier) { isActive = (memoryCashier === name); }
-                else { isActive = (index === 0); }
+                if (order.cashier) {
+                    isActive = (order.cashier === name);
+                } else if (memoryCashier) {
+                    isActive = (memoryCashier === name);
+                } else {
+                    isActive = (index === 0);
+                }
 
                 const bg = isActive ? 'var(--accent)' : '#333';
                 const col = isActive ? '#000' : '#ccc';
                 const border = isActive ? 'var(--accent)' : '#555';
                 const fw = isActive ? 'bold' : 'normal';
                 
-                cashierInputHtml += `<button class="btn-cashier-select" data-name="${name}" onclick="selectCashier('${order.id}', '${name}')" style="background:${bg}; color:${col}; border:1px solid ${border}; padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; flex:1; font-weight:${fw};">${name}</button>`;
+                inputsHtml += `<button class="btn-cashier-select" data-name="${name}" onclick="selectCashier('${order.id}', '${name}')" style="background:${bg}; color:${col}; border:1px solid ${border}; padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; flex:1; font-weight:${fw};">${name}</button>`;
             });
+            
             let defaultVal = order.cashier || memoryCashier || (cashierList.length > 0 ? cashierList[0] : '');
-            cashierInputHtml += `</div><input type="hidden" id="selected-cashier-${order.id}" value="${defaultVal}"></div>`;
+            inputsHtml += `</div><input type="hidden" id="selected-cashier-${order.id}" value="${defaultVal}"></div></div>`;
 
         } else if (finance.discount > 0) {
-             discInputHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin-bottom:5px;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
+             inputsHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin-bottom:5px;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
         }
 
         let totalDisplayHtml = `
             <div style="border-top:1px dashed #444; margin-top:10px; padding-top:5px; font-size:13px; color:#aaa;">
                 <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>${finance.subtotal.toLocaleString()}</span></div>
-                ${discInputHtml}
+                ${inputsHtml}
                 <div id="tax-row-${order.id}" style="display:${(isTaxEnabled && finance.tax > 0) ? 'flex' : 'none'}; justify-content:space-between;"><span>Tax (10%):</span><span>${finance.tax.toLocaleString()}</span></div>
                 <div style="display:flex; justify-content:space-between; margin-top:5px; font-weight:600; color:var(--accent); font-size:18px;">
                     <span>Total:</span><span id="total-val-${order.id}">Rp ${finance.finalTotal.toLocaleString()}</span>
@@ -834,6 +789,7 @@
             headerCashierHtml = `<div style="font-size:11px; color:#888; margin-top:2px;">Cashier: ${order.cashier}</div>`;
         }
 
+        // --- TAMBAHAN LOGIKA KPI DURASI (YANG SEMPAT HILANG) ---
         let kpiHtml = '';
         if (order.status === 'completed') {
             const t1 = new Date(order.timestamp).getTime();
@@ -875,28 +831,7 @@
             <div style="height:15px;"></div>`;
         }
 
-        // --- STRUKTUR AKHIR KARTU ---
-        div.innerHTML = `
-            <div class="card-header">
-                <div class="header-left">
-                    <span class="cust-name">${displayName}</span>
-                    <div style="margin-top:4px; display:flex; align-items:center;">
-                        ${paymentBadge}
-                        <span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span>
-                    </div>
-                    <div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">Queue No : ${getDailyQueueNumber(order.id)}</div>
-                    ${headerCashierHtml}
-                </div>
-                ${headerRight}
-            </div>
-            <div class="item-list">${itemsHtml}</div>
-            
-            ${totalDisplayHtml} 
-            ${cashierInputHtml}  ${kpiHtml}
-            ${statusFooter}
-            ${printButtons}
-            <div class="actions" style="display:block;">${buttonsHtml}</div>
-        `;
+        div.innerHTML = `<div class="card-header"><div class="header-left"><span class="cust-name">${displayName}</span><div style="margin-top:4px; display:flex; align-items:center;">${paymentBadge}<span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span></div><div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">Queue No : ${getDailyQueueNumber(order.id)}</div>${headerCashierHtml}</div>${headerRight}</div><div class="item-list">${itemsHtml}</div>${totalDisplayHtml}${kpiHtml}${statusFooter}${printButtons}<div class="actions" style="display:block;">${buttonsHtml}</div>`;
         return div;
     }
     
