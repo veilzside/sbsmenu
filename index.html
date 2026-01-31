@@ -8,7 +8,7 @@
     <style>
         /* --- STYLE CSS --- */
         :root { --sbs-yellow: #FFD200; --sbs-black: #1A1A1A; --sbs-orange: #FF6600; --sbs-dark-yellow: #FFB800; }
-        body { font-family: 'Poppins', sans-serif; margin: 0; padding: 15px; color: var(--sbs-black); background: repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px), radial-gradient(circle at center, var(--sbs-yellow) 0%, #e6bc00 100%); background-attachment: fixed; overscroll-behavior-y: contain; padding-bottom: 120px; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; padding: 15px; color: var(--sbs-black); background: repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px), radial-gradient(circle at center, var(--sbs-yellow) 0%, #e6bc00 100%); background-attachment: fixed; overscroll-behavior-y: contain; padding-bottom: 40px; }
         .top-bar { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
         .logo-container { width: 70px; height: 70px; background: var(--sbs-black); border-radius: 50%; border: 3px solid #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
         .logo-container img { width: 100%; height: auto; }
@@ -662,18 +662,16 @@
         <button class="btn-close-final" onclick="closeHistory()">TUTUP</button>
     </div>
 </div>  
-  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:10px;">
-            <button onclick="closeClearHistoryModal()" 
-                    style="background:#eee; color:#333; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">
-                BATAL
-            </button>
-            <button onclick="executeClearHistory()" 
-                    style="background:red; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">
-                YA, HAPUS
-            </button>
-        </div>
+
+    <div id="nice-modal" class="nice-modal-overlay">
+    <div class="nice-modal-box">
+        <span id="nm-icon" class="nm-icon">🔔</span>
+        <h3 id="nm-title" class="nm-title">JUDUL</h3>
+        <p id="nm-msg" class="nm-msg">Pesan...</p>
+        <div id="nm-actions" class="nm-actions"></div>
     </div>
 </div>
+    
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
@@ -693,6 +691,50 @@
         firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.database();
+
+    // --- HELPER FUNGSI MODAL (WAJIB ADA) ---
+    let niceModalCallback = null;
+
+    function showNiceAlert(type, title, msg, callback = null) {
+        const modal = document.getElementById('nice-modal');
+        const iconEl = document.getElementById('nm-icon');
+        const titleEl = document.getElementById('nm-title');
+        const msgEl = document.getElementById('nm-msg');
+        const actionsEl = document.getElementById('nm-actions');
+
+        niceModalCallback = callback;
+
+        // Setup Icon & Warna
+        let icon = '🔔';
+        if (type === 'warning') icon = '⚠️';
+        if (type === 'danger') icon = '⛔'; 
+        
+        iconEl.innerHTML = icon;
+        titleEl.innerText = title;
+        msgEl.innerText = msg;
+        actionsEl.innerHTML = ''; 
+
+        if (callback) {
+            let btnClass = (type === 'danger') ? 'nm-btn-danger' : 'nm-btn-confirm';
+            actionsEl.innerHTML = `
+                <button class="nm-btn nm-btn-cancel" onclick="closeNiceModal()">BATAL</button>
+                <button class="nm-btn ${btnClass}" onclick="confirmNiceModal()">YA, LANJUT</button>
+            `;
+        } else {
+            actionsEl.innerHTML = `<button class="nm-btn nm-btn-cancel" style="width:100%; background:#333; color:#fff;" onclick="closeNiceModal()">MENGERTI</button>`;
+        }
+        modal.classList.add('open');
+    }
+
+    function closeNiceModal() {
+        document.getElementById('nice-modal').classList.remove('open');
+        niceModalCallback = null;
+    }
+
+    function confirmNiceModal() {
+        if (niceModalCallback) niceModalCallback();
+        closeNiceModal();
+    }
 
     // --- LOGIC CART ---
     let cart = JSON.parse(localStorage.getItem('sbs_cart')) || [];
