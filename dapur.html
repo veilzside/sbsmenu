@@ -703,6 +703,7 @@
         if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; 
         if(order.status === 'unpaid') div.style.borderLeftColor = '#FF6600'; 
         
+        // 1. LIST ITEM
         let itemsHtml = (order.items || []).map((item, idx) => {
             const qty = parseInt(item.qty); const price = parseInt(item.price);
             const trashBtn = !['completed', 'rejected', 'processing'].includes(order.status) ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
@@ -734,55 +735,128 @@
 
         const isEditable = ['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status);
         
-        let inputsHtml = '';
+        // --- 2. LOGIKA PEMISAHAN INPUT (Disc vs Kasir) ---
+        let discInputHtml = '';
+        let cashierInputHtml = '';
+        
         if(isEditable) {
-            inputsHtml += `
+            // A. Bagian Diskon
+            discInputHtml = `
             <div style="margin:5px 0; border-top:1px dashed #444; padding-top:5px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span style="font-size:12px; color:#aaa;">Disc (Rp):</span>
                     <input type="number" id="disc-input-${order.id}" value="${order.discount||0}" oninput="updateLiveTotal('${order.id}')" style="width:100px; background:#222; border:1px solid #555; color:#fff; padding:4px; border-radius:4px; text-align:right;">
-                </div>`;
-            
-            inputsHtml += `<div style="margin-top:10px;"><div style="font-size:12px; color:#aaa; margin-bottom:3px;">PILIH KASIR:</div><div id="cashier-btn-container-${order.id}" style="display:flex; gap:5px; flex-wrap:wrap;">`;
-            
-            // BACA MEMORY
-            const memoryCashier = localStorage.getItem('sbs_cashier_name');
+                </div>
+            </div>`;
 
+            // B. Bagian Pilih Kasir (LABEL DIGANTI JADI 'KASIR:')
+            cashierInputHtml = `<div style="margin-top:10px; border-top:1px dashed #444; padding-top:10px;">
+                <div style="font-size:12px; color:#aaa; margin-bottom:3px;">KASIR:</div>
+                <div id="cashier-btn-container-${order.id}" style="display:flex; gap:5px; flex-wrap:wrap;">`;
+            
+            const memoryCashier = localStorage.getItem('sbs_cashier_name');
             cashierList.forEach((name, index) => {
                 let isActive = false;
-                if (order.cashier) {
-                    isActive = (order.cashier === name);
-                } else if (memoryCashier) {
-                    isActive = (memoryCashier === name);
-                } else {
-                    isActive = (index === 0);
-                }
+                if (order.cashier) { isActive = (order.cashier === name); }
+                else if (memoryCashier) { isActive = (memoryCashier === name); }
+                else { isActive = (index === 0); }
 
                 const bg = isActive ? 'var(--accent)' : '#333';
                 const col = isActive ? '#000' : '#ccc';
                 const border = isActive ? 'var(--accent)' : '#555';
                 const fw = isActive ? 'bold' : 'normal';
                 
-                inputsHtml += `<button class="btn-cashier-select" data-name="${name}" onclick="selectCashier('${order.id}', '${name}')" style="background:${bg}; color:${col}; border:1px solid ${border}; padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; flex:1; font-weight:${fw};">${name}</button>`;
+                cashierInputHtml += `<button class="btn-cashier-select" data-name="${name}" onclick="selectCashier('${order.id}', '${name}')" style="background:${bg}; color:${col}; border:1px solid ${border}; padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; flex:1; font-weight:${fw};">${name}</button>`;
             });
-            
             let defaultVal = order.cashier || memoryCashier || (cashierList.length > 0 ? cashierList[0] : '');
-            inputsHtml += `</div><input type="hidden" id="selected-cashier-${order.id}" value="${defaultVal}"></div></div>`;
+            cashierInputHtml += `</div><input type="hidden" id="selected-cashier-${order.id}" value="${defaultVal}"></div>`;
 
         } else if (finance.discount > 0) {
-             inputsHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin-bottom:5px;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
+             discInputHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin-bottom:5px;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
         }
 
+        // --- 3. TOTAL DISPLAY (Hanya Subtotal, Disc, Tax, Total) ---
         let totalDisplayHtml = `
             <div style="border-top:1px dashed #444; margin-top:10px; padding-top:5px; font-size:13px; color:#aaa;">
                 <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>${finance.subtotal.toLocaleString()}</span></div>
-                ${inputsHtml}
+                ${discInputHtml}
                 <div id="tax-row-${order.id}" style="display:${(isTaxEnabled && finance.tax > 0) ? 'flex' : 'none'}; justify-content:space-between;"><span>Tax (10%):</span><span>${finance.tax.toLocaleString()}</span></div>
                 <div style="display:flex; justify-content:space-between; margin-top:5px; font-weight:600; color:var(--accent); font-size:18px;">
                     <span>Total:</span><span id="total-val-${order.id}">Rp ${finance.finalTotal.toLocaleString()}</span>
                 </div>
             </div>
         `;
+
+        let headerCashierHtml = '';
+        if(order.cashier) {
+            headerCashierHtml = `<div style="font-size:11px; color:#888; margin-top:2px;">Cashier: ${order.cashier}</div>`;
+        }
+
+        // --- 4. KPI DURASI ---
+        let kpiHtml = '';
+        if (order.status === 'completed') {
+            const t1 = new Date(order.timestamp).getTime();
+            const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0;
+            const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0;
+            const t4 = order.completedAt ? new Date(order.completedAt).getTime() : 0;
+
+            let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
+
+            if (order.paymentMethod === 'qris') {
+                if(t2 && t1) durPesan = t2 - t1;
+                if(t3 && t2) durRespon = t3 - t2;
+                if(t4 && t3) durMasak = t4 - t3;
+            } else {
+                if(t3 && t1) durPesan = t3 - t1;
+                durRespon = 0; 
+                if(t4 && t3) durMasak = t4 - t3;
+            }
+            if(t4 && t1) durTotal = t4 - t1;
+
+            const responColor = durRespon > 180000 ? '#e74c3c' : '#aaa'; 
+
+            kpiHtml = `
+            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #444; font-size:11px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Pesan - Bayar:</span> <span style="color:#ddd;">${fmtDur(durPesan)}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Respon Kasir:</span> <span style="color:${responColor};">${fmtDur(durRespon)}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                    <span style="color:#777;">Masak / Siapkan:</span> <span style="color:#ddd;">${fmtDur(durMasak)}</span>
+                </div>
+                <div style="margin-top:5px; padding:5px 0; border-top:1px solid #444; border-bottom:1px solid #444; display:flex; justify-content:space-between; font-size:12px;">
+                    <span style="color:#aaa; font-weight:bold;">TOTAL DURASI:</span>
+                    <span style="color:#FFD200; font-weight:bold;">${fmtDur(durTotal)}</span>
+                </div>
+            </div>
+            <div style="height:15px;"></div>`;
+        }
+
+        // --- 5. SUSUNAN AKHIR (Posisi KASIR ada di bawah TOTAL, di atas CHECKER) ---
+        div.innerHTML = `
+            <div class="card-header">
+                <div class="header-left">
+                    <span class="cust-name">${displayName}</span>
+                    <div style="margin-top:4px; display:flex; align-items:center;">
+                        ${paymentBadge}
+                        <span style="font-size:11px; color:#aaa; margin-left:5px; font-family:monospace;">ID: ...${order.id.slice(-4)}</span>
+                    </div>
+                    <div style="margin-top:2px; font-size:14px; color:#fff; font-weight:400;">Queue No : ${getDailyQueueNumber(order.id)}</div>
+                    ${headerCashierHtml}
+                </div>
+                ${headerRight}
+            </div>
+            <div class="item-list">${itemsHtml}</div>
+            
+            ${totalDisplayHtml} 
+            ${cashierInputHtml}  ${kpiHtml}
+            ${statusFooter}
+            ${printButtons}      <div class="actions" style="display:block;">${buttonsHtml}</div>
+        `;
+        return div;
+    }
 
         let headerCashierHtml = '';
         if(order.cashier) {
