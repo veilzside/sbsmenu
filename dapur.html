@@ -261,7 +261,7 @@
     const soundNag = document.getElementById('sound-nag');
 
     // --- VOLUME LONCENG ---
-    soundNag.volume = 2; // Set 200% agar dentingannya "cling" jernih tapi tidak pecah
+    soundNag.volume = 1.0; // Set 200% agar dentingannya "cling" jernih tapi tidak pecah
     
     // ... kode lain ...
 
@@ -761,13 +761,15 @@
         // --- 2. LOGIKA JAM MASUK (REVISI) ---
         // Default: Gunakan Jam Order (t1)
         let timeBase = t1;
+        
         // KOREKSI: Jika QRIS dan sudah dibayar (t3 ada), gunakan Jam Bayar (t3) sebagai Jam Masuk
+        // Ini menjawab request: "harusnya jam masuknya itu jam ketika selesai dibayar"
         if (order.paymentMethod === 'qris' && t3 > 0) {
             timeBase = t3;
         }
         const timeIn = new Date(timeBase).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
 
-        // --- 3. TAMPILAN HEADER KANAN (REVISI) ---
+        // --- 3. TAMPILAN HEADER KANAN ---
         let timeDisplayHtml = `<div class="meta-time-block"><span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span></div>`;
         
         // Jika QRIS Belum Bayar -> Ganti teks jadi "Menunggu Pembayaran"
@@ -818,7 +820,6 @@
         let cashierInputHtml = '';
         
         if(isEditable) {
-            // DISKON
             discInputHtml = `
             <div style="margin:5px 0; border-top:1px dashed #444; padding-top:5px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -827,7 +828,6 @@
                 </div>
             </div>`;
 
-            // KASIR (Label: KASIR:)
             cashierInputHtml = `<div style="margin-top:10px; border-top:1px dashed #444; padding-top:10px;">
                 <div style="font-size:12px; color:#aaa; margin-bottom:3px;">KASIR:</div>
                 <div id="cashier-btn-container-${order.id}" style="display:flex; gap:5px; flex-wrap:wrap;">`;
