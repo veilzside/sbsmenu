@@ -255,46 +255,6 @@
         const rs = s % 60;
         return `${m}m ${rs}s`;
     }
-
-    function toggleAudio() {
-      const soundNew = document.getElementById('sound-new');
-    const soundNag = document.getElementById('sound-nag');
-
-    // --- VOLUME LONCENG ---
-    soundNag.volume = 1; // Set 200% agar dentingannya "cling" jernih tapi tidak pecah
-    
-    // ... kode lain ...
-
-    // --- DI DALAM setInterval PALING BAWAH ---
-    if (audioUnlocked) {
-        const now = Date.now();
-        if (allOrders.some(order => {
-            if (['new', 'pending_payment'].includes(order.status)) {
-                const diff = (now - new Date(order.timestamp).getTime()) / 1000;
-                // Bunyi setiap 2 menit
-                return diff > 120 && (diff % 120) < 1.5;
-            }
-            return false;
-        })) { 
-            // LOGIKA "TING... TING..." (Service Bell Style)
-            soundNag.currentTime = 0; 
-            soundNag.play().then(() => {
-                // Bunyikan lagi setelah 0.5 detik (Ting.... Ting)
-                setTimeout(() => {
-                    soundNag.currentTime = 0;
-                    soundNag.play().catch(e=>{});
-                }, 500); 
-            }).catch(e => {}); 
-        }
-    } else {
-            audioUnlocked = false;
-            [soundNew, soundNag].forEach(audio => { audio.pause(); audio.currentTime = 0; });
-            btnAudio.classList.remove('active');
-            btnAudio.classList.add('inactive');
-            btnAudio.innerHTML = "🔕";
-        }
-    }
-
     // --- LOGIKA AUDIO BARU (SAKLAR & KUNCI) ---
 
     // 1. Fungsi Body (Hanya jalan 1x di awal)
