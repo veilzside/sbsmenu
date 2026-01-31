@@ -882,7 +882,7 @@
     function createCard(order) {
         let displayName = order.tableNumber ? ("MEJA " + order.tableNumber + (order.customerName ? " - " + order.customerName.toUpperCase() : "")) : order.customer;
         
-        // --- 1. LOGIKA WAKTU (TETAP DIPERTAHANKAN) ---
+        // --- LOGIKA WAKTU (ANTI GAGAL) ---
         const t1 = new Date(order.timestamp).getTime(); 
         const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; 
         const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; 
@@ -896,10 +896,11 @@
         const finance = calculateTotals(order);
         const div = document.createElement('div');
         div.className = `order-card status-${order.status}`;
-        // Style Card agar tidak melebar
+        
+        // Style Card agar tidak melebar/kepotong
         div.style.maxWidth = "100%"; 
         div.style.overflow = "hidden";
-        
+
         if(order.status === 'qris_unpaid') div.style.borderLeftColor = '#888';
         if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; 
         if(order.status === 'unpaid') div.style.borderLeftColor = '#FF6600'; 
@@ -932,15 +933,15 @@
             headerRight = `<div class="header-right"><span class="meta-date">${dateStr}</span><div class="meta-time-block"><span class="time-label">Masuk:</span> <span style="color:#ddd; font-weight:700;">${timeInStr}</span></div><div class="meta-time-block"><span class="time-label">Selesai:</span> <span class="time-highlight">${timeDoneStr}</span></div></div>`;
         }
 
-        // --- TOMBOL PRINT (LAYOUT GRID AGAR TIDAK KEPOTONG) ---
+        // --- TOMBOL PRINT (LAYOUT GRID 3 KOLOM) ---
         let printButtons = '';
         if(order.status !== 'rejected') {
             const isUnpaidLock = (order.status === 'qris_unpaid');
             const billDone = order.isBillPrinted ? true : false;
             const receiptDone = order.isReceiptPrinted ? true : false;
 
-            const baseStyle = "width:100%; padding:10px 2px; font-size:12px;"; // Style Compact
-            const lockedStyle = "width:100%; padding:10px 2px; font-size:12px; background:#333; color:#777; border-color:#444; cursor:not-allowed;";
+            const baseStyle = "width:100%; padding:10px 2px; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px;"; 
+            const lockedStyle = "width:100%; padding:10px 2px; font-size:12px; background:#333; color:#777; border-color:#444; cursor:not-allowed; display:flex; align-items:center; justify-content:center; gap:4px;";
             
             // Bill
             const billBtnStyle = isUnpaidLock ? lockedStyle : `${baseStyle} background:#e67e22; border-color:#d35400;`;
@@ -966,7 +967,7 @@
             const checkerStyle = isUnpaidLock ? lockedStyle : baseStyle;
             const checkerAttr = isUnpaidLock ? 'disabled' : '';
 
-            // Gunakan GRID 3 Kolom agar pas di layar
+            // GRID SYSTEM: 1 Baris, 3 Kolom rata
             printButtons = `<div class="btn-print-group" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; border-top:1px solid #444; padding-top:10px; margin-bottom:10px;">
                 <button class="btn-print" style="${checkerStyle}" onclick="printDirect('${order.id}', 'checker')" ${checkerAttr}><span>𖣘</span> CHECKER</button>
                 ${btnBill}${btnReceipt}
@@ -998,24 +999,25 @@
 
         const isEditable = ['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status);
         
-        // --- INPUTS DISKON (PERBAIKAN TAMPILAN & DEFAULT %) ---
+        // --- INPUTS DISKON (KOLOM PENDEK) ---
         let discInputHtml = '';
         let cashierInputHtml = '';
         
         if(isEditable) {
-            // Kita cek dulu apa yang tersimpan. Jika tidak ada, defaultnya 'percent'
+            // Default: 'percent' jika belum ada data
             let savedType = order.discountMeta ? order.discountMeta.type : 'percent'; 
             let savedVal = order.discountMeta ? order.discountMeta.value : (order.discount || 0);
 
+            // Cek agar select terpilih sesuai data
             let selPercent = (savedType === 'percent') ? 'selected' : '';
             let selRp = (savedType === 'rp') ? 'selected' : '';
 
             discInputHtml = `
             <div style="margin:5px 0; border-top:1px dashed #444; padding-top:10px;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:12px; color:#aaa; width:30px;">Disc:</span>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="font-size:12px; color:#aaa;">Disc:</span>
                     
-                    <select id="disc-type-${order.id}" onchange="updateLiveTotal('${order.id}')" style="width:60px; background:#333; border:1px solid #555; color:#fff; padding:8px; border-radius:6px; font-size:13px; font-weight:bold;">
+                    <select id="disc-type-${order.id}" onchange="updateLiveTotal('${order.id}')" style="background:#333; border:1px solid #555; color:#fff; padding:5px; border-radius:6px; font-size:13px; font-weight:bold;">
                         <option value="percent" ${selPercent}>%</option>
                         <option value="rp" ${selRp}>Rp</option>
                     </select>
@@ -1026,9 +1028,10 @@
                         onfocus="if(this.value=='0') this.value=''" 
                         onblur="if(this.value=='') this.value='0'"
                         oninput="updateLiveTotal('${order.id}')" 
-                        style="flex:1; background:#222; border:1px solid #555; color:#fff; padding:8px; border-radius:6px; text-align:right; font-weight:bold; font-size:14px;">
+                        style="width: 100px; background:#222; border:1px solid #555; color:#fff; padding:5px; border-radius:6px; text-align:right; font-weight:bold; font-size:14px;">
+                    
+                    <div id="disc-calc-${order.id}" style="flex:1; text-align:right; font-size:11px; color:#e74c3c; font-weight:bold; display:none;"></div>
                 </div>
-                <div id="disc-calc-${order.id}" style="text-align:right; font-size:11px; color:#e74c3c; font-weight:bold; margin-top:4px; display:none;"></div>
             </div>`;
 
             cashierInputHtml = `<div style="margin-top:10px; border-top:1px dashed #444; padding-top:10px;">
