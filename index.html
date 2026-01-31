@@ -661,16 +661,8 @@
             </div>
         <button class="btn-close-final" onclick="closeHistory()">TUTUP</button>
     </div>
-</div>
-<div id="clear-history-modal" class="modal">
-    <div class="modal-content" style="text-align:center;">
-        <div class="success-icon" style="color:red; font-size:50px; margin-bottom:10px;">🗑</div>
-        <div class="modal-header" style="border:none; margin-bottom:10px; text-align:center; color:#1A1A1A;">HAPUS RIWAYAT?</div>
-        <div class="success-msg" style="margin-bottom:20px; font-size:14px; color:#555;">
-            Semua riwayat pesanan yang <b>SUDAH SELESAI</b> akan dihapus permanen dari memori HP ini.
-        </div>
-        
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:10px;">
+</div>  
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:10px;">
             <button onclick="closeClearHistoryModal()" 
                     style="background:#eee; color:#333; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">
                 BATAL
@@ -842,25 +834,29 @@
     }
     
     // --- FUNGSI KIRIM PESANAN ---
+    // --- 1. FUNGSI KIRIM PESANAN (UPDATE: VALIDASI PAKAI NICE MODAL) ---
     function submitOrder() {
         const tableNum = document.getElementById('table-number').value;
         const custName = document.getElementById('customer-real-name').value;
         const custPhone = document.getElementById('customer-phone').value;
         
-        // Ambil nilai dari Radio Button yang terpilih (Bukan ID dropdown lagi)
         const paymentRadio = document.querySelector('input[name="payment_method"]:checked');
         const paymentMethod = paymentRadio ? paymentRadio.value : 'tunai';
 
-        if (!tableNum) { alert("Mohon isi Nomor Meja!"); return; }
-        if (!custName) { alert("Mohon isi Nama Kakak!"); return; }
+        // GANTI ALERT BIASA JADI NICE MODAL
+        if (!tableNum) { 
+            showNiceAlert('warning', 'DATA KURANG', 'Mohon isi <b>Nomor Meja</b> terlebih dahulu!'); 
+            return; 
+        }
+        if (!custName) { 
+            showNiceAlert('warning', 'DATA KURANG', 'Mohon isi <b>Nama Kakak</b> agar kami tidak salah panggil.'); 
+            return; 
+        }
         if (cart.length === 0) return;
 
         let totalPrice = 0;
         cart.forEach(item => totalPrice += (item.price * item.qty));
 
-        // LOGIKA STATUS: 
-        // Tunai -> 'new'
-        // QRIS -> 'qris_unpaid' (Belum boleh diproses dapur)
         let initialStatus = (paymentMethod === 'tunai') ? 'new' : 'qris_unpaid';
 
         const orderData = {
@@ -872,7 +868,7 @@
             total: totalPrice,
             timestamp: new Date().toISOString(),
             status: initialStatus,
-            clientPaidAt: null // Placeholder untuk KPI
+            clientPaidAt: null 
         };
 
         const newOrderRef = db.ref().child('orders').push();
@@ -880,7 +876,6 @@
         .then(() => {
             saveOrderToHistory(newOrderRef.key);
             
-            // Simpan state QRIS ke LocalStorage untuk auto-restore
             if(paymentMethod === 'qris') {
                 localStorage.setItem('sbs_pending_qris', JSON.stringify({
                     id: newOrderRef.key,
@@ -905,8 +900,51 @@
             }
         })
         .catch((error) => {
-            alert("Gagal mengirim: " + error.message);
+            // GANTI ALERT ERROR JADI NICE MODAL
+            showNiceAlert('danger', 'GAGAL KIRIM', "Terjadi kesalahan: " + error.message);
         });
+    }
+
+    // --- 2. UPDATE KONFIRMASI QRIS (UPDATE: ERROR HANDLING) ---
+    function confirmQRISPayment(orderId) {
+        db.ref('orders/' + orderId).update({
+            status: 'pending_payment',
+            clientPaidAt: new Date().toISOString()
+        }).then(() => {
+            localStorage.removeItem('sbs_pending_qris');
+            
+            const modal = document.getElementById('success-modal');
+            modal.querySelector('.modal-content').innerHTML = `
+                <div class="success-icon">⏳</div>
+                <div class="modal-header" style="border:none; margin-bottom:5px; text-align:center;">PEMBAYARAN DITERIMA</div>
+                <div class="success-msg">
+                    Terima kasih! Bukti bayar sudah masuk.<br>
+                    Dapur sedang memverifikasi pesananmu.
+                </div>
+                <button class="btn-close-final" onclick="closeSuccess()">OK, MENGERTI</button>
+            `;
+            modal.style.display = 'flex'; 
+
+        }).catch(err => {
+            // GANTI ALERT ERROR
+            showNiceAlert('danger', 'ERROR KONEKSI', "Gagal update status: " + err.message); 
+        });
+    }
+
+    // --- 3. UPDATE HAPUS RIWAYAT (UPDATE: PAKAI NICE MODAL) ---
+    function manualClearHistory() {
+        // PANGGIL NICE MODAL KONFIRMASI (TIDAK PERLU HTML MODAL TAMBAHAN)
+        showNiceAlert('danger', 'HAPUS RIWAYAT?', 'Semua riwayat pesanan yang SUDAH SELESAI akan dihapus permanen dari memori HP ini.', () => {
+            executeClearHistory();
+        });
+    }
+
+    // Hapus fungsi closeClearHistoryModal() karena sudah tidak dipakai
+    // function closeClearHistoryModal() { ... } 
+
+    function executeClearHistory() {
+        localStorage.removeItem('sbs_order_history');
+        location.reload(); 
     }
 
     // --- MANAJEMEN QRIS & AUTO RESTORE ---
