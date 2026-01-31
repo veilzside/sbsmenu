@@ -777,25 +777,18 @@ txt += padRow(leftText, rightText) + "\n";
     function createCard(order) {
         let displayName = order.tableNumber ? ("MEJA " + order.tableNumber + (order.customerName ? " - " + order.customerName.toUpperCase() : "")) : order.customer;
         
-        const t1 = new Date(order.timestamp).getTime(); 
-        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; 
+        // --- 1. DEFINISI WAKTU ---
+        const t1 = new Date(order.timestamp).getTime();      // Jam Pesan (Contoh: 10:00)
+        const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; // Jam Bayar (Contoh: 10:03)
 
-        // --- PERBAIKAN UTAMA DI SINI ---
-        // Kita ubah dulu paymentMethod jadi huruf kecil semua biar 'QRIS' terbaca 'qris'
-        const pMethod = (order.paymentMethod || '').toLowerCase(); 
-        
-        // LOGIKA JAM MASUK:
-        // 1. Default = Jam Pesan (t1)
-        let entryTime = t1;
+        // --- 2. LOGIKA JAM MASUK (UNIVERSAL) ---
+        // Aturan: Jika sudah ada Jam Bayar (t3), GUNAKAN ITU. Jika belum, pakai Jam Pesan (t1).
+        // Ini mengatasi masalah QRIS 10:00 -> Bayar 10:03 -> Tampil 10:03
+        let entryTime = (t3 > 0) ? t3 : t1;
 
-        // 2. Jika metode 'qris' DAN sudah ada jam bayar (t3) -> Ganti jadi Jam Bayar
-        if (pMethod === 'qris' && t3 > 0) { 
-            entryTime = t3; 
-        }
-
-        // LOGIKA TIMER BERJALAN:
-        // Kalau status Processing -> Timer mulai dari Jam Bayar (t3)
-        // Kalau status lain -> Timer mulai dari Jam Pesan (t1)
+        // Timer Start:
+        // Kalau status Processing (Dapur) -> Hitung mulai dari Jam Bayar (t3)
+        // Kalau status lain -> Hitung mulai dari Jam Pesan (t1)
         let timerStart = (['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(order.status)) ? t1 : (order.status === 'processing' ? t3 : 0);
         
         const finance = calculateTotals(order);
@@ -805,7 +798,7 @@ txt += padRow(leftText, rightText) + "\n";
         if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; 
         if(order.status === 'unpaid') div.style.borderLeftColor = '#FF6600'; 
         
-        // 1. LIST ITEM
+        // --- ITEM LIST ---
         let itemsHtml = (order.items || []).map((item, idx) => {
             const qty = parseInt(item.qty); const price = parseInt(item.price);
             const trashBtn = !['completed', 'rejected', 'processing'].includes(order.status) ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
@@ -815,19 +808,24 @@ txt += padRow(leftText, rightText) + "\n";
         const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday:'short', day:'numeric', month:'short'});
         const timeInStr = new Date(entryTime).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
         
-        // BADGE PEMBAYARAN (Pakai pMethod biar konsisten)
-        let paymentBadge = pMethod === 'qris' ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">QRIS</span>' : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">TUNAI</span>';
+        // Badge Payment (Lebih Aman: Cek apakah mengandung kata 'qris')
+        const pMethod = (order.paymentMethod || '').toLowerCase();
+        let isQRIS = pMethod.indexOf('qris') > -1; 
+        let paymentBadge = isQRIS ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">QRIS</span>' : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">TUNAI</span>';
 
-        // 2. HEADER KANAN
+        // --- HEADER KANAN ---
         let timeDisplayHtml = '';
         if (order.status === 'qris_unpaid') {
+            // Khusus QRIS Belum Bayar -> Teks Kuning
             timeDisplayHtml = `<div class="meta-time-block"><span style="color:#FFD200; font-size:11px; font-weight:700; letter-spacing:0.5px;">Menunggu Pembayaran</span></div>`;
         } else {
+            // Normal (Termasuk Pending Payment yang sudah bayar) -> Tampilkan Waktu
             timeDisplayHtml = `<div class="meta-time-block"><span class="time-label">Masuk:</span> <span class="time-val">${timeInStr}</span></div>`;
         }
 
         let headerRight = `<div class="header-right"><span class="meta-date">${dateStr}</span>${timeDisplayHtml}<div class="timer-badge live-timer" data-start="${timerStart}">--:--</div></div>`;
         
+        // Override untuk Riwayat
         if(order.status === 'completed' || order.status === 'rejected') {
             const timeDoneStr = new Date(order.completedAt).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
             headerRight = `
@@ -838,7 +836,7 @@ txt += padRow(leftText, rightText) + "\n";
             </div>`;
         }
 
-        // 3. TOMBOL PRINT
+        // --- TOMBOL PRINT (Lock jika QRIS Unpaid) ---
         let printButtons = '';
         if(order.status !== 'rejected') {
             const isLocked = (order.status === 'qris_unpaid');
@@ -864,7 +862,7 @@ txt += padRow(leftText, rightText) + "\n";
             </div>`;
         }
 
-        // 4. TOMBOL PROSES
+        // --- TOMBOL PROSES (Lock jika belum print) ---
         let buttonsHtml = '';
         const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">TOLAK</button>`;
         const canProcess = (order.isBillPrinted && order.isReceiptPrinted);
@@ -881,6 +879,7 @@ txt += padRow(leftText, rightText) + "\n";
             buttonsHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnTolak}<button class="btn btn-grey" disabled style="opacity:0.5;">MENUNGGU PEMBAYARAN</button></div><div style="text-align:center; font-size:10px; color:#FF6600; font-weight:bold; margin-top:5px;">⚠ CUSTOMER BELUM BAYAR</div>`;
         
         } else if (order.status === 'pending_payment') {
+            // KUNCI UTAMA: Jika pending_payment dan sudah bayar (t3 > 0), tombol proses normal
             let btnProcess = canProcess 
                 ? `<button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">VERIFIKASI & PROSES</button>` 
                 : lockedProcessBtn;
@@ -894,7 +893,7 @@ txt += padRow(leftText, rightText) + "\n";
 
         const isEditable = ['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status);
         
-        // 5. INPUTS
+        // --- INPUTS ---
         let discInputHtml = '';
         let cashierInputHtml = '';
         
@@ -930,7 +929,7 @@ txt += padRow(leftText, rightText) + "\n";
              discInputHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin-bottom:5px;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
         }
 
-        // 6. TOTAL DISPLAY
+        // --- TOTAL ---
         let totalDisplayHtml = `
             <div style="border-top:1px dashed #444; margin-top:10px; padding-top:5px; font-size:13px; color:#aaa;">
                 <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>${finance.subtotal.toLocaleString()}</span></div>
@@ -947,7 +946,7 @@ txt += padRow(leftText, rightText) + "\n";
             headerCashierHtml = `<div style="font-size:11px; color:#888; margin-top:2px;">Cashier: ${order.cashier}</div>`;
         }
 
-        // 7. KPI DURASI
+        // --- KPI DURASI ---
         let kpiHtml = '';
         if (order.status === 'completed') {
             const t1 = new Date(order.timestamp).getTime();
@@ -957,7 +956,7 @@ txt += padRow(leftText, rightText) + "\n";
 
             let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
 
-            if (pMethod === 'qris') {
+            if (isQRIS) { // Pakai flag isQRIS
                 if(t2 && t1) durPesan = t2 - t1;
                 if(t3 && t2) durRespon = t3 - t2;
                 if(t4 && t3) durMasak = t4 - t3;
@@ -988,7 +987,6 @@ txt += padRow(leftText, rightText) + "\n";
             <div style="height:15px;"></div>`;
         }
 
-        // RENDER FINAL
         div.innerHTML = `
             <div class="card-header">
                 <div class="header-left">
