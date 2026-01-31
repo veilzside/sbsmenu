@@ -773,16 +773,28 @@
         });
     }
 
-    // --- UPDATE FUNGSI createCard (GANTI YANG LAMA) ---
     function createCard(order) {
         let displayName = order.tableNumber ? ("MEJA " + order.tableNumber + (order.customerName ? " - " + order.customerName.toUpperCase() : "")) : order.customer;
         
         const t1 = new Date(order.timestamp).getTime(); 
         const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; 
         
-        let entryTime = t1;
-        if (order.paymentMethod === 'qris' && t3 > 0) { entryTime = t3; }
+        // --- PERBAIKAN LOGIKA JAM MASUK ---
+        // 1. Ambil metode pembayaran dan ubah ke huruf kecil semua (agar 'QRIS' == 'qris')
+        const pMethod = (order.paymentMethod || '').toLowerCase();
 
+        // 2. Tentukan Jam Masuk
+        // Default: Jam Pesan (t1)
+        let entryTime = t1;
+        
+        // Jika QRIS DAN Sudah Dibayar (t3 ada nilainya) -> Ganti jadi Jam Bayar (t3)
+        if (pMethod === 'qris' && t3 > 0) { 
+            entryTime = t3; 
+        }
+
+        // 3. Timer Start
+        // Kalau status Processing -> Timer mulai dari Jam Bayar (t3)
+        // Kalau status lain (New/Pending) -> Timer mulai dari Jam Pesan (t1)
         let timerStart = (['new', 'qris_unpaid', 'pending_payment', 'unpaid'].includes(order.status)) ? t1 : (order.status === 'processing' ? t3 : 0);
         
         const finance = calculateTotals(order);
@@ -792,7 +804,7 @@
         if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; 
         if(order.status === 'unpaid') div.style.borderLeftColor = '#FF6600'; 
         
-        // 1. LIST ITEM
+        // --- ITEM LIST ---
         let itemsHtml = (order.items || []).map((item, idx) => {
             const qty = parseInt(item.qty); const price = parseInt(item.price);
             const trashBtn = !['completed', 'rejected', 'processing'].includes(order.status) ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
@@ -801,9 +813,11 @@
 
         const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday:'short', day:'numeric', month:'short'});
         const timeInStr = new Date(entryTime).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-        let paymentBadge = order.paymentMethod === 'qris' ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">QRIS</span>' : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">TUNAI</span>';
+        
+        // Badge juga menggunakan pMethod yang sudah dinormalkan
+        let paymentBadge = pMethod === 'qris' ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">QRIS</span>' : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">TUNAI</span>';
 
-        // 2. HEADER KANAN
+        // --- HEADER KANAN ---
         let timeDisplayHtml = '';
         if (order.status === 'qris_unpaid') {
             timeDisplayHtml = `<div class="meta-time-block"><span style="color:#FFD200; font-size:11px; font-weight:700; letter-spacing:0.5px;">Menunggu Pembayaran</span></div>`;
@@ -823,7 +837,7 @@
             </div>`;
         }
 
-        // 3. TOMBOL PRINT
+        // --- TOMBOL PRINT ---
         let printButtons = '';
         if(order.status !== 'rejected') {
             const isLocked = (order.status === 'qris_unpaid');
@@ -849,13 +863,10 @@
             </div>`;
         }
 
-        // 4. LOGIKA TOMBOL PROSES (DENGAN MODAL ALERT BARU)
+        // --- TOMBOL PROSES ---
         let buttonsHtml = '';
         const btnTolak = `<button class="btn btn-red" onclick="confirmReject('${order.id}')">TOLAK</button>`;
-
         const canProcess = (order.isBillPrinted && order.isReceiptPrinted);
-        
-        // Panggilan Modal Baru
         const lockedAction = `showNiceAlert('lock', 'AKSES DITOLAK', 'Harap Print Bill & Receipt Terlebih Dahulu untuk melanjutkan!')`;
         const lockedProcessBtn = `<button class="btn btn-grey" onclick="${lockedAction}" style="background:#444; color:#888; border:1px solid #555;">🔒 VERIFIKASI & PROSES</button>`;
 
@@ -863,7 +874,6 @@
             let btnProcess = canProcess 
                 ? `<button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">LUNAS & PROSES</button>` 
                 : `<button class="btn btn-grey" onclick="${lockedAction}" style="background:#444; color:#888; border:1px solid #555;">🔒 LUNAS & PROSES</button>`;
-            
             buttonsHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnTolak}${btnProcess}</div>`;
         
         } else if (order.status === 'qris_unpaid') {
@@ -873,7 +883,6 @@
             let btnProcess = canProcess 
                 ? `<button class="btn btn-blue" onclick="verifyAndPrint('${order.id}', this)">VERIFIKASI & PROSES</button>` 
                 : lockedProcessBtn;
-
             buttonsHtml = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">${btnTolak}${btnProcess}</div><div style="text-align:center; font-size:10px; color:#e67e22; font-weight:bold; margin-top:5px;">⚠ CEK MUTASI!</div>`;
         
         } else if (order.status === 'processing') {
@@ -884,7 +893,7 @@
 
         const isEditable = ['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status);
         
-        // 5. INPUTS
+        // --- INPUTS ---
         let discInputHtml = '';
         let cashierInputHtml = '';
         
@@ -907,12 +916,10 @@
                 if (order.cashier) { isActive = (order.cashier === name); }
                 else if (memoryCashier) { isActive = (memoryCashier === name); }
                 else { isActive = (index === 0); }
-
                 const bg = isActive ? 'var(--accent)' : '#333';
                 const col = isActive ? '#000' : '#ccc';
                 const border = isActive ? 'var(--accent)' : '#555';
                 const fw = isActive ? 'bold' : 'normal';
-                
                 cashierInputHtml += `<button class="btn-cashier-select" data-name="${name}" onclick="selectCashier('${order.id}', '${name}')" style="background:${bg}; color:${col}; border:1px solid ${border}; padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; flex:1; font-weight:${fw};">${name}</button>`;
             });
             let defaultVal = order.cashier || memoryCashier || (cashierList.length > 0 ? cashierList[0] : '');
@@ -922,7 +929,7 @@
              discInputHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin-bottom:5px;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
         }
 
-        // 6. TOTAL DISPLAY
+        // --- TOTAL ---
         let totalDisplayHtml = `
             <div style="border-top:1px dashed #444; margin-top:10px; padding-top:5px; font-size:13px; color:#aaa;">
                 <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>${finance.subtotal.toLocaleString()}</span></div>
@@ -939,7 +946,7 @@
             headerCashierHtml = `<div style="font-size:11px; color:#888; margin-top:2px;">Cashier: ${order.cashier}</div>`;
         }
 
-        // 7. KPI DURASI
+        // --- KPI DURASI ---
         let kpiHtml = '';
         if (order.status === 'completed') {
             const t1 = new Date(order.timestamp).getTime();
@@ -949,7 +956,7 @@
 
             let durPesan = 0, durRespon = 0, durMasak = 0, durTotal = 0;
 
-            if (order.paymentMethod === 'qris') {
+            if (pMethod === 'qris') {
                 if(t2 && t1) durPesan = t2 - t1;
                 if(t3 && t2) durRespon = t3 - t2;
                 if(t4 && t3) durMasak = t4 - t3;
@@ -961,7 +968,6 @@
             if(t4 && t1) durTotal = t4 - t1;
 
             const responColor = durRespon > 180000 ? '#e74c3c' : '#aaa'; 
-
             kpiHtml = `
             <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #444; font-size:11px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
@@ -981,7 +987,6 @@
             <div style="height:15px;"></div>`;
         }
 
-        // RENDER FINAL
         div.innerHTML = `
             <div class="card-header">
                 <div class="header-left">
