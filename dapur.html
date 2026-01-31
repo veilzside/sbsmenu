@@ -651,7 +651,7 @@
         const o = allOrders.find(x => x.id === id); 
         if (!o) return;
 
-        // 1. UPDATE DB (Simpan Status & Data Diskon)
+        // 1. UPDATE DB
         const inputEl = document.getElementById(`disc-input-${id}`);
         const typeEl = document.getElementById(`disc-type-${id}`);
         
@@ -678,7 +678,7 @@
         updates.discountMeta = { type: metaType, value: metaVal };
         db.ref('orders/' + id).update(updates);
 
-        // 2. PERSIAPAN DATA PRINT
+        // 2. DATA
         const hiddenCashier = document.getElementById(`selected-cashier-${id}`);
         let selectedCashier = o.cashier; 
         if (!selectedCashier && hiddenCashier && hiddenCashier.value) { selectedCashier = hiddenCashier.value; }
@@ -693,14 +693,12 @@
         const custName = (o.customerName || "Customer").toUpperCase();
         const displayID = o.id.slice(-7).toUpperCase();
 
-        // 3. KONSTANTA ESC/POS
+        // 3. ESC/POS COMMANDS
         const ESC = "\x1B"; const GS = "\x1D"; const INIT = ESC + "@";
         const ALIGN_CENTER = ESC + "a" + "\x01"; const ALIGN_LEFT = ESC + "a" + "\x00"; 
         const BOLD_ON = ESC + "E" + "\x01"; const BOLD_OFF = ESC + "E" + "\x00";
         const TEXT_NORMAL = GS + "!" + "\x00";
         const TEXT_DOUBLE = GS + "!" + "\x11"; 
-        
-        // --- FITUR BARU: TINGGI 2X, LEBAR NORMAL (Biar Gak Kepotong) ---
         const TEXT_HEIGHT_DOUBLE = GS + "!" + "\x01"; 
 
         let txt = INIT;
@@ -715,15 +713,19 @@
             txt += "\n\n\n";
 
         } else {
-            // --- HEADER BILL (MODIFIKASI DI SINI) ---
+            // --- HEADER BERBEDA UNTUK BILL & RECEIPT ---
+            
             if (type === 'bill') {
-                // Pakai TEXT_HEIGHT_DOUBLE (Tinggi 2x, Lebar 1x) + BOLD
-                // Hasil: Tulisan tinggi/jelas, tapi tidak melebar ke samping (aman line break)
+                // BILL: Ada Peringatan Besar + SBS CAFE Kecil (Normal)
                 txt += ALIGN_CENTER + BOLD_ON + TEXT_HEIGHT_DOUBLE + "THIS IS NOT A RECEIPT\n" + TEXT_NORMAL + "\n" + BOLD_OFF;
+                txt += ALIGN_CENTER + BOLD_ON + TEXT_NORMAL + "SBS CAFE\n" + BOLD_OFF;
+            } else {
+                // RECEIPT: Tanpa Peringatan + SBS CAFE Besar (Double)
+                txt += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + BOLD_OFF;
             }
 
-            // "SBS CAFE": Normal Size, Bold
-            txt += ALIGN_CENTER + BOLD_ON + "SBS CAFE\n" + BOLD_OFF + TEXT_NORMAL + "Jl. Mundu 8, Kota Malang\nJawa Timur, 65116\n085159039877\n";
+            // ALAMAT (Sama untuk keduanya)
+            txt += ALIGN_CENTER + TEXT_NORMAL + "Jl. Mundu 8, Kota Malang\nJawa Timur, 65116\n085159039877\n";
             
             txt += ALIGN_LEFT + "--------------------------------\n";
             txt += BOLD_ON + "TABLE: " + (o.tableNumber || "TA") + BOLD_OFF + "\n"; 
