@@ -749,7 +749,7 @@
         if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; 
         if(order.status === 'unpaid') div.style.borderLeftColor = '#FF6600'; 
         
-        // --- 1. ITEM LIST ---
+        // --- 1. LIST ITEM ---
         let itemsHtml = (order.items || []).map((item, idx) => {
             const qty = parseInt(item.qty); const price = parseInt(item.price);
             const trashBtn = !['completed', 'rejected', 'processing'].includes(order.status) ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
@@ -757,21 +757,27 @@
         }).join('');
 
         const dateStr = new Date(t1).toLocaleDateString('id-ID', {weekday:'short', day:'numeric', month:'short'});
-        const timeIn = new Date(t1).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-        let paymentBadge = order.paymentMethod === 'qris' ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">QRIS</span>' : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">TUNAI</span>';
+        
+        // --- 2. LOGIKA JAM MASUK (REVISI) ---
+        // Default: Gunakan Jam Order (t1)
+        let timeBase = t1;
+        // KOREKSI: Jika QRIS dan sudah dibayar (t3 ada), gunakan Jam Bayar (t3) sebagai Jam Masuk
+        if (order.paymentMethod === 'qris' && t3 > 0) {
+            timeBase = t3;
+        }
+        const timeIn = new Date(timeBase).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
 
-        // --- 2. HEADER RIGHT (LOGIKA BARU) ---
-        // Default: Tampilkan Jam Masuk
+        // --- 3. TAMPILAN HEADER KANAN (REVISI) ---
         let timeDisplayHtml = `<div class="meta-time-block"><span class="time-label">Masuk:</span> <span class="time-val">${timeIn}</span></div>`;
         
-        // REVISI: Jika QRIS Belum Bayar -> Ganti teks "Menunggu Pembayaran"
+        // Jika QRIS Belum Bayar -> Ganti teks jadi "Menunggu Pembayaran"
         if (order.status === 'qris_unpaid') {
             timeDisplayHtml = `<div class="meta-time-block"><span style="color:#FFD200; font-size:11px; font-weight:700; letter-spacing:0.5px;">Menunggu Pembayaran</span></div>`;
         }
 
         let headerRight = `<div class="header-right"><span class="meta-date">${dateStr}</span>${timeDisplayHtml}<div class="timer-badge live-timer" data-start="${timerStart}">--:--</div></div>`;
         
-        // Override untuk Riwayat (Completed/Rejected)
+        // Override Tampilan untuk Riwayat (Selesai/Tolak)
         if(order.status === 'completed' || order.status === 'rejected') {
             const tPaid = order.paidAt ? new Date(order.paidAt) : new Date(order.timestamp);
             const timePaidStr = tPaid.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
@@ -807,11 +813,12 @@
 
         const isEditable = ['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status);
         
-        // --- 3. INPUTS ---
+        // --- 4. INPUT AREA (Disc & Kasir) ---
         let discInputHtml = '';
         let cashierInputHtml = '';
         
         if(isEditable) {
+            // DISKON
             discInputHtml = `
             <div style="margin:5px 0; border-top:1px dashed #444; padding-top:5px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -820,6 +827,7 @@
                 </div>
             </div>`;
 
+            // KASIR (Label: KASIR:)
             cashierInputHtml = `<div style="margin-top:10px; border-top:1px dashed #444; padding-top:10px;">
                 <div style="font-size:12px; color:#aaa; margin-bottom:3px;">KASIR:</div>
                 <div id="cashier-btn-container-${order.id}" style="display:flex; gap:5px; flex-wrap:wrap;">`;
@@ -845,6 +853,7 @@
              discInputHtml = `<div style="display:flex; justify-content:space-between; color:#e74c3c; margin-bottom:5px;"><span>Disc:</span><span>- ${finance.discount.toLocaleString()}</span></div>`;
         }
 
+        // --- 5. TOTAL DISPLAY ---
         let totalDisplayHtml = `
             <div style="border-top:1px dashed #444; margin-top:10px; padding-top:5px; font-size:13px; color:#aaa;">
                 <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span>${finance.subtotal.toLocaleString()}</span></div>
@@ -861,7 +870,7 @@
             headerCashierHtml = `<div style="font-size:11px; color:#888; margin-top:2px;">Cashier: ${order.cashier}</div>`;
         }
 
-        // --- 4. KPI ---
+        // --- 6. KPI DURASI ---
         let kpiHtml = '';
         if (order.status === 'completed') {
             const t1 = new Date(order.timestamp).getTime();
@@ -903,7 +912,7 @@
             <div style="height:15px;"></div>`;
         }
 
-        // --- 5. RENDER ---
+        // --- 7. SUSUNAN HTML FINAL ---
         div.innerHTML = `
             <div class="card-header">
                 <div class="header-left">
@@ -920,8 +929,7 @@
             <div class="item-list">${itemsHtml}</div>
             
             ${totalDisplayHtml} 
-            ${cashierInputHtml} 
-            ${kpiHtml}
+            ${cashierInputHtml}  ${kpiHtml}
             ${statusFooter}
             ${printButtons}
             <div class="actions" style="display:block;">${buttonsHtml}</div>
