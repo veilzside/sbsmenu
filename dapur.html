@@ -668,7 +668,7 @@
             if (allOrders.some(order => {
                 if (['new', 'pending_payment'].includes(order.status)) {
                     const diff = (now - new Date(order.timestamp).getTime()) / 1000;
-                    return diff > 120 && (diff % 120) < 1.5;
+                    return diff > 120 && Math.floor(diff) % 120 === 0;
                 }
                 return false;
             })) { soundNag.currentTime = 0; soundNag.play().catch(e => {}); }
