@@ -923,7 +923,7 @@
     function createCard(order) {
         let displayName = order.tableNumber ? ("MEJA " + order.tableNumber + (order.customerName ? " - " + order.customerName.toUpperCase() : "")) : order.customer;
         
-        // --- LOGIKA WAKTU (ANTI GAGAL) ---
+        // LOGIKA WAKTU
         const t1 = new Date(order.timestamp).getTime(); 
         const t2 = order.clientPaidAt ? new Date(order.clientPaidAt).getTime() : 0; 
         const t3 = order.paidAt ? new Date(order.paidAt).getTime() : 0; 
@@ -937,13 +937,13 @@
         const finance = calculateTotals(order);
         const div = document.createElement('div');
         div.className = `order-card status-${order.status}`;
-        div.style.maxWidth = "100%"; div.style.overflow = "hidden"; // Style compact
+        div.style.maxWidth = "100%"; div.style.overflow = "hidden";
 
         if(order.status === 'qris_unpaid') div.style.borderLeftColor = '#888';
         if(order.status === 'pending_payment') div.style.borderLeftColor = '#e67e22'; 
         if(order.status === 'unpaid') div.style.borderLeftColor = '#FF6600'; 
         
-        // ITEM LIST
+        // ITEMS
         let itemsHtml = (order.items || []).map((item, idx) => {
             const qty = parseInt(item.qty); const price = parseInt(item.price);
             const trashBtn = !['completed', 'rejected', 'processing'].includes(order.status) ? `<button class="btn-trash" onclick="deleteOrderItem('${order.id}', ${idx})">🗑</button>` : '';
@@ -957,6 +957,7 @@
         const isQRIS = pMethod.indexOf('qris') > -1;
         let paymentBadge = isQRIS ? '<span style="background:#000; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">QRIS</span>' : '<span style="background:#ddd; color:#000; padding:2px 6px; border-radius:4px; font-size:10px; margin-right:5px;">TUNAI</span>';
 
+        // HEADER KANAN
         let timeDisplayHtml = '';
         if (order.status === 'qris_unpaid') {
             timeDisplayHtml = `<div class="meta-time-block"><span style="color:#FFD200; font-size:11px; font-weight:700; letter-spacing:0.5px;">Menunggu Pembayaran</span></div>`;
@@ -970,7 +971,7 @@
             headerRight = `<div class="header-right"><span class="meta-date">${dateStr}</span><div class="meta-time-block"><span class="time-label">Masuk:</span> <span style="color:#ddd; font-weight:700;">${timeInStr}</span></div><div class="meta-time-block"><span class="time-label">Selesai:</span> <span class="time-highlight">${timeDoneStr}</span></div></div>`;
         }
 
-        // TOMBOL PRINT
+        // --- TOMBOL PRINT (LOGIKA KONDISIONAL BARU) ---
         let printButtons = '';
         if(order.status !== 'rejected') {
             const isUnpaidLock = (order.status === 'qris_unpaid');
@@ -980,6 +981,7 @@
             const baseStyle = "width:100%; padding:10px 2px; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px;"; 
             const lockedStyle = "width:100%; padding:10px 2px; font-size:12px; background:#333; color:#777; border-color:#444; cursor:not-allowed; display:flex; align-items:center; justify-content:center; gap:4px;";
             
+            // 1. Definisikan Tombol
             const billBtnStyle = isUnpaidLock ? lockedStyle : `${baseStyle} background:#e67e22; border-color:#d35400;`;
             const billAttr = isUnpaidLock ? 'disabled' : '';
             const billIcon = billDone ? '✅' : '📄';
@@ -995,16 +997,34 @@
                 receiptBtnStyle = lockedStyle;
                 receiptAction = `showNiceAlert('lock', 'AKSES DIKUNCI', 'Harap Print BILL terlebih dahulu sebelum mencetak Receipt!')`;
             }
-
             const receiptIcon = receiptDone ? '✅' : '🧾';
             const btnReceipt = `<button class="btn-print" style="${receiptBtnStyle}" onclick="${receiptAction}" ${receiptAttr}><span>${receiptIcon}</span> RECEIPT</button>`;
             
             const checkerStyle = isUnpaidLock ? lockedStyle : baseStyle;
             const checkerAttr = isUnpaidLock ? 'disabled' : '';
+            // Icon Checker Ganti Jadi Clipboard (📋)
+            const btnChecker = `<button class="btn-print" style="${checkerStyle}" onclick="printDirect('${order.id}', 'checker')" ${checkerAttr}><span>📋</span> CHECKER</button>`;
 
-            printButtons = `<div class="btn-print-group" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; border-top:1px solid #444; padding-top:10px; margin-bottom:10px;">
-                <button class="btn-print" style="${checkerStyle}" onclick="printDirect('${order.id}', 'checker')" ${checkerAttr}><span>𖣘</span> CHECKER</button>
-                ${btnBill}${btnReceipt}
+            // 2. Susun Layout Berdasarkan Status
+            let gridCols = "1fr 1fr 1fr";
+            let content = "";
+
+            if (order.status === 'processing') {
+                // DAPUR: Cukup Checker (1 Kolom)
+                gridCols = "1fr";
+                content = btnChecker;
+            } else if (order.status === 'completed') {
+                // RIWAYAT: Cukup Bill & Receipt (2 Kolom)
+                gridCols = "1fr 1fr";
+                content = btnBill + btnReceipt;
+            } else {
+                // KASIR (New/Pending): Semua (3 Kolom)
+                gridCols = "1fr 1fr 1fr";
+                content = btnChecker + btnBill + btnReceipt;
+            }
+
+            printButtons = `<div class="btn-print-group" style="display:grid; grid-template-columns: ${gridCols}; gap:5px; border-top:1px solid #444; padding-top:10px; margin-bottom:10px;">
+                ${content}
             </div>`;
         }
 
@@ -1033,41 +1053,32 @@
 
         const isEditable = ['new', 'unpaid', 'pending_payment', 'qris_unpaid'].includes(order.status);
         
-        // --- INPUTS DISKON (DENGAN AUTO-SAVE ONCHANGE) ---
+        // INPUTS DISKON
         let discInputHtml = '';
         let cashierInputHtml = '';
         
         if(isEditable) {
             let savedType = order.discountMeta ? order.discountMeta.type : 'percent'; 
             let savedVal = order.discountMeta ? order.discountMeta.value : (order.discount || 0);
-
             let selPercent = (savedType === 'percent') ? 'selected' : '';
             let selRp = (savedType === 'rp') ? 'selected' : '';
-            
-            // Lebar Awal
             let initialWidth = (savedType === 'percent') ? '50px' : '110px';
 
             discInputHtml = `
             <div style="margin:5px 0; border-top:1px dashed #444; padding-top:10px;">
                 <div style="display:flex; align-items:center; gap:5px;">
                     <span style="font-size:12px; color:#aaa;">Disc:</span>
-                    
                     <select id="disc-type-${order.id}" 
                         onchange="updateLiveTotal('${order.id}'); saveOrderDiscount('${order.id}')" 
                         style="width:60px; background:#333; border:1px solid #555; color:#fff; padding:5px; border-radius:6px; font-size:13px; font-weight:bold;">
                         <option value="percent" ${selPercent}>%</option>
                         <option value="rp" ${selRp}>Rp</option>
                     </select>
-
                     <input type="number" id="disc-input-${order.id}" 
-                        value="${savedVal}" 
-                        placeholder="0"
-                        onfocus="if(this.value=='0') this.value=''" 
-                        onblur="if(this.value=='') this.value='0'"
-                        oninput="updateLiveTotal('${order.id}')" 
-                        onchange="saveOrderDiscount('${order.id}')"
+                        value="${savedVal}" placeholder="0"
+                        onfocus="if(this.value=='0') this.value=''" onblur="if(this.value=='') this.value='0'"
+                        oninput="updateLiveTotal('${order.id}')" onchange="saveOrderDiscount('${order.id}')"
                         style="width: ${initialWidth}; background:#222; border:1px solid #555; color:#fff; padding:5px; border-radius:6px; text-align:right; font-weight:bold; font-size:14px; transition: width 0.2s;">
-                    
                     <div id="disc-calc-${order.id}" style="flex:1; text-align:right; font-size:11px; color:#e74c3c; font-weight:bold; display:${(savedType==='percent' && savedVal > 0) ? 'block' : 'none'};">
                         ${(savedType === 'percent' && savedVal > 0) ? '= -Rp ' + Math.ceil((calculateTotals(order).subtotal || 0) * (savedVal/100)).toLocaleString('id-ID') : ''}
                     </div>
