@@ -8,29 +8,12 @@
     <style>
         /* --- STYLE CSS --- */
         :root { --sbs-yellow: #FFD200; --sbs-black: #1A1A1A; --sbs-orange: #FF6600; --sbs-dark-yellow: #FFB800; }
-        body { font-family: 'Poppins', sans-serif; margin: 0; padding: 15px; color: var(--sbs-black); background: repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px), radial-gradient(circle at center, var(--sbs-yellow) 0%, #e6bc00 100%); background-attachment: fixed; overscroll-behavior-y: contain; padding-bottom: 40px; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; padding: 15px; color: var(--sbs-black); background: repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px), radial-gradient(circle at center, var(--sbs-yellow) 0%, #e6bc00 100%); background-attachment: fixed; overscroll-behavior-y: contain; padding-bottom: 120px; }
         .top-bar { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
         .logo-container { width: 70px; height: 70px; background: var(--sbs-black); border-radius: 50%; border: 3px solid #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
         .logo-container img { width: 100%; height: auto; }
         .header-title h1 { font-family: 'Bebas Neue', cursive; font-size: 55px; margin: 0; line-height: 0.8; letter-spacing: -1px; transform: skew(-5deg); text-shadow: 4px 4px 0px #fff; }
 
-        .nice-modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px);
-    display: none; justify-content: center; align-items: center; 
-    z-index: 10000; /* Z-Index tinggi biar di atas semua */
-    opacity: 0; transition: opacity 0.3s ease;
-}
-.nice-modal-overlay.open { display: flex; opacity: 1; }
-
-.nice-modal-box {
-    background: #2b2b36; width: 85%; max-width: 350px;
-    border-radius: 20px; padding: 25px; text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6); border: 1px solid #444;
-    transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.nice-modal-overlay.open .nice-modal-box { transform: scale(1); }
-        
         /* --- TRACKING STATUS BAR (UPDATED) --- */
         #status-tracker {
             position: fixed; top: 0; left: 0; width: 100%; 
@@ -333,58 +316,6 @@
 .menu-card:active .corner-add-triangle {
     border-color: transparent transparent var(--sbs-orange) transparent;
 }       
-
-        /* --- FIX TAMPILAN NICE MODAL (PASANG DI PALING BAWAH STYLE) --- */
-#nice-modal .nice-modal-box {
-    background: #2b2b36 !important;
-    border: 1px solid #444 !important;
-    color: #fff !important; /* Paksa teks putih */
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8) !important;
-}
-
-#nice-modal .nm-title {
-    color: #FFD200 !important; /* Judul Kuning Emas */
-    font-family: 'Bebas Neue', sans-serif !important;
-    font-size: 28px !important;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-    text-shadow: 2px 2px 0px #000;
-}
-
-#nice-modal .nm-msg {
-    color: #e0e0e0 !important; /* Teks Abu Terang */
-    font-family: 'Poppins', sans-serif !important;
-    font-size: 14px !important;
-    line-height: 1.5;
-}
-
-/* Fix Tombol Mengerti/Batal/Ya */
-#nice-modal .nm-btn {
-    border-radius: 50px !important; /* Tombol bulat modern */
-    text-transform: uppercase;
-    font-family: 'Montserrat', sans-serif !important;
-    font-weight: 900 !important;
-    border: none !important;
-    padding: 12px !important;
-}
-
-#nice-modal .nm-btn-cancel {
-    background: #444 !important;
-    color: #fff !important;
-}
-
-#nice-modal .nm-btn-confirm {
-    background: #FFD200 !important;
-    color: #000 !important;
-    box-shadow: 0 4px 15px rgba(255, 210, 0, 0.4);
-}
-
-#nice-modal .nm-btn-danger {
-    background: #e74c3c !important;
-    color: #fff !important;
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
-}
-        
     </style>
 </head>
 <body>
@@ -722,15 +653,35 @@
     </div>
 </div>
 
-    <div id="nice-modal" class="nice-modal-overlay">
-    <div class="nice-modal-box">
-        <span id="nm-icon" class="nm-icon">🔔</span>
-        <h3 id="nm-title" class="nm-title">JUDUL</h3>
-        <p id="nm-msg" class="nm-msg">Pesan...</p>
-        <div id="nm-actions" class="nm-actions"></div>
+<div id="history-modal" class="modal">
+    <div class="modal-content">
+        <div class="close-modal" onclick="closeHistory()">&times;</div>
+        <div class="modal-header">RIWAYAT PESANAN</div>
+        <div id="history-container" style="padding-bottom:10px;">
+            </div>
+        <button class="btn-close-final" onclick="closeHistory()">TUTUP</button>
     </div>
 </div>
-    
+<div id="clear-history-modal" class="modal">
+    <div class="modal-content" style="text-align:center;">
+        <div class="success-icon" style="color:red; font-size:50px; margin-bottom:10px;">🗑</div>
+        <div class="modal-header" style="border:none; margin-bottom:10px; text-align:center; color:#1A1A1A;">HAPUS RIWAYAT?</div>
+        <div class="success-msg" style="margin-bottom:20px; font-size:14px; color:#555;">
+            Semua riwayat pesanan yang <b>SUDAH SELESAI</b> akan dihapus permanen dari memori HP ini.
+        </div>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:10px;">
+            <button onclick="closeClearHistoryModal()" 
+                    style="background:#eee; color:#333; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">
+                BATAL
+            </button>
+            <button onclick="executeClearHistory()" 
+                    style="background:red; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">
+                YA, HAPUS
+            </button>
+        </div>
+    </div>
+</div>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
@@ -750,52 +701,6 @@
         firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.database();
-
-    // --- HELPER FUNGSI MODAL (WAJIB ADA) ---
-    let niceModalCallback = null;
-
-    function showNiceAlert(type, title, msg, callback = null) {
-        const modal = document.getElementById('nice-modal');
-        const iconEl = document.getElementById('nm-icon');
-        const titleEl = document.getElementById('nm-title');
-        const msgEl = document.getElementById('nm-msg');
-        const actionsEl = document.getElementById('nm-actions');
-
-        niceModalCallback = callback;
-
-        // Setup Icon & Warna
-        let icon = '🔔';
-        if (type === 'warning') icon = '⚠️';
-        if (type === 'danger') icon = '⛔'; 
-        
-        iconEl.innerHTML = icon;
-        titleEl.innerText = title;
-        msgEl.innerHTML = msg; // Pakai innerHTML agar bisa bold
-        actionsEl.innerHTML = ''; 
-
-        if (callback) {
-            // Mode Konfirmasi (Ada Callback)
-            let btnClass = (type === 'danger') ? 'nm-btn-danger' : 'nm-btn-confirm';
-            actionsEl.innerHTML = `
-                <button class="nm-btn nm-btn-cancel" onclick="closeNiceModal()">BATAL</button>
-                <button class="nm-btn ${btnClass}" onclick="confirmNiceModal()">YA, LANJUT</button>
-            `;
-        } else {
-            // Mode Info (Hanya Mengerti)
-            actionsEl.innerHTML = `<button class="nm-btn nm-btn-cancel" style="width:100%; background:#333; color:#fff;" onclick="closeNiceModal()">MENGERTI</button>`;
-        }
-        modal.classList.add('open');
-    }
-
-    function closeNiceModal() {
-        document.getElementById('nice-modal').classList.remove('open');
-        niceModalCallback = null;
-    }
-
-    function confirmNiceModal() {
-        if (niceModalCallback) niceModalCallback();
-        closeNiceModal();
-    }
 
     // --- LOGIC CART ---
     let cart = JSON.parse(localStorage.getItem('sbs_cart')) || [];
@@ -937,32 +842,25 @@
     }
     
     // --- FUNGSI KIRIM PESANAN ---
-    // --- 1. FUNGSI KIRIM PESANAN (UPDATE: VALIDASI PAKAI NICE MODAL) ---
     function submitOrder() {
         const tableNum = document.getElementById('table-number').value;
         const custName = document.getElementById('customer-real-name').value;
         const custPhone = document.getElementById('customer-phone').value;
         
+        // Ambil nilai dari Radio Button yang terpilih (Bukan ID dropdown lagi)
         const paymentRadio = document.querySelector('input[name="payment_method"]:checked');
         const paymentMethod = paymentRadio ? paymentRadio.value : 'tunai';
 
-        // VALIDASI PAKAI NICE MODAL (PASTIKAN FUNGSI showNiceAlert ADA)
-        if (!tableNum) { 
-            showNiceAlert('warning', 'DATA KURANG', 'Mohon isi <b>Nomor Meja</b> terlebih dahulu!'); 
-            return; 
-        }
-        if (!custName) { 
-            showNiceAlert('warning', 'DATA KURANG', 'Mohon isi <b>Nama Kakak</b> agar kami tidak salah panggil.'); 
-            return; 
-        }
-        if (cart.length === 0) {
-             showNiceAlert('warning', 'KERANJANG KOSONG', 'Pilih menu dulu ya kak!');
-             return;
-        }
+        if (!tableNum) { alert("Mohon isi Nomor Meja!"); return; }
+        if (!custName) { alert("Mohon isi Nama Kakak!"); return; }
+        if (cart.length === 0) return;
 
         let totalPrice = 0;
         cart.forEach(item => totalPrice += (item.price * item.qty));
 
+        // LOGIKA STATUS: 
+        // Tunai -> 'new'
+        // QRIS -> 'qris_unpaid' (Belum boleh diproses dapur)
         let initialStatus = (paymentMethod === 'tunai') ? 'new' : 'qris_unpaid';
 
         const orderData = {
@@ -974,7 +872,7 @@
             total: totalPrice,
             timestamp: new Date().toISOString(),
             status: initialStatus,
-            clientPaidAt: null 
+            clientPaidAt: null // Placeholder untuk KPI
         };
 
         const newOrderRef = db.ref().child('orders').push();
@@ -982,6 +880,7 @@
         .then(() => {
             saveOrderToHistory(newOrderRef.key);
             
+            // Simpan state QRIS ke LocalStorage untuk auto-restore
             if(paymentMethod === 'qris') {
                 localStorage.setItem('sbs_pending_qris', JSON.stringify({
                     id: newOrderRef.key,
@@ -994,7 +893,6 @@
             updateCartUI();
             closeCart();
             
-            // Reset Form
             if(!document.getElementById('table-number').readOnly) {
                 document.getElementById('table-number').value = '';
             }
@@ -1007,47 +905,8 @@
             }
         })
         .catch((error) => {
-            showNiceAlert('danger', 'GAGAL KIRIM', "Terjadi kesalahan: " + error.message);
+            alert("Gagal mengirim: " + error.message);
         });
-    }
-
-    // --- 2. UPDATE KONFIRMASI QRIS (UPDATE: ERROR HANDLING) ---
-    function confirmQRISPayment(orderId) {
-        db.ref('orders/' + orderId).update({
-            status: 'pending_payment',
-            clientPaidAt: new Date().toISOString()
-        }).then(() => {
-            localStorage.removeItem('sbs_pending_qris');
-            
-            const modal = document.getElementById('success-modal');
-            modal.querySelector('.modal-content').innerHTML = `
-                <div class="success-icon">⏳</div>
-                <div class="modal-header" style="border:none; margin-bottom:5px; text-align:center;">PEMBAYARAN DITERIMA</div>
-                <div class="success-msg">
-                    Terima kasih! Bukti bayar sudah masuk.<br>
-                    Dapur sedang memverifikasi pesananmu.
-                </div>
-                <button class="btn-close-final" onclick="closeSuccess()">OK, MENGERTI</button>
-            `;
-            modal.style.display = 'flex'; 
-
-        }).catch(err => {
-            // GANTI ALERT ERROR
-            showNiceAlert('danger', 'ERROR KONEKSI', "Gagal update status: " + err.message); 
-        });
-    }
-
-    // --- 3. UPDATE HAPUS RIWAYAT (UPDATE: PAKAI NICE MODAL) ---
-    function manualClearHistory() {
-        // Panggil Nice Modal (BUKAN modal 'clear-history-modal' yang sudah dihapus)
-        showNiceAlert('danger', 'HAPUS RIWAYAT?', 'Semua riwayat pesanan yang SUDAH SELESAI akan dihapus dari HP ini.', () => {
-            executeClearHistory();
-        });
-    }
-
-    function executeClearHistory() {
-        localStorage.removeItem('sbs_order_history');
-        location.reload(); 
     }
 
     // --- MANAJEMEN QRIS & AUTO RESTORE ---
