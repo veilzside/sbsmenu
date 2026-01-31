@@ -971,22 +971,32 @@
             headerRight = `<div class="header-right"><span class="meta-date">${dateStr}</span><div class="meta-time-block"><span class="time-label">Masuk:</span> <span style="color:#ddd; font-weight:700;">${timeInStr}</span></div><div class="meta-time-block"><span class="time-label">Selesai:</span> <span class="time-highlight">${timeDoneStr}</span></div></div>`;
         }
 
-        // --- TOMBOL PRINT (LOGIKA KONDISIONAL BARU) ---
+        // --- TOMBOL PRINT ---
         let printButtons = '';
         if(order.status !== 'rejected') {
             const isUnpaidLock = (order.status === 'qris_unpaid');
+            const isHistory = (order.status === 'completed'); // Cek Status Riwayat
+            
             const billDone = order.isBillPrinted ? true : false;
             const receiptDone = order.isReceiptPrinted ? true : false;
 
             const baseStyle = "width:100%; padding:10px 2px; font-size:12px; display:flex; align-items:center; justify-content:center; gap:4px;"; 
             const lockedStyle = "width:100%; padding:10px 2px; font-size:12px; background:#333; color:#777; border-color:#444; cursor:not-allowed; display:flex; align-items:center; justify-content:center; gap:4px;";
             
-            // 1. Definisikan Tombol
-            const billBtnStyle = isUnpaidLock ? lockedStyle : `${baseStyle} background:#e67e22; border-color:#d35400;`;
+            // 1. BILL BUTTON
+            // Default Kasir: Orange. Riwayat: Abu-abu (baseStyle).
+            let billBtnStyle = isUnpaidLock ? lockedStyle : `${baseStyle} background:#e67e22; border-color:#d35400;`;
+            
+            // OVERRIDE: Jika di Riwayat, jangan pakai warna Orange, pakai standar saja.
+            if (isHistory) { 
+                billBtnStyle = baseStyle; 
+            }
+
             const billAttr = isUnpaidLock ? 'disabled' : '';
             const billIcon = billDone ? '✅' : '📄';
             const btnBill = `<button class="btn-print" style="${billBtnStyle}" onclick="printDirect('${order.id}', 'bill')" ${billAttr}><span>${billIcon}</span> BILL</button>`;
 
+            // 2. RECEIPT BUTTON
             let receiptBtnStyle = baseStyle;
             let receiptAction = `printDirect('${order.id}', 'invoice')`;
             let receiptAttr = '';
@@ -1000,12 +1010,12 @@
             const receiptIcon = receiptDone ? '✅' : '🧾';
             const btnReceipt = `<button class="btn-print" style="${receiptBtnStyle}" onclick="${receiptAction}" ${receiptAttr}><span>${receiptIcon}</span> RECEIPT</button>`;
             
+            // 3. CHECKER BUTTON
             const checkerStyle = isUnpaidLock ? lockedStyle : baseStyle;
             const checkerAttr = isUnpaidLock ? 'disabled' : '';
-            // Icon Checker Ganti Jadi Clipboard (📋)
             const btnChecker = `<button class="btn-print" style="${checkerStyle}" onclick="printDirect('${order.id}', 'checker')" ${checkerAttr}><span>📋</span> CHECKER</button>`;
 
-            // 2. Susun Layout Berdasarkan Status
+            // LAYOUT GRID SYSTEM
             let gridCols = "1fr 1fr 1fr";
             let content = "";
 
@@ -1014,11 +1024,11 @@
                 gridCols = "1fr";
                 content = btnChecker;
             } else if (order.status === 'completed') {
-                // RIWAYAT: Cukup Bill & Receipt (2 Kolom)
+                // RIWAYAT: Cukup Bill & Receipt (2 Kolom) -> Bill warnanya sudah disesuaikan jadi abu-abu di atas
                 gridCols = "1fr 1fr";
                 content = btnBill + btnReceipt;
             } else {
-                // KASIR (New/Pending): Semua (3 Kolom)
+                // KASIR: Semua (3 Kolom) -> Bill tetap warna Orange
                 gridCols = "1fr 1fr 1fr";
                 content = btnChecker + btnBill + btnReceipt;
             }
