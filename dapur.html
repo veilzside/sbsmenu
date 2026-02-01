@@ -651,7 +651,7 @@
         const o = allOrders.find(x => x.id === id); 
         if (!o) return;
 
-        // 1. UPDATE DB
+        // 1. UPDATE DB (Simpan Status & Diskon)
         const inputEl = document.getElementById(`disc-input-${id}`);
         const typeEl = document.getElementById(`disc-type-${id}`);
         
@@ -678,7 +678,7 @@
         updates.discountMeta = { type: metaType, value: metaVal };
         db.ref('orders/' + id).update(updates);
 
-        // 2. DATA
+        // 2. DATA HEADER
         const hiddenCashier = document.getElementById(`selected-cashier-${id}`);
         let selectedCashier = o.cashier; 
         if (!selectedCashier && hiddenCashier && hiddenCashier.value) { selectedCashier = hiddenCashier.value; }
@@ -693,7 +693,7 @@
         const custName = (o.customerName || "Customer").toUpperCase();
         const displayID = o.id.slice(-7).toUpperCase();
 
-        // 3. ESC/POS COMMANDS
+        // 3. KONFIGURASI ESC/POS
         const ESC = "\x1B"; const GS = "\x1D"; const INIT = ESC + "@";
         const ALIGN_CENTER = ESC + "a" + "\x01"; const ALIGN_LEFT = ESC + "a" + "\x00"; 
         const BOLD_ON = ESC + "E" + "\x01"; const BOLD_OFF = ESC + "E" + "\x00";
@@ -703,28 +703,51 @@
 
         let txt = INIT;
 
+        // --- HELPER DETEKSI MAKANAN (Hanya Dipakai Checker) ---
+        function isFood(name) {
+            const n = name.toLowerCase();
+            // Daftar kata kunci makanan di menu SBS
+            const foodKeywords = [
+                'nasi', 'mie', 'katsu', 'ayam', 'paket', 'chicken', 'potato', 
+                'tahu', 'gyoza', 'snack', 'cricket', 'barudak', 'kalter', 
+                'obama', 'mangku', 'sekena', 'sambat', 'uhat', 'julit'
+            ];
+            return foodKeywords.some(k => n.includes(k));
+        }
+
+        // === LOGIKA PEMISAH (CHECKER VS BILL/RECEIPT) ===
         if (type === 'checker') {
-            txt += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF + "\n" + ALIGN_LEFT + "TABLE: " + BOLD_ON + (o.tableNumber || "TA") + BOLD_OFF + "\nQUEUE: #" + q + "\nTIME : " + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) + "\nID   : " + displayID + "\n--------------------------------\n";
+            // A. LAYOUT KHUSUS CHECKER (Pakai Simbol)
+            txt += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "CHECKER\n" + TEXT_NORMAL + BOLD_OFF + "\n";
+            txt += ALIGN_LEFT + "TABLE: " + BOLD_ON + (o.tableNumber || "TA") + BOLD_OFF + "\n";
+            txt += "QUEUE: #" + q + "\n";
+            txt += "TIME : " + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) + "\n";
+            txt += "ID   : " + displayID + "\n";
+            txt += "--------------------------------\n";
+            
             o.items.forEach(i => {
-                txt += BOLD_ON + i.qty + " x " + i.name + BOLD_OFF + "\n";
-                if(i.note) txt += "   [ " + i.note + " ]\n";
+                // LOGIKA SIMBOL: Makanan = [#] Tebal, Minuman = >> Tipis
+                if (isFood(i.name)) {
+                    txt += BOLD_ON + "[#] " + i.qty + " x " + i.name + BOLD_OFF + "\n";
+                } else {
+                    txt += BOLD_OFF + " >> " + i.qty + " x " + i.name + "\n";
+                }
+                
+                if(i.note) txt += "    [ " + i.note + " ]\n";
                 txt += "\n";
             });
             txt += "\n\n\n";
 
         } else {
-            // --- HEADER BERBEDA UNTUK BILL & RECEIPT ---
+            // B. LAYOUT BILL & RECEIPT (ORIGINAL - TIDAK ADA SIMBOL)
             
             if (type === 'bill') {
-                // BILL: Ada Peringatan Besar + SBS CAFE Kecil (Normal)
                 txt += ALIGN_CENTER + BOLD_ON + TEXT_HEIGHT_DOUBLE + "THIS IS NOT A RECEIPT\n" + TEXT_NORMAL + "\n" + BOLD_OFF;
                 txt += ALIGN_CENTER + BOLD_ON + TEXT_NORMAL + "SBS CAFE\n" + BOLD_OFF;
             } else {
-                // RECEIPT: Tanpa Peringatan + SBS CAFE Besar (Double)
                 txt += ALIGN_CENTER + BOLD_ON + TEXT_DOUBLE + "SBS CAFE\n" + BOLD_OFF;
             }
 
-            // ALAMAT (Sama untuk keduanya)
             txt += ALIGN_CENTER + TEXT_NORMAL + "Jl. Mundu 8, Kota Malang\nJawa Timur, 65116\n085159039877\n";
             
             txt += ALIGN_LEFT + "--------------------------------\n";
@@ -739,7 +762,10 @@
             o.items.forEach(i => {
                 let p = parseInt(String(i.price).replace(/[^0-9]/g, '')) || 0;
                 let sub = i.qty * p;
+                
+                // MURNI NAMA MENU SAJA (Tanpa Simbol)
                 txt += i.name + "\n";
+                
                 let leftText = i.qty + "x @" + p.toLocaleString('id-ID'); 
                 if (leftText.length < 15) leftText = leftText; 
                 let rightText = sub.toLocaleString('id-ID'); 
