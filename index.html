@@ -315,7 +315,37 @@
 /* Efek saat diketuk tetap sama */
 .menu-card:active .corner-add-triangle {
     border-color: transparent transparent var(--sbs-orange) transparent;
-}       
+}
+        /* --- CSS NICE MODAL (POPUP CANTIK) --- */
+.nice-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px);
+    display: none; justify-content: center; align-items: center; z-index: 10000;
+    opacity: 0; transition: opacity 0.3s ease;
+}
+.nice-modal-overlay.open { display: flex; opacity: 1; }
+
+.nice-modal-box {
+    background: #2b2b36; width: 85%; max-width: 350px;
+    border-radius: 20px; padding: 30px 25px; text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6); border: 1px solid #444;
+    transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.nice-modal-overlay.open .nice-modal-box { transform: scale(1); }
+
+/* Typography & Elements */
+.nm-icon { font-size: 50px; margin-bottom: 15px; display: block; text-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+.nm-title { color: #fff; font-family: 'Bebas Neue', sans-serif; font-size: 26px; margin: 0 0 10px 0; letter-spacing: 1px; }
+.nm-msg { color: #ccc; font-family: 'Poppins', sans-serif; font-size: 14px; line-height: 1.5; margin-bottom: 25px; }
+
+/* Buttons */
+.nm-actions { display: flex; gap: 10px; justify-content: center; }
+.nm-btn { flex: 1; padding: 12px; border-radius: 12px; border: none; font-family: 'Montserrat', sans-serif; font-weight: 700; cursor: pointer; font-size: 13px; transition: 0.2s; text-transform: uppercase; }
+.nm-btn:active { transform: scale(0.95); }
+
+.nm-btn-cancel { background: #444; color: #ccc; }
+.nm-btn-confirm { background: #FFD200; color: #000; box-shadow: 0 5px 15px rgba(255, 210, 0, 0.3); }
+.nm-btn-danger { background: #e74c3c; color: #fff; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4); }
     </style>
 </head>
 <body>
@@ -662,26 +692,16 @@
         <button class="btn-close-final" onclick="closeHistory()">TUTUP</button>
     </div>
 </div>
-<div id="clear-history-modal" class="modal">
-    <div class="modal-content" style="text-align:center;">
-        <div class="success-icon" style="color:red; font-size:50px; margin-bottom:10px;">🗑</div>
-        <div class="modal-header" style="border:none; margin-bottom:10px; text-align:center; color:#1A1A1A;">HAPUS RIWAYAT?</div>
-        <div class="success-msg" style="margin-bottom:20px; font-size:14px; color:#555;">
-            Semua riwayat pesanan yang <b>SUDAH SELESAI</b> akan dihapus permanen dari memori HP ini.
-        </div>
-        
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:10px;">
-            <button onclick="closeClearHistoryModal()" 
-                    style="background:#eee; color:#333; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">
-                BATAL
-            </button>
-            <button onclick="executeClearHistory()" 
-                    style="background:red; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">
-                YA, HAPUS
-            </button>
-        </div>
+
+<div id="nice-modal" class="nice-modal-overlay">
+    <div class="nice-modal-box">
+        <span id="nm-icon" class="nm-icon">🔔</span>
+        <h3 id="nm-title" class="nm-title">JUDUL</h3>
+        <p id="nm-msg" class="nm-msg">Pesan...</p>
+        <div id="nm-actions" class="nm-actions"></div>
     </div>
 </div>
+    
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
@@ -701,6 +721,59 @@
         firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.database();
+
+    // --- HELPER FUNGSI MODAL ---
+    let niceModalCallback = null;
+
+    function showNiceAlert(type, title, msg, callback = null) {
+        const modal = document.getElementById('nice-modal');
+        // Fallback aman jika elemen belum siap
+        if (!modal) { console.error("Modal element not found"); return; }
+
+        const iconEl = document.getElementById('nm-icon');
+        const titleEl = document.getElementById('nm-title');
+        const msgEl = document.getElementById('nm-msg');
+        const actionsEl = document.getElementById('nm-actions');
+
+        niceModalCallback = callback;
+
+        // Ikon & Warna
+        let icon = '🔔';
+        if (type === 'warning') icon = '⚠️';
+        if (type === 'danger') icon = '🗑️'; // Ikon sampah untuk danger
+        if (type === 'error') icon = '⛔';
+        
+        iconEl.innerText = icon;
+        titleEl.innerText = title;
+        msgEl.innerHTML = msg; // Support HTML (Bold dll)
+        actionsEl.innerHTML = ''; 
+
+        if (callback) {
+            // Mode Tanya (Ya/Tidak)
+            let btnClass = (type === 'danger') ? 'nm-btn-danger' : 'nm-btn-confirm';
+            let btnText = (type === 'danger') ? 'YA, HAPUS' : 'YA, LANJUT';
+            
+            actionsEl.innerHTML = `
+                <button class="nm-btn nm-btn-cancel" onclick="closeNiceModal()">BATAL</button>
+                <button class="nm-btn ${btnClass}" onclick="confirmNiceModal()">${btnText}</button>
+            `;
+        } else {
+            // Mode Info (Hanya Oke)
+            actionsEl.innerHTML = `<button class="nm-btn nm-btn-cancel" style="width:100%;" onclick="closeNiceModal()">MENGERTI</button>`;
+        }
+        modal.classList.add('open');
+    }
+
+    function closeNiceModal() {
+        const modal = document.getElementById('nice-modal');
+        if(modal) modal.classList.remove('open');
+        niceModalCallback = null;
+    }
+
+    function confirmNiceModal() {
+        if (niceModalCallback) niceModalCallback();
+        closeNiceModal();
+    }
 
     // --- LOGIC CART ---
     let cart = JSON.parse(localStorage.getItem('sbs_cart')) || [];
@@ -846,46 +919,36 @@
         const tableNum = document.getElementById('table-number').value;
         const custName = document.getElementById('customer-real-name').value;
         const custPhone = document.getElementById('customer-phone').value;
-        
-        // Ambil nilai dari Radio Button yang terpilih (Bukan ID dropdown lagi)
         const paymentRadio = document.querySelector('input[name="payment_method"]:checked');
         const paymentMethod = paymentRadio ? paymentRadio.value : 'tunai';
 
-        if (!tableNum) { alert("Mohon isi Nomor Meja!"); return; }
-        if (!custName) { alert("Mohon isi Nama Kakak!"); return; }
+        // --- VALIDASI DENGAN NICE MODAL ---
+        if (!tableNum) { 
+            showNiceAlert('warning', 'DATA KURANG', 'Mohon isi <b>Nomor Meja</b> terlebih dahulu!'); 
+            return; 
+        }
+        if (!custName) { 
+            showNiceAlert('warning', 'DATA KURANG', 'Mohon isi <b>Nama Kakak</b> agar kami tidak salah panggil.'); 
+            return; 
+        }
         if (cart.length === 0) return;
 
         let totalPrice = 0;
         cart.forEach(item => totalPrice += (item.price * item.qty));
-
-        // LOGIKA STATUS: 
-        // Tunai -> 'new'
-        // QRIS -> 'qris_unpaid' (Belum boleh diproses dapur)
         let initialStatus = (paymentMethod === 'tunai') ? 'new' : 'qris_unpaid';
 
         const orderData = {
-            tableNumber: tableNum,
-            customerName: custName,
-            customerPhone: custPhone,
-            paymentMethod: paymentMethod,
-            items: cart,
-            total: totalPrice,
-            timestamp: new Date().toISOString(),
-            status: initialStatus,
-            clientPaidAt: null // Placeholder untuk KPI
+            tableNumber: tableNum, customerName: custName, customerPhone: custPhone,
+            paymentMethod: paymentMethod, items: cart, total: totalPrice,
+            timestamp: new Date().toISOString(), status: initialStatus, clientPaidAt: null 
         };
 
         const newOrderRef = db.ref().child('orders').push();
         newOrderRef.set(orderData)
         .then(() => {
             saveOrderToHistory(newOrderRef.key);
-            
-            // Simpan state QRIS ke LocalStorage untuk auto-restore
             if(paymentMethod === 'qris') {
-                localStorage.setItem('sbs_pending_qris', JSON.stringify({
-                    id: newOrderRef.key,
-                    amount: totalPrice
-                }));
+                localStorage.setItem('sbs_pending_qris', JSON.stringify({id: newOrderRef.key, amount: totalPrice}));
             }
             
             cart = []; 
@@ -893,9 +956,7 @@
             updateCartUI();
             closeCart();
             
-            if(!document.getElementById('table-number').readOnly) {
-                document.getElementById('table-number').value = '';
-            }
+            if(!document.getElementById('table-number').readOnly) document.getElementById('table-number').value = '';
             document.getElementById('customer-real-name').value = '';
             
             if(paymentMethod === 'qris') {
@@ -905,7 +966,7 @@
             }
         })
         .catch((error) => {
-            alert("Gagal mengirim: " + error.message);
+            showNiceAlert('error', 'GAGAL KIRIM', "Terjadi kesalahan: " + error.message);
         });
     }
 
@@ -1125,8 +1186,10 @@
     }
 
     function manualClearHistory() {
-        // Jangan pakai confirm() biasa, panggil modal baru
-        document.getElementById('clear-history-modal').style.display = 'flex';
+        showNiceAlert('danger', 'HAPUS RIWAYAT?', 'Semua riwayat pesanan yang SUDAH SELESAI akan dihapus permanen dari HP ini.', () => {
+            localStorage.removeItem('sbs_order_history');
+            location.reload(); 
+        });
     }
 
     function closeClearHistoryModal() {
